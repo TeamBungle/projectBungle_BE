@@ -31,10 +31,10 @@ public class User {
     private String profileUrl;
 
     @Column(unique = true)
-    private String kakaoId;
+    private Long kakaoId;
 
     @Column(unique = true)
-    private String googleId;
+    private Long googleId;
 
     @Column(unique = true)
     private String naverId;
@@ -43,6 +43,6 @@ public class User {
     private Float mannerTemp;
 
     @CreatedDate
-    private LocalDateTime cteatedAt;
+    private LocalDateTime createdAt;
 
 }
