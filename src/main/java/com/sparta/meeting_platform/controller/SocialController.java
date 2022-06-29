@@ -29,8 +29,8 @@ public class SocialController {
 
     @ResponseBody
     @GetMapping("/naver")
-    public String naverLogin(@RequestParam String code, @RequestParam String state)  {
-        return socialNaverService.getNaverAccessToken(code, state);
+    // 추후 정훈님 완료되면 리턴값 변경하여 ResponseDto 리턴 예정
+    public void naverLogin(@RequestParam String code, @RequestParam String state)  {
+        socialNaverService.naverLogin(code, state);
     }
-
 }
