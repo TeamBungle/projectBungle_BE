@@ -49,12 +49,9 @@ dependencies {
     // validation
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-//    //spring-cloud-starter-aws
-//    compileOnly 'org.springframework.cloud:spring-cloud-starter-aws:2.0.2.RELEASE'
-//    implementation platform('com.amazonaws:aws-java-sdk-bom:1.11.228')
-//    implementation 'com.amazonaws:aws-java-sdk-s3'
-//    // https://mvnrepository.com/artifact/commons-io/commons-io
-//    implementation 'commons-io:commons-io:2.6'
+    // S3 Bucket 설정
+    implementation group: 'org.springframework.cloud', name: 'spring-cloud-starter-aws', version: '2.2.5.RELEASE'
+
 }
 
 tasks.named('test') {
