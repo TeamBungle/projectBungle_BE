@@ -1,7 +1,7 @@
 package com.sparta.meeting_platform.security;
 
-import com.example.jwtprac.User;
-import com.example.jwtprac.UserRepository;
+import com.sparta.meeting_platform.domain.User;
+import com.sparta.meeting_platform.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

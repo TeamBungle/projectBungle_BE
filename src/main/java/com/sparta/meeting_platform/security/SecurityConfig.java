@@ -9,15 +9,19 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.web.context.SecurityContextPersistenceFilter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
-@EnableWebSecurity // 스프링 시큐리티 필터가 스프링 필터체인에 등록이 된다는 뜻, 활성화 한다
+@EnableWebSecurity(debug = true) // 스프링 시큐리티 필터가 스프링 필터체인에 등록이 된다는 뜻, 활성화 한다 //(debug = true)지금사용하는 필터 종류를 보여준다
 @RequiredArgsConstructor
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtExceptionFilter jwtExceptionFilter;
+
 
     //Bean = 해당 메서드의 리턴되는 오브젝트를 IoC로 등록 해준다
     @Bean
@@ -36,28 +40,37 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.csrf().disable();
+        http
+                .cors()
+                .configurationSource(corsConfigurationSource())
+                .and()
+                .csrf().disable();
 
         // 서버에서 인증은 JWT로 인증하기 때문에 Session의 생성을 막습니다.
-        http
-                .sessionManagement()
+        http.sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .formLogin().disable() // 폼로그인을 사용안하겠다.
                 .httpBasic().disable(); //http헤더에 Anthorization에 아이디와 패스워드를 달고 요청하는것을 사용안하겠다.
 
-        http.addFilterBefore(new MyFilter1(), SecurityContextPersistenceFilter.class); //MyFilter1가 (스프링시큐리티 필터중 하나)SecurityContextPersistenceFilter보다 먼저 실행 되라라
-        http.addFilterBefore(new JwtAuthorizationFilter((authenticationManager())));
+//        http.addFilterBefore(new MyFilter1(), SecurityContextPersistenceFilter.class); //MyFilter1가 (스프링시큐리티 필터중 하나)SecurityContextPersistenceFilter보다 먼저 실행 되라라
+//        http.addFilterBefore(new JwtAuthenticationFilter(authenticationManager()));
 
 
-       http.authorizeRequests()
-                .antMatchers("/user/**").authenticated() //("/user/**") 일때는 권한 필요
-                .antMatchers("/adimin/**").access("hasRole('ROLE_ADMIN')") //("/adimin/**")일때는 권한과 엑세스도 필요
-                .anyRequest().permitAll(); //나머지 요청은 다 허용
+
+        http.authorizeRequests()
+//            .antMatchers("/user/**").authenticated() //("/user/**") 일때는 권한 필요
+//            .antMatchers("/adimin/**").access("hasRole('ROLE_ADMIN')") //("/adimin/**")일때는 권한과 엑세스도 필요
+                .anyRequest().permitAll() //나머지 요청은 토큰말고 세션 id 다 허용
+                .and()
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtExceptionFilter, JwtAuthenticationFilter.class);
+
+
+
 
 
     }
-
 
 
     @Bean

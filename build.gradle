@@ -29,6 +29,8 @@ dependencies {
 
     // OAuth2 Google
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'com.google.code.gson:gson:2.9.0'
+    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
 
     // 스프링 시큐리티
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -40,6 +42,9 @@ dependencies {
     implementation group: 'org.javassist', name: 'javassist', version: '3.15.0-GA'
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
     implementation 'commons-codec:commons-codec:1.13'
+
+    // validation
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
 }
 
 tasks.named('test') {

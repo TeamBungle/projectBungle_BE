@@ -12,7 +12,7 @@ import com.sparta.meeting_platform.dto.Google.GoogleLoginRequestDto;
 import com.sparta.meeting_platform.dto.Google.GoogleLoginResponseDto;
 import com.sparta.meeting_platform.dto.Google.GoogleResponseDto;
 import com.sparta.meeting_platform.repository.UserRepository;
-import com.sparta.meeting_platform.security.JwtTokenUtils;
+import com.sparta.meeting_platform.security.JwtTokenProvider;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -35,11 +35,13 @@ public class SocialGoogleService {
     private final UserRepository userRepository;
     private final GoogleConfig googleConfig;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public SocialGoogleService(UserRepository userRepository, GoogleConfig googleConfig, PasswordEncoder passwordEncoder){
+    public SocialGoogleService(UserRepository userRepository, GoogleConfig googleConfig, PasswordEncoder passwordEncoder,JwtTokenProvider jwtTokenProvider){
         this.userRepository = userRepository;
         this.googleConfig = googleConfig;
         this.passwordEncoder = passwordEncoder;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     public GoogleResponseDto googleLogin(String authCode, HttpServletResponse httpServletResponse) throws JsonProcessingException {
@@ -124,7 +126,8 @@ public class SocialGoogleService {
         Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String jwt_token = JwtTokenUtils.generateJwtToken(userDetails);
+        //*** jwtTokenProvider클래스 내에 generateJwtToken함수로 토큰을 제작했습니다. 확인해 주세요!!
+        String jwt_token = jwtTokenProvider.generateJwtToken(userDetails);
         headers.set(AUTH_HEADER, TOKEN_TYPE + " " + jwt_token);
 
         GoogleResponseDto googleResponseDto = GoogleResponseDto.builder()
