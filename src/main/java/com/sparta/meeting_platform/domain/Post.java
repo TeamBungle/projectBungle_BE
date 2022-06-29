@@ -3,8 +3,11 @@ package com.sparta.meeting_platform.domain;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import javax.persistence.*;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Setter
 @Getter
@@ -28,8 +31,31 @@ public class Post {
     @Column(nullable = false)
     private int personnel;
 
-    @Column(nullable = false, unique = true)
-    private String category;
+    @Column(nullable = false)
+    private String place;
 
+    @ElementCollection
+    @CollectionTable
+    @Column
+    private List<String> categories;
+
+    @CreatedDate
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    private LocalDateTime modifiedAt;
+
+    @Column(nullable = false)
+    private Boolean isLetter;
+
+    @ElementCollection
+    @CollectionTable
+    @Column
+    private List<String> postUrls;
+
+    @ElementCollection
+    @CollectionTable
+    @Column
+    private List<String> tags;
 
 }

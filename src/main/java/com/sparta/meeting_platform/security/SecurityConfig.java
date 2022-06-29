@@ -40,6 +40,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        http.csrf().disable();
+
+        // 서버에서 인증은 JWT로 인증하기 때문에 Session의 생성을 막습니다.
         http
                 .cors()
                 .configurationSource(corsConfigurationSource())

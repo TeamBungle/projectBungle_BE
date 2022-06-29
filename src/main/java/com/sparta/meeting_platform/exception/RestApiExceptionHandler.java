@@ -20,6 +20,18 @@ public class RestApiExceptionHandler {
                 HttpStatus.BAD_REQUEST
         );
     }
+
+    @ExceptionHandler(value = { NullPointerException.class})
+    public ResponseEntity<Object> handleApiRequestException(NullPointerException ex) {
+        RestApiException restApiException = new RestApiException();
+        restApiException.setResponse(false);
+        restApiException.setMessage(ex.getMessage());
+
+        return new ResponseEntity<>(
+                restApiException,
+                HttpStatus.BAD_REQUEST
+        );
+    }
     @ExceptionHandler(value = {MethodArgumentNotValidException.class})
     public ResponseEntity<RestApiException> handleUserRequestException (MethodArgumentNotValidException ex) {
         RestApiException restApiException = new RestApiException();

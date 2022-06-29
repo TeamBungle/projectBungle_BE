@@ -6,11 +6,10 @@ import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.logging.Level;
 
-@Builder
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor()
 @Setter
 @Entity(name = "userinfo")
 public class User {
@@ -40,11 +39,12 @@ public class User {
     @Column(unique = true)
     private String naverId;
 
+    @CreatedDate
+    private LocalDateTime createdAt;
+
     @Column(nullable = false)
     private Float mannerTemp;
 
-    @CreatedDate
-    private LocalDateTime createdAt;
 
     public User(SignUpRequestDto requestDto) {
         this.username = requestDto.getUsername();
@@ -54,4 +54,18 @@ public class User {
         this.mannerTemp = 36.5f;
     }
 
+    @Builder
+    public User(Long id, String username, String password, String nickName, String profileUrl, Long kakaoId,
+                Long googleId, String naverId, LocalDateTime createdAt, Float mannerTemp) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.nickName = nickName;
+        this.profileUrl = profileUrl;
+        this.kakaoId = kakaoId;
+        this.googleId = googleId;
+        this.naverId = naverId;
+        this.createdAt = createdAt;
+        this.mannerTemp = mannerTemp;
+    }
 }

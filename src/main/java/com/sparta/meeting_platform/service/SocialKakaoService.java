@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.KakaoDto.KakaoUserInfoDto;
 import com.sparta.meeting_platform.repository.UserRepository;
+import com.sparta.meeting_platform.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +14,8 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -22,6 +25,7 @@ import org.springframework.web.client.RestTemplate;
 import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import java.util.UUID;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -65,8 +69,7 @@ public class SocialKakaoService {
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "authorization_code");
         body.add("client_id", kakaoClientId);
-//        body.add("redirect_uri", "http://localhost:3000/user/signin/kakao");
-        body.add("redirect_uri", "http://localhost:3000/user/login");
+        body.add("redirect_uri", "http://localhost:3000/user/signin/kakao");
         body.add("code", code);
 
         //HTTP 요청 보내기
@@ -105,7 +108,8 @@ public class SocialKakaoService {
                 kakaoUserInfoRequest,
                 String.class
         );
-
+        //HTTP 응답 (JSON)
+        //JSON -> JsonNode 객체로 변환
         String responseBody = response.getBody();
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(responseBody);
@@ -115,11 +119,11 @@ public class SocialKakaoService {
         String email = jsonNode.get("kakao_account")
                 .get("email").asText();
         String profileUrl = jsonNode.get("properties")
-                        .get("profile_image").asText();
+                .get("profile_image").asText();
 
         log.info("카카오 사용자 정보 id: {},{},{},{}", id, nickname, email, profileUrl);
 
-        return new KakaoUserInfoDto(id, nickname, email,profileUrl);
+        return new KakaoUserInfoDto(id, nickname, email, profileUrl);
     }
 
     // 3번
@@ -129,20 +133,15 @@ public class SocialKakaoService {
         User findKakao = userRepository.findByKakaoId(kakaoId)
                 .orElse(null);
 
+        //DB에 중복된 계정이 없으면 회원가입 처리
         if (findKakao == null) {
-            //회원가입
-            //nickname = nickname
             String nickName = kakaoUserInfoDto.getNickname();
-
-            //프로필 사진
             String profileUrl = kakaoUserInfoDto.getProfileUrl();
-
-            //password : random UUID
+            String email = kakaoUserInfoDto.getEmail();
             String password = UUID.randomUUID().toString();
             String encodedPassword = passwordEncoder.encode(password);
-            //username : kakao email
-            String email = kakaoUserInfoDto.getEmail();
             LocalDateTime createdAt = LocalDateTime.now();
+            Float mannerTemp = 36.5F;
 
             User kakaoUser = User.builder()
                     .username(email)
@@ -151,6 +150,7 @@ public class SocialKakaoService {
                     .profileUrl(profileUrl)
                     .createdAt(createdAt)
                     .kakaoId(kakaoId)
+                    .mannerTemp(mannerTemp)
                     .build();
 
             userRepository.save(kakaoUser);
@@ -161,44 +161,44 @@ public class SocialKakaoService {
         log.info("카카오 아이디가 있는 경우 {}", findKakao);
         return findKakao;
     }
+/*
+    // 4번
+    private Authentication forceLoginKakaoUser(User kakaoUser) {
+        UserDetails userDetails = new UserDetailsImpl(kakaoUser);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        log.info("강제 로그인 {}", authentication);
+        return authentication;
+    }
+
+    // 5번
+    private void kakaoUsersAuthorizationInput(Authentication authentication, HttpServletResponse response) {
+        // response header에 token 추가
+        UserDetailsImpl userDetailsImpl = ((UserDetailsImpl) authentication.getPrincipal());
+        String token = jwtTokenProvider.createToken(userDetailsImpl);
+//        String refreshToken = JwtTokenProvider.generateRefreshToken();
+
+        response.addHeader("Authorization", "BEARER" + " " + token);
+//        response.addHeader("RefreshAuthorization", "BEARER" + " " + refreshToken);
+
+        log.info("액세스 토큰 {}", token);
+//        log.info("리프레쉬 토큰 {} ", refreshToken);
 //
-//    // 4번
-//    private Authentication forceLoginKakaoUser(User kakaoUser) {
-//        UserDetails userDetails = new UserDetailsImpl(kakaoUser);
-//        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-//        SecurityContextHolder.getContext().setAuthentication(authentication);
-//        log.info("강제 로그인 {}", authentication);
-//        return authentication;
-//    }
+//        RefreshToken findToken = refreshTokenRepository.findByUserEmail(userDetailsImpl.getUserEmail());
 //
-//    // 5번
-//    private void kakaoUsersAuthorizationInput(Authentication authentication, HttpServletResponse response) {
-//        // response header에 token 추가
-//        UserDetailsImpl userDetailsImpl = ((UserDetailsImpl) authentication.getPrincipal());
-//        String token = jwtTokenProvider.createToken(userDetailsImpl);
-////        String refreshToken = JwtTokenProvider.generateRefreshToken();
+//        if (findToken != null) {
+//            findToken.setRefreshToken(JwtTokenUtils.generateRefreshToken());
+//            log.info("리프레쉬 토큰 저장 {}", findToken);
+//            return;
+//        }
 //
-//        response.addHeader("Authorization", "BEARER" + " " + token);
-////        response.addHeader("RefreshAuthorization", "BEARER" + " " + refreshToken);
+//        //리프레쉬 토큰을 저장
+//        RefreshToken refresh = RefreshToken.builder()
+//                .refreshToken(refreshToken)
+//                .userEmail(userDetailsImpl.getUserEmail())
+//                .build();
 //
-//        log.info("액세스 토큰 {}", token);
-////        log.info("리프레쉬 토큰 {} ", refreshToken);
-////
-////        RefreshToken findToken = refreshTokenRepository.findByUserEmail(userDetailsImpl.getUserEmail());
-////
-////        if (findToken != null) {
-////            findToken.setRefreshToken(JwtTokenUtils.generateRefreshToken());
-////            log.info("리프레쉬 토큰 저장 {}", findToken);
-////            return;
-////        }
-////
-////        //리프레쉬 토큰을 저장
-////        RefreshToken refresh = RefreshToken.builder()
-////                .refreshToken(refreshToken)
-////                .userEmail(userDetailsImpl.getUserEmail())
-////                .build();
-////
-////        log.info("리프레쉬 토큰 저장 {}", refresh);
-////        refreshTokenRepository.save(refresh);
-//    }
+//        log.info("리프레쉬 토큰 저장 {}", refresh);
+//        refreshTokenRepository.save(refresh);
+    }*/
 }
