@@ -3,68 +3,68 @@ package com.sparta.meeting_platform.service;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.sparta.meeting_platform.domain.User;
+import com.sparta.meeting_platform.dto.Naver.NaverUserDto;
+import com.sparta.meeting_platform.repository.UserRepository;
+import lombok.AllArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.UUID;
 
 @Service
+@AllArgsConstructor
 public class SocialNaverService {
 
-    // 클라이언트로 부터 받은 code, state 를 네이버로 전달하여 access_Token 받는 함수
-    public String getNaverAccessToken(String code, String state) {
-        String access_Token = "";
-        String refresh_Token;
-        String reqURL = "https://nid.naver.com/oauth2.0/token";
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    // 로그인 기능 (추후 정훈님 완료되면 리턴값 변경하여 ResponseDto 리턴 예정)
+    public void naverLogin(String code, String state) {
 
         try {
-            JsonElement element = jsonElement(reqURL, null, code, state);
+            // 네이버에서 가져온 유저정보 + 임의 비밀번호 생성
+            NaverUserDto naverUser = getNaverUserInfo(code, state);
+            String password = UUID.randomUUID().toString();
+            String encodedPassword = passwordEncoder.encode(password);
 
-            access_Token = element.getAsJsonObject().get("access_token").getAsString();
-            refresh_Token = element.getAsJsonObject().get("refresh_token").getAsString();
+            // 네이버 ID DB 조회 후 없으면 회원가입
+            if (userRepository.findByNaverId(naverUser.getNaverId()).orElse(null) == null) {
+                User user = User.builder()
+                        .username(naverUser.getEmail())
+                        .password(encodedPassword)
+                        .nickName(naverUser.getNickName())
+                        .profileUrl(naverUser.getProfileUrl())
+                        .naverId(naverUser.getNaverId())
+                        .mannerTemp(36.5F)
+                        .build();
+                userRepository.save(user);
+            }
 
-            System.out.println("access_token : " + access_Token);
-            System.out.println("refresh_token : " + refresh_Token);
+            // 강제 로그인 (정훈님 필터 확인후 구현 예정)
 
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        System.out.println(access_Token);
-        createNaverUser(access_Token);
-        return access_Token;
-    }
-
-    // 받은 토큰을 사용하여 유저 정보 가져오는 함수
-    public void createNaverUser(String token) {
-
-        String reqURL = "https://openapi.naver.com/v1/nid/me";
-
-        try {
-            JsonElement element = jsonElement(reqURL, token, null, null);
-
-            String profileImageValue = String.valueOf(element.getAsJsonObject().get("response").getAsJsonObject().get("profile_image"));
-            String profileImage = profileImageValue.replaceAll("\\\\","" );
-            System.out.println("id : " + element.getAsJsonObject().get("response").getAsJsonObject().get("id"));
-            System.out.println("email : " + element.getAsJsonObject().get("response").getAsJsonObject().get("email"));
-            System.out.println("profile_image : " + element.getAsJsonObject().get("response").getAsJsonObject().get("profile_image"));
-            System.out.println(profileImage);
-
-        } catch (IOException e) {
+        } catch(IOException e){
             e.printStackTrace();
         }
     }
 
-    public JsonElement jsonElement(String reqURL, String token, String code, String state) throws IOException {
+
+    // 네이버에 요청해서 데이터 전달 받는 메소드
+    public JsonElement jsonElement (String reqURL, String token, String code, String state) throws IOException {
+
+        // 요청하는 URL 설정
         URL url = new URL(reqURL);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
-        //POST 요청을 위해 기본값이 false인 setDoOutput을 true로
+        // POST 요청을 위해 기본값이 false인 setDoOutput을 true로
         conn.setRequestMethod("POST");
         conn.setDoOutput(true);
 
-        //전송할 header 작성, access_token전송
+        // POST 요청에 필요한 데이터 저장 후 전송
         if (token == null) {
             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(conn.getOutputStream()));
             String sb = "grant_type=authorization_code" +  // TODO grant_type 입력
@@ -76,14 +76,11 @@ public class SocialNaverService {
             bw.write(sb);
             bw.flush();
             bw.close();
-        } else
+        } else {
             conn.setRequestProperty("Authorization", "Bearer " + token);
+        }
 
-        //결과 코드가 200이라면 성공
-        int responseCode = conn.getResponseCode();
-        System.out.println("responseCode : " + responseCode);
-
-        //요청을 통해 얻은 JSON타입의 Response 메세지 읽어오기
+        // 요청을 통해 얻은 JSON타입의 Response 메세지 읽어오기
         BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
         String line;
         StringBuilder result = new StringBuilder();
@@ -93,9 +90,34 @@ public class SocialNaverService {
         }
         br.close();
 
-        System.out.println("response body : " + result);
-
-        //Gson 라이브러리에 포함된 클래스로 JSON 파싱 객체 생성
+        // Gson 라이브러리에 포함된 클래스로 JSON 파싱
         return JsonParser.parseString(result.toString());
     }
+
+
+    // 네이버에 요청해서 회원정보 받는 메소드
+    public NaverUserDto getNaverUserInfo (String code, String state) throws IOException {
+
+        String codeReqURL = "https://nid.naver.com/oauth2.0/token";
+        String tokenReqURL = "https://openapi.naver.com/v1/nid/me";
+
+        // 코드를 네이버에 전달하여 엑세스 토큰 가져옴
+        JsonElement tokenElement = jsonElement(codeReqURL, null, code, state);
+        String access_Token = tokenElement.getAsJsonObject().get("access_token").getAsString();
+
+        // 엑세스 토큰을 네이버에 전달하여 유저정보 가져옴
+        JsonElement userInfoElement = jsonElement(tokenReqURL, access_Token, null, null);
+        String naverId = String.valueOf(userInfoElement.getAsJsonObject().get("response")
+                .getAsJsonObject().get("id"));
+        String email = String.valueOf(userInfoElement.getAsJsonObject().get("response")
+                .getAsJsonObject().get("email"));
+        String nickName = String.valueOf(userInfoElement.getAsJsonObject().get("response")
+                .getAsJsonObject().get("nickname"));
+        String profileUrlValue = String.valueOf(userInfoElement.getAsJsonObject().get("response")
+                .getAsJsonObject().get("profile_image"));
+        String profileUrl = profileUrlValue.replaceAll("\\\\", "");
+
+        return new NaverUserDto(naverId, email, nickName, profileUrl);
+    }
+
 }
