@@ -2,28 +2,28 @@ package com.sparta.meeting_platform.service;
 
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.domain.User;
+import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
-
-    public PostService(PostRepository postRepository, UserRepository userRepository) {
-        this.postRepository = postRepository;
-        this.userRepository = userRepository;
-    }
+    private final S3Service s3Service;
 
     //게시글 전체 조회
     @Transactional(readOnly = true)
@@ -72,6 +72,53 @@ public class PostService {
             postRepository.deleteById(postid);
             return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공"), HttpStatus.OK);
         }
+    }
+
+    // 게시글 등록
+    public ResponseEntity<FinalResponseDto<?>> createPost(Long userId, PostRequestDto requestDto, List<MultipartFile> files) {
+        User user = userRepository.findById(userId).orElse(null);
+
+        if (user==null) {
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
+        }
+
+        if(files.isEmpty()){
+            requestDto.setPostUrls(null);  // 기본 이미지로 변경 필요
+        } else {
+            List<String> postUrls = new ArrayList<>();
+            for(MultipartFile file : files){
+                postUrls.add(s3Service.upload(file));
+            }
+            requestDto.setPostUrls(postUrls);
+        }
+        Post post = postRepository.save(new Post(user, requestDto));
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공"), HttpStatus.OK);
+    }
+
+    // 게시글 수정
+    @Transactional
+    public ResponseEntity<FinalResponseDto<?>> updatePost(Long postId, Long userId, PostRequestDto requestDto, List<MultipartFile> files) {
+        Post post = postRepository.findByIdAndUserId(postId, userId).orElse(null);
+
+        if(post == null){
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 수정 실패"), HttpStatus.BAD_REQUEST);
+        }
+
+        if(files.isEmpty()){
+            requestDto.setPostUrls(null);  // 기본 이미지로 변경 필요
+        } else {
+            List<String> postUrls = new ArrayList<>();
+            for(MultipartFile file : files){
+                postUrls.add(s3Service.upload(file));
+            }
+            requestDto.setPostUrls(postUrls);
+        }
+
+        // DB 업데이트
+        post.update(requestDto);
+
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 수정 성공"), HttpStatus.OK);
+
     }
 
 }

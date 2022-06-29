@@ -2,7 +2,6 @@ package com.sparta.meeting_platform.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
-import com.sparta.meeting_platform.dto.Google.GoogleResponseDto;
 import com.sparta.meeting_platform.service.SocialGoogleService;
 
 import com.sparta.meeting_platform.service.SocialKakaoService;
@@ -24,20 +23,20 @@ public class SocialController {
     private final SocialNaverService socialNaverService;
     public final SocialKakaoService socialKakaoService;
 
-
-    //https://accounts.google.com/o/oauth2/v2/auth?client_id=1063605264794-i2qeg4lqsmi3u60pu51cdqcm9eemrb23.apps.googleusercontent.com&redirect_uri=http://localhost:8080/user/google/signin&response_type=code&scope=email%20profile%20openid&access_type=offline
     @GetMapping("/google")
-    public GoogleResponseDto googleLogin(@RequestParam(value = "code") String authCode,
+    public ResponseEntity<FinalResponseDto<?>> googleLogin(@RequestParam(value = "code") String authCode,
                                          HttpServletResponse httpServletResponse) throws JsonProcessingException {
-        GoogleResponseDto googleUserResponseDto = socialGoogleService.googleLogin(authCode, httpServletResponse);
-        return googleUserResponseDto;
+        return socialGoogleService.googleLogin(authCode, httpServletResponse);
     }
+
+
     @GetMapping("/kakao")
     public ResponseEntity<FinalResponseDto<?>> kakaoLogin(@RequestParam(value = "code") String code,
                                                           HttpServletResponse response) throws JsonProcessingException {
         log.info("요청 메서드 [GET] /api/user/kakao/callback");
         return socialKakaoService.kakaoLogin(code, response);
     }
+
 
     @GetMapping("/naver")
     public ResponseEntity<FinalResponseDto<?>> naverLogin(@RequestParam String code, @RequestParam String state,

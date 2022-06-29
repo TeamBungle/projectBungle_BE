@@ -2,12 +2,16 @@ package com.sparta.meeting_platform.controller;
 
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
+import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -40,4 +44,27 @@ public class PostController {
         Long userId = getUserId(userDetails);
         return postService.deletePost(postid, userId);
     }
+
+    // 게시글 작성
+    @PostMapping("/letter")
+    public ResponseEntity<FinalResponseDto<?>> createPost(
+            @RequestPart(value = "postDto") PostRequestDto requestDto,
+            @RequestPart(value = "postImg") List<MultipartFile> files,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        return postService.createPost(userDetails.getUser().getId(), requestDto, files);
+    }
+
+    // 게시글 수정
+    @PutMapping("/post/{postId}")
+    public ResponseEntity<FinalResponseDto<?>> updatePost(
+            @PathVariable Long postId,
+            @RequestPart(value = "postDto") PostRequestDto requestDto,
+            @RequestPart(value = "postImg") List<MultipartFile> files,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        return postService.updatePost(postId, userDetails.getUser().getId(), requestDto, files);
+    }
+
+
 }

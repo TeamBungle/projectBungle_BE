@@ -1,5 +1,6 @@
 package com.sparta.meeting_platform.domain;
 
+import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -58,4 +59,29 @@ public class Post {
     @Column
     private List<String> tags;
 
+    public Post(User user, PostRequestDto requestDto){
+        this.user = user;
+        this.title = requestDto.getTitle();
+        this.time = requestDto.getTime();
+        this.personnel = requestDto.getPersonnel();
+        this.place = requestDto.getPlace();
+        this.isLetter = requestDto.getIsLetter();
+        this.categories = requestDto.getCategories();
+        this.tags = requestDto.getTags();
+        this.postUrls = requestDto.getPostUrls();
+        this.createdAt = LocalDateTime.now();
+        this.modifiedAt = LocalDateTime.now();
+    }
+
+    public void update(PostRequestDto requestDto) {
+        this.title = requestDto.getTitle();
+        this.time = requestDto.getTime();
+        this.personnel = requestDto.getPersonnel();
+        this.place = requestDto.getPlace();
+        this.isLetter = requestDto.getIsLetter();
+        this.categories = requestDto.getCategories();
+        this.tags = requestDto.getTags();
+        this.postUrls = requestDto.getPostUrls();
+        this.modifiedAt = LocalDateTime.now();
+    }
 }
