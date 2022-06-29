@@ -21,7 +21,7 @@ public class PostController {
     }
 
     //게시긇 전체 조회
-    @GetMapping("/")
+    @GetMapping("")
     public ResponseEntity<FinalResponseDto<?>> getPosts(@AuthenticationPrincipal UserDetailsImpl userDetails){
         Long userId = getUserId(userDetails);
         return postService.getPosts(userId);

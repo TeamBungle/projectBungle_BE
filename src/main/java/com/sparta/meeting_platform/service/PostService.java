@@ -40,7 +40,7 @@ public class PostService {
             PostResponseDto postResponseDto = new PostResponseDto(posts);
             postList.add(postResponseDto);
         }
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공"), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
     }
 
     //게시글 상세 조회

@@ -68,7 +68,6 @@ public class SocialKakaoService {
     public String getAccessToken(String code) throws JsonProcessingException {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
-        System.out.println("getCode : " + code);
 
         //HTTP Body 생성
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();

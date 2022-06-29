@@ -24,7 +24,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        System.out.println("로그인 요청 들어왔니?");
         User userEntity = userRepository.findByUsername(username).orElseThrow(
                 () -> new NoSuchElementException("등록되지 않은 유저 입니다.")
         );
