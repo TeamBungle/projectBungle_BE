@@ -1,5 +1,6 @@
 package com.sparta.meeting_platform.domain;
 
+import com.sparta.meeting_platform.dto.user.SignUpRequestDto;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 
@@ -18,7 +19,7 @@ public class User {
     @Id
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String username;
 
     @Column(nullable = false)
@@ -44,5 +45,13 @@ public class User {
 
     @CreatedDate
     private LocalDateTime cteatedAt;
+
+    public User(SignUpRequestDto requestDto) {
+        this.username = requestDto.getUsername();
+        this.password = requestDto.getPassword();
+        this.nickName = requestDto.getNickName();
+        this.profileUrl = requestDto.getIconUrl();
+        this.mannerTemp = 36.5f;
+    }
 
 }

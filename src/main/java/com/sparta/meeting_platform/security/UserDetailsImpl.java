@@ -1,7 +1,8 @@
 package com.sparta.meeting_platform.security;
 
 
-import com.example.jwtprac.User;
+
+import com.sparta.meeting_platform.domain.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
