@@ -34,7 +34,7 @@ public class User {
     private Long kakaoId;
 
     @Column(unique = true)
-    private Long googleId;
+    private String googleId;
 
     @Column(unique = true)
     private String naverId;
@@ -56,7 +56,7 @@ public class User {
 
     @Builder
     public User(Long id, String username, String password, String nickName, String profileUrl, Long kakaoId,
-                Long googleId, String naverId, LocalDateTime createdAt, Float mannerTemp) {
+                String googleId, String naverId, LocalDateTime createdAt, Float mannerTemp) {
         this.id = id;
         this.username = username;
         this.password = password;

@@ -1,4 +1,4 @@
-package com.sparta.meeting_platform.dto.Google;
+package com.sparta.meeting_platform.dto.GoogleDto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
