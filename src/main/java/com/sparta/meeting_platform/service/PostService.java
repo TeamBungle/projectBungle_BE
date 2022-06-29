@@ -66,7 +66,7 @@ public class PostService {
                 () -> new NullPointerException("해당 게시글이 존재하지 않습니다.")
         );
 
-        if (post.getUser().getId().equals(userId)) {
+        if (!post.getUser().getId().equals(userId)) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "본인 게시글이 아닙니다."),HttpStatus.BAD_REQUEST);
         } else {
             postRepository.deleteById(postid);
