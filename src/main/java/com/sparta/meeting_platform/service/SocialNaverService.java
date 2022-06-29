@@ -4,12 +4,20 @@ package com.sparta.meeting_platform.service;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.sparta.meeting_platform.domain.User;
+import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.Naver.NaverUserDto;
 import com.sparta.meeting_platform.repository.UserRepository;
+import com.sparta.meeting_platform.security.JwtTokenProvider;
+import com.sparta.meeting_platform.security.UserDetailsImpl;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -21,19 +29,22 @@ public class SocialNaverService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
     // 로그인 기능 (추후 정훈님 완료되면 리턴값 변경하여 ResponseDto 리턴 예정)
-    public void naverLogin(String code, String state) {
+    public ResponseEntity<FinalResponseDto<?>> naverLogin(String code, String state, HttpServletResponse response) {
 
         try {
             // 네이버에서 가져온 유저정보 + 임의 비밀번호 생성
             NaverUserDto naverUser = getNaverUserInfo(code, state);
             String password = UUID.randomUUID().toString();
             String encodedPassword = passwordEncoder.encode(password);
+            // 네이버 ID로 유저 정보 DB 에서 조회
+            User user = userRepository.findByNaverId(naverUser.getNaverId()).orElse(null);
 
-            // 네이버 ID DB 조회 후 없으면 회원가입
-            if (userRepository.findByNaverId(naverUser.getNaverId()).orElse(null) == null) {
-                User user = User.builder()
+            // 없으면 회원가입
+            if (user == null) {
+                user = User.builder()
                         .username(naverUser.getEmail())
                         .password(encodedPassword)
                         .nickName(naverUser.getNickName())
@@ -43,18 +54,22 @@ public class SocialNaverService {
                         .build();
                 userRepository.save(user);
             }
-
-            // 강제 로그인 (정훈님 필터 확인후 구현 예정)
-
-
-        } catch(IOException e){
-            e.printStackTrace();
+            // 강제 로그인
+            Authentication authentication = new UsernamePasswordAuthenticationToken(user.getUsername(), null);
+            UserDetailsImpl userDetailsImpl = ((UserDetailsImpl) authentication.getPrincipal());
+            String token = jwtTokenProvider.generateJwtToken(userDetailsImpl);
+            response.addHeader("Authorization", "BEARER" + " " + token);
+            return new ResponseEntity<>(new FinalResponseDto<>
+                    (true, "로그인 성공!!", user.getNickName(), user.getMannerTemp()), HttpStatus.OK);
+        } catch (IOException e) {
+            return new ResponseEntity<>(new FinalResponseDto<>
+                    (false, "로그인 실패"), HttpStatus.BAD_REQUEST);
         }
     }
 
 
     // 네이버에 요청해서 데이터 전달 받는 메소드
-    public JsonElement jsonElement (String reqURL, String token, String code, String state) throws IOException {
+    public JsonElement jsonElement(String reqURL, String token, String code, String state) throws IOException {
 
         // 요청하는 URL 설정
         URL url = new URL(reqURL);
@@ -96,7 +111,7 @@ public class SocialNaverService {
 
 
     // 네이버에 요청해서 회원정보 받는 메소드
-    public NaverUserDto getNaverUserInfo (String code, String state) throws IOException {
+    public NaverUserDto getNaverUserInfo(String code, String state) throws IOException {
 
         String codeReqURL = "https://nid.naver.com/oauth2.0/token";
         String tokenReqURL = "https://openapi.naver.com/v1/nid/me";

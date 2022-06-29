@@ -40,8 +40,8 @@ public class SocialController {
     }
 
     @GetMapping("/naver")
-    // 추후 정훈님 완료되면 리턴값 변경하여 ResponseDto 리턴 예정
-    public void naverLogin(@RequestParam String code, @RequestParam String state)  {
-        socialNaverService.naverLogin(code, state);
+    public ResponseEntity<FinalResponseDto<?>> naverLogin(@RequestParam String code, @RequestParam String state,
+                                                          HttpServletResponse response)  {
+        return socialNaverService.naverLogin(code, state, response);
     }
 }
