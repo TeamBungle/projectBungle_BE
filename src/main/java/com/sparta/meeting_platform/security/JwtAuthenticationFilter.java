@@ -19,15 +19,18 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
         String apiPath = ((HttpServletRequest) request).getServletPath();
 
-        if (apiPath.equals("/user/login")||apiPath.equals("/user/signup")||apiPath.equals("/user/duplicate/username")) {
+        if (apiPath.equals("/user/login") || apiPath.equals("/user/signup") || apiPath.equals("/user/duplicate/username")
+                || apiPath.equals("/user/signin/kakao") || apiPath.equals("/user/signin/google")
+                || apiPath.equals("/user/signin/naver")) {
             chain.doFilter(request, response); // 그냥 필터 타고 넘어가라
         } else {
             // 헤더에서 jwt 토큰 받아옴
             String token = ((HttpServletRequest) request).getHeader("Authorization");
-            if( token == null) {
+            if (token == null) {
                 System.out.println("로그인이 필요합니다.");
                 throw new JwtException("로그인이 필요합니다.");
             }

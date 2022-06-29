@@ -15,15 +15,10 @@ import java.util.List;
 public class FinalResponseDto<T> {
 
     private List<T> List;
-
     private boolean response;
-
     private String message;
-
     private PostResponseDto postResponseDto;
-
     private String nickName;
-
     private Float mannerTemp;
 
     public FinalResponseDto(boolean response, String message) {
@@ -43,7 +38,7 @@ public class FinalResponseDto<T> {
         this.postResponseDto = postResponseDto;
     }
 
-    public FinalResponseDto(boolean response, String message, String nickname , float mannerTemp) {
+    public FinalResponseDto(boolean response, String message, String nickname, float mannerTemp) {
         this.response = response;
         this.message = message;
         this.nickName = nickname;

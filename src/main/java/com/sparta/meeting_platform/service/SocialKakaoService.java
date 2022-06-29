@@ -35,6 +35,8 @@ public class SocialKakaoService {
 
     @Value("${kakao.client_id}")
     String kakaoClientId;
+    @Value("${kakao.redirect_uri}")
+    String RedirectURI;
 
     private final BCryptPasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
@@ -61,7 +63,7 @@ public class SocialKakaoService {
         Float mannerTemp = kakaoUser.getMannerTemp();
 
         return new ResponseEntity<>(new FinalResponseDto<>
-                (true, "로그인 성공!!", nickname, mannerTemp), HttpStatus.OK);
+                (true, "로그인 성공", nickname, mannerTemp), HttpStatus.OK);
     }
     //header 에 Content-type 지정
     //1번
@@ -73,7 +75,7 @@ public class SocialKakaoService {
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "authorization_code");
         body.add("client_id", kakaoClientId);
-        body.add("redirect_uri", "http://localhost:3000/user/signin/kakao");
+        body.add("redirect_uri", RedirectURI);
         body.add("code", code);
 
         //HTTP 요청 보내기
