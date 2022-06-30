@@ -3,9 +3,6 @@ package com.sparta.meeting_platform.dto.PostDto;
 import com.sparta.meeting_platform.domain.Post;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.security.PrivateKey;
-import java.sql.PreparedStatement;
 import java.util.List;
 
 @Getter
