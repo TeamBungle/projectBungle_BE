@@ -9,7 +9,7 @@ import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-
+//user
 @Getter
 @NoArgsConstructor()
 @Setter
