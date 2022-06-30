@@ -67,10 +67,12 @@ public class PostService {
         List<PostResponseDto> postList = new ArrayList<>();
 
         for (String category : categories) {
-            List<Post> post = postRepository.findAllByCategories(category);
-
-            for (Post posts : post) {
-                PostResponseDto postResponseDto = new PostResponseDto(posts);
+            List<Post> posts = postRepository.findAllByCategories(category);
+            if(posts.size() < 1){
+                return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 조회해주세요"), HttpStatus.BAD_REQUEST);
+            }
+            for (Post post : posts) {
+                PostResponseDto postResponseDto = new PostResponseDto(post);
                 postList.add(postResponseDto);
             }
         }
@@ -89,13 +91,17 @@ public class PostService {
         List<PostResponseDto> postList = new ArrayList<>();
 
         for (String tag : tags) {
-            List<Post> post = postRepository.findAllByTags(tag);
+            List<Post> posts = postRepository.findAllByTags(tag);
+            if(posts.size() < 1){
+                return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 조회해주세요"), HttpStatus.BAD_REQUEST);
+            }
 
-            for (Post posts : post) {
-                PostResponseDto postResponseDto = new PostResponseDto(posts);
+            for (Post post : posts) {
+                PostResponseDto postResponseDto = new PostResponseDto(post);
                 postList.add(postResponseDto);
             }
         }
+
 
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
 
@@ -126,9 +132,11 @@ public class PostService {
         }
         List<PostResponseDto> postList = new ArrayList<>();
         List<Post> posts = postRepository.findAllByTitleContainsOrderByCreatedAtDesc(keyword);
+
         if(posts.size() < 1){
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 검색해주세요"), HttpStatus.BAD_REQUEST);
         }
+
         for (Post post : posts) {
             Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
             Boolean isLike;
