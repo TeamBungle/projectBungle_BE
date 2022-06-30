@@ -1,10 +1,11 @@
 package com.sparta.meeting_platform.service;
 
+import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.domain.User;
+import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
-import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.repository.LikeRepository;
 import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.repository.UserRepository;
@@ -38,10 +39,18 @@ public class PostService {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 조회 실패"), HttpStatus.BAD_REQUEST);
         }
         List<PostResponseDto> postList = new ArrayList<>();
-        List<Post> post = postRepository.findAllByOrderByCreatedAtDesc();
+        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
 
-        for (Post posts : post) {
-            PostResponseDto postResponseDto = new PostResponseDto(posts);
+        for (Post post : posts) {
+            Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
+            Boolean isLike;
+
+            if(like == null){
+                isLike = false;
+            }else {
+                isLike = like.getIsLike();
+            }
+            PostResponseDto postResponseDto = new PostResponseDto(post,isLike);
             postList.add(postResponseDto);
         }
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
@@ -69,12 +78,14 @@ public class PostService {
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
     }
     //태그별 게시글 조회
+    @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getPostsByTags(Long userId, List<String> tags) {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 조회 실패"), HttpStatus.BAD_REQUEST);
         }
+
         List<PostResponseDto> postList = new ArrayList<>();
 
         for (String tag : tags) {
@@ -106,7 +117,32 @@ public class PostService {
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공",postResponseDto), HttpStatus.OK);
     }
 
+    //게시글 조회 (제목에 포함된 단어로)
+    public ResponseEntity<FinalResponseDto<?>> getSearch(String keyword, Long userId) {
+        Optional<User> user = userRepository.findById(userId);
 
+        if (!user.isPresent()) {
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 검색 실패"), HttpStatus.BAD_REQUEST);
+        }
+        List<PostResponseDto> postList = new ArrayList<>();
+        List<Post> posts = postRepository.findAllByTitleContainsOrderByCreatedAtDesc(keyword);
+        if(posts.size() < 1){
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 검색해주세요"), HttpStatus.BAD_REQUEST);
+        }
+        for (Post post : posts) {
+            Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
+            Boolean isLike;
+
+            if (like == null) {
+                isLike = false;
+            } else {
+                isLike = like.getIsLike();
+            }
+            PostResponseDto postResponseDto = new PostResponseDto(post, isLike);
+            postList.add(postResponseDto);
+        }
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
+    }
 
     //게시글 삭제
     @Transactional
@@ -186,5 +222,7 @@ public class PostService {
         }
         return new ResponseEntity<>(new FinalResponseDto<>(true, "좋아요한 게시글 조회 성공", postList), HttpStatus.OK);
     }
+
+
 }
 

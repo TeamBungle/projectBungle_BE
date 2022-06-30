@@ -13,6 +13,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.sql.ResultSet;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -61,6 +62,14 @@ public class PostController {
         return postService.getPostsDetails(postid, userId);
     }
 
+    //게시글 검색(제목에포함된단어로)
+    @GetMapping("/search")
+    public ResponseEntity<FinalResponseDto<?>> getSearch(@RequestParam(value = "keyword") String keyword,
+                                                         @AuthenticationPrincipal UserDetailsImpl userDetails){
+        Long userId = getUserId(userDetails);
+        return postService.getSearch(keyword,userId);
+    }
+
     //게시글 삭제
     @DeleteMapping(value = {"/{postid}/letter", "/{postid}/video"})
     public ResponseEntity<FinalResponseDto<?>> deletePost(
@@ -105,6 +114,8 @@ public class PostController {
     public ResponseEntity<FinalResponseDto<?>> getLiedPosts(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         return postService.getLikedPosts(getUserId(userDetails));
     }
+
+
 
 
 }
