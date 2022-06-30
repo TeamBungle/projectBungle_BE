@@ -1,7 +1,5 @@
 package com.sparta.meeting_platform.controller;
 
-
-
 import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.user.DuplicateRequestDto;
 import com.sparta.meeting_platform.dto.user.LoginRequestDto;
