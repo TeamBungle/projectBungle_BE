@@ -3,7 +3,6 @@ package com.sparta.meeting_platform.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.service.SocialGoogleService;
-
 import com.sparta.meeting_platform.service.SocialKakaoService;
 import com.sparta.meeting_platform.service.SocialNaverService;
 import lombok.RequiredArgsConstructor;

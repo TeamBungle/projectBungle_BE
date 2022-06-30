@@ -38,4 +38,4 @@ out/
 
 # Application.properties ignore
 src/main/resources/application.properties
-.properties
+*.properties
