@@ -5,8 +5,11 @@ import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
+import com.sparta.meeting_platform.repository.LikeRepository;
 import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.repository.UserRepository;
+import com.sparta.meeting_platform.repository.mapping.PostMapping;
+import com.sparta.meeting_platform.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +26,7 @@ import java.util.Optional;
 public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final LikeRepository likeRepository;
     private final S3Service s3Service;
 
     //게시글 전체 조회
@@ -158,7 +162,6 @@ public class PostService {
             }
             requestDto.setPostUrls(postUrls);
         }
-
         // DB 업데이트
         post.update(requestDto);
 
@@ -166,5 +169,22 @@ public class PostService {
 
     }
 
+    // 좋아요한 게시글 전체 조회
+    public ResponseEntity<FinalResponseDto<?>> getLikedPosts(Long userId) {
+        Optional<User> user = userRepository.findById(userId);
+
+        if (!user.isPresent()) {
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "좋아요한 게시글 조회 실패"), HttpStatus.BAD_REQUEST);
+        }
+        List<PostMapping> post = likeRepository.findAllByUserIdAndIsLikeTrue(userId);
+
+        List<PostResponseDto> postList = new ArrayList<>();
+
+        for (PostMapping posts : post) {
+            PostResponseDto postResponseDto = new PostResponseDto(posts.getPost());
+            postList.add(postResponseDto);
+        }
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "좋아요한 게시글 조회 성공", postList), HttpStatus.OK);
+    }
 }
 
