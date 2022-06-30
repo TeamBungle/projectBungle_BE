@@ -3,7 +3,9 @@ package com.sparta.meeting_platform.controller;
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
+import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
+import com.sparta.meeting_platform.service.LikeService;
 import com.sparta.meeting_platform.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import java.util.List;
 @RequestMapping("/posts")
 public class PostController {
     private final PostService postService;
+    private final LikeService likeService;
 
     private Long getUserId(UserDetailsImpl userDetails) {
         User user = userDetails.getUser();
@@ -74,7 +77,7 @@ public class PostController {
             @RequestPart(value = "postImg") List<MultipartFile> files,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
-        return postService.createPost(userDetails.getUser().getId(), requestDto, files);
+        return postService.createPost(getUserId(userDetails), requestDto, files);
     }
 
     // 게시글 수정
@@ -85,7 +88,23 @@ public class PostController {
             @RequestPart(value = "postImg") List<MultipartFile> files,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
-        return postService.updatePost(postId, userDetails.getUser().getId(), requestDto, files);
+        return postService.updatePost(postId, getUserId(userDetails), requestDto, files);
     }
+
+    // 찜하기
+    @PostMapping("/like/{postId}")
+    public ResponseEntity<FinalResponseDto<?>> heartClick(
+            @PathVariable Long postId ,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        return likeService.setLike(postId, getUserId(userDetails));
+    }
+
+    // 찜한 게시글 전체 조회
+    @GetMapping("/like")
+    public ResponseEntity<FinalResponseDto<?>> getLiedPosts(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return postService.getLikedPosts(getUserId(userDetails));
+    }
+
 
 }

@@ -6,7 +6,6 @@ import com.sparta.meeting_platform.dto.user.LoginRequestDto;
 import com.sparta.meeting_platform.dto.user.SignUpRequestDto;
 import com.sparta.meeting_platform.service.UserService;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
