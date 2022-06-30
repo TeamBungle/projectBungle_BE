@@ -37,7 +37,7 @@ public class Post {
 
     @ElementCollection
     @CollectionTable
-    @Column
+    @Column(name = "category")
     private List<String> categories;
 
     @CreatedDate
@@ -51,12 +51,12 @@ public class Post {
 
     @ElementCollection
     @CollectionTable
-    @Column
+    @Column(name = "postUrl")
     private List<String> postUrls;
 
     @ElementCollection
     @CollectionTable
-    @Column
+    @Column(name = "tag")
     private List<String> tags;
 
     public Post(User user, PostRequestDto requestDto){

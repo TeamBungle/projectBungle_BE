@@ -43,6 +43,49 @@ public class PostService {
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
     }
 
+    //카테고리별 게시글 조회
+    @Transactional(readOnly = true)
+    public ResponseEntity<FinalResponseDto<?>> getPostsByCategories(Long userId, List<String> categories) {
+        Optional<User> user = userRepository.findById(userId);
+
+        if (!user.isPresent()) {
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 조회 실패"), HttpStatus.BAD_REQUEST);
+        }
+        List<PostResponseDto> postList = new ArrayList<>();
+
+        for (String category : categories) {
+            List<Post> post = postRepository.findAllByCategories(category);
+
+            for (Post posts : post) {
+                PostResponseDto postResponseDto = new PostResponseDto(posts);
+                postList.add(postResponseDto);
+            }
+        }
+
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
+    }
+    //태그별 게시글 조회
+    public ResponseEntity<FinalResponseDto<?>> getPostsByTags(Long userId, List<String> tags) {
+        Optional<User> user = userRepository.findById(userId);
+
+        if (!user.isPresent()) {
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 조회 실패"), HttpStatus.BAD_REQUEST);
+        }
+        List<PostResponseDto> postList = new ArrayList<>();
+
+        for (String tag : tags) {
+            List<Post> post = postRepository.findAllByTags(tag);
+
+            for (Post posts : post) {
+                PostResponseDto postResponseDto = new PostResponseDto(posts);
+                postList.add(postResponseDto);
+            }
+        }
+
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
+
+    }
+
     //게시글 상세 조회
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>>getPostsDetails(Long postId, Long userId) {
@@ -58,6 +101,8 @@ public class PostService {
 
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공",postResponseDto), HttpStatus.OK);
     }
+
+
 
     //게시글 삭제
     @Transactional

@@ -26,21 +26,43 @@ public class PostController {
 
     //게시긇 전체 조회
     @GetMapping("")
-    public ResponseEntity<FinalResponseDto<?>> getPosts(@AuthenticationPrincipal UserDetailsImpl userDetails){
+    public ResponseEntity<FinalResponseDto<?>> getPosts(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         Long userId = getUserId(userDetails);
         return postService.getPosts(userId);
     }
 
+    // 카테고리별 게시글 조회
+    @GetMapping("/categories")
+    public ResponseEntity<FinalResponseDto<?>> getPostsByCategories(
+            @RequestParam(value = "categories",required = false, defaultValue = "") List<String> categories,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        Long userId = getUserId(userDetails);
+        return postService.getPostsByCategories(userId,categories);
+    }
+
+    //태그별 게시글 조회
+    @GetMapping("/tags")
+    public ResponseEntity<FinalResponseDto<?>> getPostsByTags(
+            @RequestParam(value = "tags",required = false,defaultValue = "") List<String> tags,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        Long userId = getUserId(userDetails);
+        return postService.getPostsByTags(userId,tags);
+    }
+
     //게시글 상세 조회
     @GetMapping("/{postid}")
-    public ResponseEntity<FinalResponseDto<?>> getPostDetails(@PathVariable Long postid, @AuthenticationPrincipal UserDetailsImpl userDetails){
+    public ResponseEntity<FinalResponseDto<?>> getPostDetails(
+            @PathVariable Long postid,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         Long userId = getUserId(userDetails);
         return postService.getPostsDetails(postid, userId);
     }
 
     //게시글 삭제
     @DeleteMapping(value = {"/{postid}/letter", "/{postid}/video"})
-    public ResponseEntity<FinalResponseDto<?>> deletePost(@PathVariable Long postid, @AuthenticationPrincipal UserDetailsImpl userDetails){
+    public ResponseEntity<FinalResponseDto<?>> deletePost(
+            @PathVariable Long postid,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         Long userId = getUserId(userDetails);
         return postService.deletePost(postid, userId);
     }
