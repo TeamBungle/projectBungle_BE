@@ -46,12 +46,12 @@ public class User {
     private Float mannerTemp;
 
 
-    public User(SignUpRequestDto requestDto) {
+    public User(SignUpRequestDto requestDto,String userUrl) {
         this.username = requestDto.getUsername();
         this.password = requestDto.getPassword();
         this.nickName = requestDto.getNickName();
-        this.profileUrl = requestDto.getIconUrl();
         this.mannerTemp = 36.5f;
+        this.profileUrl = userUrl;
     }
 
     @Builder

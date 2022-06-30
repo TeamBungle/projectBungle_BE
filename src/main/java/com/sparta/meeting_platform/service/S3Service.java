@@ -26,9 +26,9 @@ public class S3Service {
     @Value("${iamSecretKey}")
     private String secretKey;
     @Value("${region}")
-    private final String region = "ap-northeast-2";
+    private String region;
     @Value("${Bucket}")
-    private final String bucket = "team7-bucket";
+    private String bucket;
     @PostConstruct
     public void setS3Client() {
         AWSCredentials credentials = new BasicAWSCredentials(this.accessKey, this.secretKey);

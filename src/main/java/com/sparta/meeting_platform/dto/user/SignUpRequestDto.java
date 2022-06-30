@@ -26,6 +26,4 @@ public class SignUpRequestDto {
     @NotNull(message = "닉네임은 공백이 될 수 없습니다.")
     @Pattern(regexp = "^[0-9A-Za-z가-힣]{4,20}$", message = "닉네임은 한글,영문,숫자 4~20자리여야 합니다.")
     private String nickName;
-
-    private String iconUrl;
 }
