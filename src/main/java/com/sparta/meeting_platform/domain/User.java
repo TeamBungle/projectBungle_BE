@@ -1,12 +1,14 @@
 package com.sparta.meeting_platform.domain;
 
 import com.sparta.meeting_platform.dto.user.SignUpRequestDto;
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.logging.Level;
 
 @Getter
 @NoArgsConstructor()
