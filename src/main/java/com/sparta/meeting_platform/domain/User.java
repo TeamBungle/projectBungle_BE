@@ -69,4 +69,9 @@ public class User {
         this.createdAt = createdAt;
         this.mannerTemp = mannerTemp;
     }
+
+    public void setReport(){
+        this.mannerTemp -= 1.0f;
+    }
+
 }
