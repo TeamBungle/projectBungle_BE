@@ -35,8 +35,6 @@ public class ChatMessage {
     private String nickName;
     // 프로필 사진
     private String profileUrl;
-    // 채팅방 인원수, 채팅방 내에서 메세지가 전달될때 인원수 갱신시 사용
-    private long userCount;
 
 }
 

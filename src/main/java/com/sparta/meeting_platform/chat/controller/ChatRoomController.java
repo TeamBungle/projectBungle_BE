@@ -11,11 +11,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+// Websocket 통신 외에 채팅 화면 View 구성을 위해 필요한 Controller 생성
 @Log4j2
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/chat")
-public class ChatRoomController {   // 채팅화면을 보여주기 위한 Controller.
+public class ChatRoomController {
     private final ChatService chatService;
 
     // 채팅방 생성
@@ -25,11 +26,13 @@ public class ChatRoomController {   // 채팅화면을 보여주기 위한 Contr
         return chatService.createRoom(postid, roomId);
     }
 
+
     // 채팅 리스트 화면
     @GetMapping("/room")
     public String rooms(Model model) {
         return "/chat/room";
     }
+
 
     // 모든 채팅방 목록 반환
     @GetMapping("/rooms")
@@ -45,6 +48,7 @@ public class ChatRoomController {   // 채팅화면을 보여주기 위한 Contr
         model.addAttribute("roomId", roomId);
         return "/chat/roomdetail";
     }
+
 
     // 특정 채팅방 조회
     @GetMapping("/room/{roomId}")

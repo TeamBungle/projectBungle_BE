@@ -6,6 +6,16 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+
+/*  Config 작성
+ *  Stomp 를 사용하기 위해 @EnableWebSocketMessageBroker 추가
+ *  WebSocketMessageBrokerConfigurer 상속하여
+ *  configureMessageBroker 구현
+ *  pub/sub 메시징을 구현하기 위해 메시지를 발행하는 요청의 prefix 는 /pub 로 시작하도록 설정
+ *  메시지를 구독하는 요청의 prefix 는 /sub 로 시작하도록 설정
+ *  그리고 Stomp websocket 의 연결 endpoint 는 /ws/chat 로 설정
+ * */
+
 @Configuration
 @EnableWebSocketMessageBroker   // Stomp 를 사용하기위해 선언하는 어노테이션
 public class ChatConfig implements WebSocketMessageBrokerConfigurer {
@@ -31,11 +41,11 @@ public class ChatConfig implements WebSocketMessageBrokerConfigurer {
         // "/queue", "/topic" 이 두 경로가 prefix(api 경로 맨 앞)에 붙은 경우,
         // messageBroker 가 잡아서 해당 채팅방을 구독하고 있는 클라이언트에게 메시지를 전달해줌
         // 주로 "/queue"는 1 대 1 메시징, "/topic"은 1 대 N 메시징일 때 주로 사용함.
-        registry.enableSimpleBroker("/queue", "/topic");
+        registry.enableSimpleBroker("/queue", "/topic");    // sub
 
         // Client 에서 SEND 요청을 처리
         // 메시지 보낼 때 관련 경로 설정
-        registry.setApplicationDestinationPrefixes("/app");
+        registry.setApplicationDestinationPrefixes("/app"); // pub
     }
 
 }

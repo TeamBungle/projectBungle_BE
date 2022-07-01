@@ -20,6 +20,11 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.util.*;
 
+
+/*   ChatService 작성
+ *   채팅방 정보를 Map 으로 관리 하고 DB 로 채팅방 정보를 저장함
+ * */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -33,7 +38,6 @@ public class ChatService {
     private final SimpMessageSendingOperations sendingOperations; // 특정 Broker 로 메세지를 전달
 
     private Map<String, ChatRoom> chatRooms;
-
 
     @PostConstruct
     //의존관게 주입완료되면 실행되는 코드
@@ -54,12 +58,18 @@ public class ChatService {
         return chatRooms.get(roomId);
     }
 
-    //채팅방 생성
+
+    // 채팅방 생성
     public ChatRoom createRoom(Long postId, RoomIdDto roomId) {
+        // postId로 게시판 내용 가져옴
         Optional<Post> post = postRepository.findById(postId);
-        String s=roomId.getRoomId();
+
+        // Client 로 부터 받은 채팅방 아이디 저장
+        String roomName =roomId.getRoomId();
+
+        // 채팅방 정보중 필요한 부분만 꺼내서 DB 저장 후 채팅방 생성
         ChatRoom chatRoom = ChatRoom.builder()
-               .roomId(s)
+               .roomId(roomName)
                .title(post.get().getTitle())
                .personnel(post.get().getPersonnel())
                .build();
@@ -69,10 +79,7 @@ public class ChatService {
     }
 
 
-    /**
-     * 채팅방에 메시지 발송
-     */
-
+    // 메시지 발송
     public void enter(ChatMessageDto message, String token) {
         // 토큰으로 유저정보 가져오기
         UserDetailsImpl userDetails = (UserDetailsImpl) jwtTokenProvider.getAuthentication(token).getPrincipal();
@@ -80,12 +87,11 @@ public class ChatService {
                 () -> new IllegalArgumentException("해당 유저를 찾을 수 없습니다.")
         );
 
+        // 가져온 유저정보로 메세지 전달내용 추가
         message.setNickName(user.getNickName());
         message.setProfileUrl(user.getProfileUrl());
 
-        // 유저 카운트 설정
-//        message.setUserCount(chatRoomRepository.getUserCount(message.getRoomId()));
-
+       // DB에 메세지 내용 저장
         ChatMessage chatMessage = ChatMessage.builder()
                 .type(message.getType())
                 .roomId(message.getRoomId())
