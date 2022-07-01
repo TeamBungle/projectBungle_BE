@@ -1,19 +1,32 @@
-package com.sparta.meeting_platform.chat.dto;
+package com.sparta.meeting_platform.chat.model;
 
-import com.sparta.meeting_platform.chat.model.ChatMessage;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@Entity
 @Getter
-@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChatMessageDto {
+public class ChatMessage {
 
+    // 메시지 타입 : 입장, 퇴장, 채팅
+    public enum MessageType {
+        ENTER, QUIT, TALK
+    }
+
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    private Long id;
     // 메시지 타입
-    private ChatMessage.MessageType type;
+    private MessageType type;
     // 채팅방 ID
     private String roomId;
     // 내용
@@ -26,3 +39,4 @@ public class ChatMessageDto {
     private long userCount;
 
 }
+

@@ -1,5 +1,6 @@
 package com.sparta.meeting_platform.chat.controller;
 
+import com.sparta.meeting_platform.chat.dto.RoomIdDto;
 import com.sparta.meeting_platform.chat.model.ChatRoom;
 import com.sparta.meeting_platform.chat.service.ChatService;
 import lombok.RequiredArgsConstructor;
@@ -18,10 +19,10 @@ public class ChatRoomController {   // 채팅화면을 보여주기 위한 Contr
     private final ChatService chatService;
 
     // 채팅방 생성
-    @PostMapping("/room")
+    @PostMapping("/room/{postid}")
     @ResponseBody
-    public ChatRoom createRoom(@RequestParam String name) {
-        return chatService.createRoom(name);
+    public ChatRoom createRoom(@PathVariable Long postid, @RequestBody RoomIdDto roomId) {
+        return chatService.createRoom(postid, roomId);
     }
 
     // 채팅 리스트 화면

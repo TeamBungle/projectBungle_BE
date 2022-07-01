@@ -1,11 +1,11 @@
 package com.sparta.meeting_platform.chat.controller;
 
 import com.sparta.meeting_platform.chat.dto.ChatMessageDto;
-import com.sparta.meeting_platform.security.JwtTokenProvider;
-import lombok.RequiredArgsConstructor;
+import com.sparta.meeting_platform.chat.service.ChatService;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RestController;
 
 
@@ -13,9 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class MessageController {
 
-    private final JwtTokenProvider jwtTokenProvider;
+    private final ChatService chatService;
 
-    private final SimpMessageSendingOperations sendingOperations; // 특정 Broker 로 메세지를 전달
 
     // Client 가 SEND 할 수 있는 경로
     // stompConfig 에서 설정한 applicationDestinationPrefixes 와 @MessageMapping 경로가 병합됨
@@ -27,12 +26,8 @@ public class MessageController {
     // 이때 /topic/chat/room/[roomId]는 채팅방을 구분하는 값이다.
     // 기존의 핸들러 ChatHandler 의 역할을 대신 해주므로 핸들러는 없어도 된다.
     @MessageMapping("/chat/message")    // WebSocket 으로 들어오는 메세지 발행을 처리한다.
-    public void enter(ChatMessageDto message, @Header("token") String token) {
+    public void enter(ChatMessageDto message, @Header("Token") String token) {
+        chatService.enter(message, token);
 
-
-        if (ChatMessageDto.MessageType.ENTER.equals(message.getType())) {
-            message.setMessage(message.getNickName() + "님이 입장하였습니다.");
-        }
-        sendingOperations.convertAndSend("/topic/chat/room/" + message.getRoomId(), message);
     }
 }
