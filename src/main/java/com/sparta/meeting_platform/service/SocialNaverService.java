@@ -30,7 +30,6 @@ public class SocialNaverService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
-    // 로그인 기능 (추후 정훈님 완료되면 리턴값 변경하여 ResponseDto 리턴 예정)
     public ResponseEntity<FinalResponseDto<?>> naverLogin(String code, String state, HttpServletResponse response) {
 
         try {
