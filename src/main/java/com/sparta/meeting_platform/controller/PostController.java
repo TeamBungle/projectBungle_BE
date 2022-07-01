@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.sql.ResultSet;
+import java.text.ParseException;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -30,7 +31,7 @@ public class PostController {
 
     //게시긇 전체 조회
     @GetMapping("")
-    public ResponseEntity<FinalResponseDto<?>> getPosts(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<FinalResponseDto<?>> getPosts(@AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
         Long userId = getUserId(userDetails);
         return postService.getPosts(userId);
     }
@@ -39,7 +40,7 @@ public class PostController {
     @GetMapping("/categories")
     public ResponseEntity<FinalResponseDto<?>> getPostsByCategories(
             @RequestParam(value = "categories",required = false, defaultValue = "") List<String> categories,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
         Long userId = getUserId(userDetails);
         return postService.getPostsByCategories(userId,categories);
     }
@@ -48,7 +49,7 @@ public class PostController {
     @GetMapping("/tags")
     public ResponseEntity<FinalResponseDto<?>> getPostsByTags(
             @RequestParam(value = "tags",required = false,defaultValue = "") List<String> tags,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
         Long userId = getUserId(userDetails);
         return postService.getPostsByTags(userId,tags);
     }
@@ -57,7 +58,7 @@ public class PostController {
     @GetMapping("/{postid}")
     public ResponseEntity<FinalResponseDto<?>> getPostDetails(
             @PathVariable Long postid,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
         Long userId = getUserId(userDetails);
         return postService.getPostsDetails(postid, userId);
     }
@@ -65,7 +66,7 @@ public class PostController {
     //게시글 검색(제목에포함된단어로)
     @GetMapping("/search")
     public ResponseEntity<FinalResponseDto<?>> getSearch(@RequestParam(value = "keyword") String keyword,
-                                                         @AuthenticationPrincipal UserDetailsImpl userDetails){
+                                                         @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
         Long userId = getUserId(userDetails);
         return postService.getSearch(keyword,userId);
     }
@@ -111,7 +112,7 @@ public class PostController {
 
     // 찜한 게시글 전체 조회
     @GetMapping("/like")
-    public ResponseEntity<FinalResponseDto<?>> getLiedPosts(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<FinalResponseDto<?>> getLiedPosts(@AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
         return postService.getLikedPosts(getUserId(userDetails));
     }
 

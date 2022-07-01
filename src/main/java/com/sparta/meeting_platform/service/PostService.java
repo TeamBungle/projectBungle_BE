@@ -10,7 +10,6 @@ import com.sparta.meeting_platform.repository.LikeRepository;
 import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.repository.mapping.PostMapping;
-import com.sparta.meeting_platform.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +17,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.text.ParseException;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -32,7 +35,7 @@ public class PostService {
 
     //게시글 전체 조회
     @Transactional(readOnly = true)
-    public ResponseEntity<FinalResponseDto<?>> getPosts(Long userId) {
+    public ResponseEntity<FinalResponseDto<?>> getPosts(Long userId) throws ParseException {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
@@ -50,7 +53,7 @@ public class PostService {
             }else {
                 isLike = like.getIsLike();
             }
-            PostResponseDto postResponseDto = new PostResponseDto(post,isLike);
+            PostResponseDto postResponseDto = new PostResponseDto(post,isLike, timeCheck(post.getTime()));
             postList.add(postResponseDto);
         }
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
@@ -58,7 +61,7 @@ public class PostService {
 
     //카테고리별 게시글 조회
     @Transactional(readOnly = true)
-    public ResponseEntity<FinalResponseDto<?>> getPostsByCategories(Long userId, List<String> categories) {
+    public ResponseEntity<FinalResponseDto<?>> getPostsByCategories(Long userId, List<String> categories) throws ParseException {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
@@ -72,7 +75,7 @@ public class PostService {
                 return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 조회해주세요"), HttpStatus.BAD_REQUEST);
             }
             for (Post post : posts) {
-                PostResponseDto postResponseDto = new PostResponseDto(post);
+                PostResponseDto postResponseDto = new PostResponseDto(post, timeCheck(post.getTime()));
                 postList.add(postResponseDto);
             }
         }
@@ -81,7 +84,7 @@ public class PostService {
     }
     //태그별 게시글 조회
     @Transactional(readOnly = true)
-    public ResponseEntity<FinalResponseDto<?>> getPostsByTags(Long userId, List<String> tags) {
+    public ResponseEntity<FinalResponseDto<?>> getPostsByTags(Long userId, List<String> tags) throws ParseException {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
@@ -97,7 +100,7 @@ public class PostService {
             }
 
             for (Post post : posts) {
-                PostResponseDto postResponseDto = new PostResponseDto(post);
+                PostResponseDto postResponseDto = new PostResponseDto(post, timeCheck(post.getTime()));
                 postList.add(postResponseDto);
             }
         }
@@ -109,7 +112,7 @@ public class PostService {
 
     //게시글 상세 조회
     @Transactional(readOnly = true)
-    public ResponseEntity<FinalResponseDto<?>>getPostsDetails(Long postId, Long userId) {
+    public ResponseEntity<FinalResponseDto<?>>getPostsDetails(Long postId, Long userId) throws ParseException {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
@@ -118,13 +121,13 @@ public class PostService {
         Post post = postRepository.findById(postId).orElseThrow(
                 () -> new NullPointerException("존재하지 않는 게시물 입니다.")
         );
-        PostResponseDto postResponseDto = new PostResponseDto(post);
+        PostResponseDto postResponseDto = new PostResponseDto(post, timeCheck(post.getTime()));
 
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공",postResponseDto), HttpStatus.OK);
     }
 
     //게시글 조회 (제목에 포함된 단어로)
-    public ResponseEntity<FinalResponseDto<?>> getSearch(String keyword, Long userId) {
+    public ResponseEntity<FinalResponseDto<?>> getSearch(String keyword, Long userId) throws ParseException {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
@@ -146,7 +149,7 @@ public class PostService {
             } else {
                 isLike = like.getIsLike();
             }
-            PostResponseDto postResponseDto = new PostResponseDto(post, isLike);
+            PostResponseDto postResponseDto = new PostResponseDto(post, isLike, timeCheck(post.getTime()));
             postList.add(postResponseDto);
         }
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
@@ -214,23 +217,34 @@ public class PostService {
     }
 
     // 좋아요한 게시글 전체 조회
-    public ResponseEntity<FinalResponseDto<?>> getLikedPosts(Long userId) {
+    public ResponseEntity<FinalResponseDto<?>> getLikedPosts(Long userId) throws ParseException {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "좋아요한 게시글 조회 실패"), HttpStatus.BAD_REQUEST);
         }
-        List<PostMapping> post = likeRepository.findAllByUserIdAndIsLikeTrue(userId);
+        List<PostMapping> posts = likeRepository.findAllByUserIdAndIsLikeTrue(userId);
 
         List<PostResponseDto> postList = new ArrayList<>();
 
-        for (PostMapping posts : post) {
-            PostResponseDto postResponseDto = new PostResponseDto(posts.getPost());
+        for (PostMapping post : posts) {
+            PostResponseDto postResponseDto = new PostResponseDto(post.getPost(), timeCheck(post.getPost().getTime()));
             postList.add(postResponseDto);
         }
         return new ResponseEntity<>(new FinalResponseDto<>(true, "좋아요한 게시글 조회 성공", postList), HttpStatus.OK);
     }
 
+    // Time 변환
+    public String timeCheck(String time) throws ParseException {
+        DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime localDateTime = LocalDateTime.parse(time, inputFormat);
+        if(!localDateTime.isAfter(LocalDateTime.now())){
+            Duration duration = Duration.between(localDateTime, LocalDateTime.now());
+            System.out.println(duration.getSeconds());
+            return duration.getSeconds()/60 + "분 경과";
+        }
+        return localDateTime.getHour() + "시 시작 예정";
+    }
 
 }
 

@@ -4,6 +4,13 @@ import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 
 @Getter
@@ -31,10 +38,10 @@ public class PostResponseDto {
 
 
 
-    public PostResponseDto(Post post) {
+    public PostResponseDto(Post post, String time) {
         this.id = post.getId();
         this.title = post.getTitle();
-        this.time = post.getTime();
+        this.time = time;
         this.personnel = post.getPersonnel();
         this.place = post.getPlace();
         this.postUrls = post.getPostUrls();
@@ -43,10 +50,10 @@ public class PostResponseDto {
         this.isLetter = post.getIsLetter();
     }
 
-    public PostResponseDto(Post post, Boolean isLike) {
+    public PostResponseDto(Post post, Boolean isLike, String time) {
         this.id = post.getId();
         this.title = post.getTitle();
-        this.time = post.getTime();
+        this.time = time;
         this.personnel = post.getPersonnel();
         this.place = post.getPlace();
         this.postUrls = post.getPostUrls();
@@ -55,4 +62,6 @@ public class PostResponseDto {
         this.isLetter = post.getIsLetter();
         this.isLike = isLike;
     }
+
+
 }
