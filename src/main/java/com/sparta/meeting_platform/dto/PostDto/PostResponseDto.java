@@ -1,16 +1,9 @@
 package com.sparta.meeting_platform.dto.PostDto;
 
-import com.sparta.meeting_platform.domain.Like;
-import com.sparta.meeting_platform.domain.Post;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.List;
 
 @Getter
@@ -18,6 +11,7 @@ import java.util.List;
 public class PostResponseDto {
 
     private Long id;
+
     private String title;
 
     private String time;
@@ -32,36 +26,76 @@ public class PostResponseDto {
 
     private List<String> categories;
 
+    private int bungCount;
+
+    private int mannerTemp;
+
+    private List<String> joinPeopleUrl;
+
+    private List<String> joinPeopleNickname;
+
+    private int joinCount;
+
     private Boolean isLetter;
 
     private Boolean isLike = false;
 
+    private double avgTemp;
 
+    private String postUrl;
 
-    public PostResponseDto(Post post, String time) {
-        this.id = post.getId();
-        this.title = post.getTitle();
+    @Builder
+    public PostResponseDto(Long id, String title, String time, int personnel, String place, List<String> postUrls,
+                           List<String> tags, List<String> categories, int bungCount, int mannerTemp, List<String> joinPeopleUrl,
+                           List<String> joinPeopleNickname, int joinCount, Boolean isLetter, Boolean isLike,
+                           double avgTemp, String postUrl) {
+        this.id = id;
+        this.title = title;
         this.time = time;
-        this.personnel = post.getPersonnel();
-        this.place = post.getPlace();
-        this.postUrls = post.getPostUrls();
-        this.tags = post.getTags();
-        this.categories = post.getCategories();
-        this.isLetter = post.getIsLetter();
-    }
-
-    public PostResponseDto(Post post, Boolean isLike, String time) {
-        this.id = post.getId();
-        this.title = post.getTitle();
-        this.time = time;
-        this.personnel = post.getPersonnel();
-        this.place = post.getPlace();
-        this.postUrls = post.getPostUrls();
-        this.tags = post.getTags();
-        this.categories = post.getCategories();
-        this.isLetter = post.getIsLetter();
+        this.personnel = personnel;
+        this.place = place;
+        this.postUrls = postUrls;
+        this.tags = tags;
+        this.categories = categories;
+        this.bungCount = bungCount;
+        this.mannerTemp = mannerTemp;
+        this.joinPeopleUrl = joinPeopleUrl;
+        this.joinPeopleNickname = joinPeopleNickname;
+        this.joinCount = joinCount;
+        this.isLetter = isLetter;
         this.isLike = isLike;
+        this.avgTemp = avgTemp;
+        this.postUrl = postUrl;
     }
 
+//    public PostResponseDto(Post post, String time) {
+//        this.id = post.getId();
+//        this.title = post.getTitle();
+//        this.time = time;
+//        this.personnel = post.getPersonnel();
+//        this.place = post.getPlace();
+//        this.postUrls = post.getPostUrls();
+//        this.tags = post.getTags();
+//        this.categories = post.getCategories();
+//        this.isLetter = post.getIsLetter();
+//    }
+//
+//    @Builder
+//    public PostResponseDto(Post post, Boolean isLike, String time) {
+//        this.title = post.getTitle();
+//        this.time = time;
+//        this.personnel = post.getPersonnel();
+//        this.place = post.getPlace();
+//        this.postUrls = post.getPostUrls();
+//        this.tags = post.getTags();
+//        this.categories = post.getCategories();
+//        this.bungCount = post.getUser().getBungCount();;
+//        this.mannerTemp = post.getUser().getMannerTemp();
+//        this.joinPeopleUrl = null;              //수정필요
+//        this.joinPeopleNickname = null;         //수정필요
+//        this.joinCount = 1;
+//        this.isLetter = post.getIsLetter();
+//        this.isLike = isLike;
+//    }
 
 }

@@ -44,21 +44,32 @@ public class User {
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
-    private Float mannerTemp;
+    private int mannerTemp;
+
+    @Column(nullable = false)
+    private Boolean isOwner;
+
+    @Column
+    private String intro;
+
+    @Column
+    private int bungCount;
+
+
+
 
 
     public User(SignUpRequestDto requestDto,String userUrl) {
         this.username = requestDto.getUsername();
         this.password = requestDto.getPassword();
         this.nickName = requestDto.getNickName();
-        this.mannerTemp = 36.5f;
+        this.mannerTemp = 50;
         this.profileUrl = userUrl;
     }
 
     @Builder
-    public User(Long id, String username, String password, String nickName, String profileUrl, Long kakaoId,
-                String googleId, String naverId, LocalDateTime createdAt, Float mannerTemp) {
-        this.id = id;
+    public User(String username, String password, String nickName, String profileUrl, Long kakaoId, String googleId,
+                String naverId, LocalDateTime createdAt, int mannerTemp, Boolean isOwner, String intro, int bungCount) {
         this.username = username;
         this.password = password;
         this.nickName = nickName;
@@ -68,10 +79,13 @@ public class User {
         this.naverId = naverId;
         this.createdAt = createdAt;
         this.mannerTemp = mannerTemp;
+        this.isOwner = isOwner;
+        this.intro = intro;
+        this.bungCount = bungCount;
     }
 
     public void setReport(){
-        this.mannerTemp -= 1.0f;
+        this.mannerTemp -= 5;
     }
 
 }

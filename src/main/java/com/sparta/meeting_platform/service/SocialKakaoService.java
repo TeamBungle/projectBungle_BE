@@ -59,7 +59,7 @@ public class SocialKakaoService {
         kakaoUsersAuthorizationInput(authentication, response);
 
         String nickname = kakaoUser.getNickName();
-        Float mannerTemp = kakaoUser.getMannerTemp();
+        int mannerTemp = kakaoUser.getMannerTemp();
 
         return new ResponseEntity<>(new FinalResponseDto<>
                 (true, "로그인 성공", nickname, mannerTemp), HttpStatus.OK);
@@ -142,7 +142,7 @@ public class SocialKakaoService {
             String password = UUID.randomUUID().toString();
             String encodedPassword = passwordEncoder.encode(password);
             LocalDateTime createdAt = LocalDateTime.now();
-            Float mannerTemp = 36.5F;
+            int mannerTemp = 50;
             User kakaoUser = User.builder()
                     .username(email)
                     .nickName(nickName)

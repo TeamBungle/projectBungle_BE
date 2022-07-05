@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -58,6 +59,13 @@ public class Post {
     @CollectionTable
     @Column(name = "tag")
     private List<String> tags;
+
+    @Column(nullable = false)
+    private Double latitude;
+
+    @Column(nullable = false)
+    private Double longitude;
+
 
     public Post(User user, PostRequestDto requestDto){
         this.user = user;
