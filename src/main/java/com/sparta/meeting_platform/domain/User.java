@@ -47,7 +47,7 @@ public class User {
     private int mannerTemp;
 
     @Column(nullable = false)
-    private Boolean isOwner;
+    private Boolean isOwner = false;
 
     @Column
     private String intro;

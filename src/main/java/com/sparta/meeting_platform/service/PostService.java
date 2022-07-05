@@ -4,6 +4,7 @@ import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
+import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
 import com.sparta.meeting_platform.dto.user.MyPageDto;
@@ -63,7 +64,7 @@ public class PostService {
                     .place(post.getPlace())
                     .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
                     .time(timeCheck(post.getTime()))
-                    .avgTemp(50.3)                      //TODO 수정필요
+                    .avgTemp(50)                      //TODO 수정필요
                     .isLetter(post.getIsLetter())
                     .isLike(isLike)
                     .build();
@@ -105,7 +106,7 @@ public class PostService {
                         .place(post.getPlace())
                         .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
                         .time(timeCheck(post.getTime()))
-                        .avgTemp(50.3)                      //TODO 수정필요
+                        .avgTemp(50)                      //TODO 수정필요
                         .isLetter(post.getIsLetter())
                         .isLike(isLike)
                         .build();
@@ -149,7 +150,7 @@ public class PostService {
                         .place(post.getPlace())
                         .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
                         .time(timeCheck(post.getTime()))
-                        .avgTemp(50.3)                      //TODO 수정필요
+                        .avgTemp(50)                      //TODO 수정필요
                         .isLetter(post.getIsLetter())
                         .isLike(isLike)
                         .build();
@@ -181,7 +182,13 @@ public class PostService {
         }else {
             isLike = like.getIsLike();
         }
-        PostResponseDto postResponseDto =PostResponseDto.builder()
+        List<String> joinPeopleurls = new ArrayList<>(); //TODO 수정필요
+        joinPeopleurls.add("test1");
+        joinPeopleurls.add("test2");
+        List<String> joinPeopleNicknames = new ArrayList<>(); //TODO 수정필요
+        joinPeopleNicknames.add("test1");
+        joinPeopleNicknames.add("test2");
+        PostDetailsResponseDto postDetailsResponseDto =PostDetailsResponseDto.builder()
                 .title(post.getTitle())
                 .time(timeCheck(post.getTime()))
                 .personnel(post.getPersonnel())
@@ -191,14 +198,14 @@ public class PostService {
                 .categories(post.getCategories())
                 .bungCount(post.getUser().getBungCount())
                 .mannerTemp(post.getUser().getMannerTemp())
-                .joinPeopleUrl(null)                //TODO 수정필요
-                .joinPeopleNickname(null)           //TODO 수정필요
+                .joinPeopleUrl(joinPeopleurls)                //TODO 수정필요
+                .joinPeopleNickname(joinPeopleNicknames)           //TODO 수정필요
                 .joinCount(1)                       //TODO 수정필요
                 .isLetter(post.getIsLetter())
                 .isLike(isLike)
                 .build();
 
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공",postResponseDto), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공",postDetailsResponseDto), HttpStatus.OK);
     }
     //게시글 삭제
     @Transactional
@@ -272,9 +279,14 @@ public class PostService {
         }
         List<PostMapping> posts = likeRepository.findAllByUserIdAndIsLikeTrue(userId);
 
+
         List<PostResponseDto> postList = new ArrayList<>();
 
         for (PostMapping post : posts) {
+            Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getPost().getId()).orElseThrow(
+                    ()-> new NullPointerException("찜한 게시글이 없습니다.")
+            );
+
             PostResponseDto postResponseDto =PostResponseDto.builder()
                     .id(post.getPost().getId())
                     .title(post.getPost().getTitle())
@@ -283,9 +295,9 @@ public class PostService {
                     .place(post.getPost().getPlace())
                     .postUrl(post.getPost().getPostUrls().get(0))    //TODO 수정필요
                     .time(timeCheck(post.getPost().getTime()))
-                    .avgTemp(50.3)                                  //TODO 수정필요
+                    .avgTemp(50)                                  //TODO 수정필요
                     .isLetter(post.getPost().getIsLetter())
-                    .isLike(true)                                   //TODO 어차피 좋아요한 게시물만 뽑아서 그냥 TRUE로 했습니다 (?)
+                    .isLike(like.getIsLike())
                     .build();
             postList.add(postResponseDto);
         }
@@ -325,7 +337,7 @@ public class PostService {
                 .place(post.getPlace())
                 .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
                 .time(timeCheck(post.getTime()))
-                .avgTemp(50.3)                      //TODO 수정필요
+                .avgTemp(50)                      //TODO 수정필요
                 .isLetter(post.getIsLetter())
                 .isLike(isLike)
                 .build();

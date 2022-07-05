@@ -1,6 +1,7 @@
 package com.sparta.meeting_platform.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
 import com.sparta.meeting_platform.dto.user.MyPageDto;
 import lombok.Getter;
@@ -20,9 +21,17 @@ public class FinalResponseDto<T> {
     private String message;
     private PostResponseDto postResponseDto;
     private String nickName;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private int mannerTemp;
-
     private MyPageDto myPageDto;
+
+    private PostDetailsResponseDto postDetailsResponseDto;
+
+    public FinalResponseDto(boolean response, String message, PostDetailsResponseDto postDetailsResponseDto) {
+        this.response = response;
+        this.message = message;
+        this.postDetailsResponseDto = postDetailsResponseDto;
+    }
 
     public FinalResponseDto(boolean response, String message, MyPageDto myPageDto) {
         this.response = response;

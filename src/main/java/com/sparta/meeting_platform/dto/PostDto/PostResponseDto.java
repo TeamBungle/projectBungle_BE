@@ -1,5 +1,6 @@
 package com.sparta.meeting_platform.dto.PostDto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,6 +9,7 @@ import java.util.List;
 
 @Getter
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PostResponseDto {
 
     private Long id;
@@ -26,8 +28,10 @@ public class PostResponseDto {
 
     private List<String> categories;
 
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private int bungCount;
 
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private int mannerTemp;
 
     private List<String> joinPeopleUrl;
@@ -40,7 +44,8 @@ public class PostResponseDto {
 
     private Boolean isLike = false;
 
-    private double avgTemp;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private int avgTemp;
 
     private String postUrl;
 
@@ -48,7 +53,7 @@ public class PostResponseDto {
     public PostResponseDto(Long id, String title, String time, int personnel, String place, List<String> postUrls,
                            List<String> tags, List<String> categories, int bungCount, int mannerTemp, List<String> joinPeopleUrl,
                            List<String> joinPeopleNickname, int joinCount, Boolean isLetter, Boolean isLike,
-                           double avgTemp, String postUrl) {
+                           int avgTemp, String postUrl) {
         this.id = id;
         this.title = title;
         this.time = time;
