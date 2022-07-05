@@ -59,6 +59,12 @@ public class Post {
     @Column(name = "tag")
     private List<String> tags;
 
+    @Column(nullable = false)
+    private Double latitude;
+
+    @Column(nullable = false)
+    private Double longitude;
+
     public Post(User user, PostRequestDto requestDto){
         this.user = user;
         this.title = requestDto.getTitle();
