@@ -29,9 +29,9 @@ public class Report {
     private LocalDateTime createdAt;
 
 
-    public Report(User user, Long badMannserId) {
+    public Report(User user, Long badMannerId) {
         this.user = user;
-        this.badMannerId = badMannserId;
+        this.badMannerId = badMannerId;
         this.createdAt = LocalDateTime.now();
     }
 }

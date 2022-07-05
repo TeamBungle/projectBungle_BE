@@ -6,6 +6,7 @@ import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.user.DuplicateRequestDto;
 import com.sparta.meeting_platform.dto.user.LoginRequestDto;
 import com.sparta.meeting_platform.dto.user.SignUpRequestDto;
+import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final S3Service s3Service;
+
+    private final PostRepository postRepository;
 
     public ResponseEntity<FinalResponseDto<?>> duplicateUsername(DuplicateRequestDto requestDto) {
 

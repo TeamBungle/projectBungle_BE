@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class ReportService {
@@ -37,5 +39,17 @@ public class ReportService {
         return new ResponseEntity<>(new FinalResponseDto<>(true, "신고하기 성공"), HttpStatus.OK);
 
     }
+    @Transactional(readOnly = true)
+    //신고내역 조회
+    public ResponseEntity<FinalResponseDto<?>> getUserReport(Long id) {
+        User user = userRepository.findById(id).orElseThrow(
+                ()-> new NullPointerException("신고 내역 조회 실패")
+        );
+        List<Report> report = reportRepository.findAllByUserId(user.getId());
 
+        if (report.size() < 1){
+            return new ResponseEntity<>(new FinalResponseDto<>(false,"신고내역이 존재하지 않습니다"),HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>(new FinalResponseDto<>(true,"신고 내역 조회 성공", report),HttpStatus.OK);
+    }
 }

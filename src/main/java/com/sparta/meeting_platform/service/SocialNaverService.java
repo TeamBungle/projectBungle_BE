@@ -48,7 +48,7 @@ public class SocialNaverService {
                         .nickName(naverUser.getNickName())
                         .profileUrl(naverUser.getProfileUrl())
                         .naverId(naverUser.getNaverId())
-                        .mannerTemp(36.5F)
+                        .mannerTemp(36)
                         .build();
                 userRepository.save(user);
             }

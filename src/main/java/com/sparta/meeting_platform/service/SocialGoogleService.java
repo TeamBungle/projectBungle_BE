@@ -98,7 +98,7 @@ public class SocialGoogleService {
             String profileImage = userInfoDto.getPicture(); // profileImage: google profile image
             LocalDateTime createdAt = LocalDateTime.now();
             String googleId = userInfoDto.getSub(); // 구글 고유키
-            Float mannerTemp = 36.5F;
+            int mannerTemp = 36;
             user = User.builder()
                     .username(username)
                     .nickName(nickName)
@@ -123,7 +123,7 @@ public class SocialGoogleService {
         httpServletResponse.addHeader("Authorization", "BEARER" + " " + jwt_token);
 
         return new ResponseEntity<>(new FinalResponseDto<>
-                (true, "로그인 성공!!", user.getNickName(), 36.5F), HttpStatus.OK);
+                (true, "로그인 성공!!", user.getNickName(), 36), HttpStatus.OK);
     }
 
 }
