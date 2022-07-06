@@ -17,6 +17,9 @@ import java.util.List;
 public class FinalResponseDto<T> {
 
     private List<T> List;
+
+    private List<String> postUrls;
+
     private boolean response;
     private String message;
     private PostResponseDto postResponseDto;
@@ -24,6 +27,22 @@ public class FinalResponseDto<T> {
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private int mannerTemp;
     private MyPageDto myPageDto;
+
+    private Long postId;
+
+    private PostResponseDto[] postList;
+    public FinalResponseDto(boolean response, String message, Long postId, List<String> postUrls) {
+        this.response = response;
+        this.message = message;
+        this.postId = postId;
+        this.postUrls = postUrls;
+    }
+
+    public FinalResponseDto(boolean response, String message, Long postId) {
+        this.response = response;
+        this.message = message;
+        this.postId = postId;
+    }
 
     private PostDetailsResponseDto postDetailsResponseDto;
 

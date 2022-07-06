@@ -30,9 +30,11 @@ public class PostController {
 
     //게시긇 전체 조회
     @GetMapping("")
-    public ResponseEntity<FinalResponseDto<?>> getPosts(@AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
+    public ResponseEntity<FinalResponseDto<?>> getPosts(@RequestParam(value = "latitude") Double latitude,
+                                                        @RequestParam(value = "longitude") Double longitude,
+                                                        @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
         Long userId = getUserId(userDetails);
-        return postService.getPosts(userId);
+        return postService.getPosts(userId,latitude,longitude);
     }
 
     // 카테고리별 게시글 조회
@@ -72,11 +74,11 @@ public class PostController {
     }
 
     // 게시글 작성
-    @PostMapping("/letter")
+    @PostMapping("")
     public ResponseEntity<FinalResponseDto<?>> createPost(
             @RequestPart(value = "postDto") PostRequestDto requestDto,
             @RequestPart(value = "postImg") List<MultipartFile> files,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws Exception {
 
         return postService.createPost(getUserId(userDetails), requestDto, files);
     }
@@ -87,7 +89,7 @@ public class PostController {
             @PathVariable Long postId,
             @RequestPart(value = "postDto") PostRequestDto requestDto,
             @RequestPart(value = "postImg") List<MultipartFile> files,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws Exception {
 
         return postService.updatePost(postId, getUserId(userDetails), requestDto, files);
     }
