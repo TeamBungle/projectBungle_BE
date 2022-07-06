@@ -78,7 +78,7 @@ public class PostController {
     public ResponseEntity<FinalResponseDto<?>> createPost(
             @RequestPart(value = "postDto") PostTestDto requestDto,
             @RequestPart(value = "postImg") List<MultipartFile> files,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) throws IOException, org.json.simple.parser.ParseException {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws Exception {
 
         return postService.createPost(getUserId(userDetails), requestDto, files);
     }

@@ -27,6 +27,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -37,7 +40,6 @@ import java.util.List;
 public class MapService {
     private final PostRepository postRepository;
     private final LikeRepository likeRepository;
-    private final PostService postService;
 
     String geocodingUrl = "http://dapi.kakao.com/v2/local/search/address.json?query=";
 
@@ -71,7 +73,7 @@ public class MapService {
             dist = rad2deg(dist);
             dist = dist * 60 * 1.1515 * 1.609344;
 
-            if (dist <= 50) {
+            if (dist <= 7000) {
 
                 Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId()).orElse(null);
 
@@ -90,7 +92,7 @@ public class MapService {
                         .joinCount(1)                       //TODO 수정필요
                         .place(post.getPlace())
                         .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
-                        .time(postService.timeCheck(post.getTime()))
+                        .time(post.getTime())
                         .avgTemp(50)                      //TODO 수정필요
                         .isLetter(post.getIsLetter())
                         .isLike(isLike)
@@ -100,7 +102,9 @@ public class MapService {
 
                 mapListDtos.add(mapListDto);
             }
-        }
+        }// 리스트가 아무것도 없을시 예외처리해야함
+        // 본인게시글 보이지 않게?
+        // 순서는 어떻게?
         return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공",mapListDtos), HttpStatus.OK);
 
     }
@@ -122,7 +126,7 @@ public class MapService {
             dist = rad2deg(dist);
             dist = dist * 60 * 1.1515 * 1.609344;
 
-            if (dist <= 50) {
+            if (dist <= 7000) {
 
                 Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId()).orElse(null);
 
@@ -141,7 +145,7 @@ public class MapService {
                         .joinCount(1)                       //TODO 수정필요
                         .place(post.getPlace())
                         .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
-                        .time(postService.timeCheck(post.getTime()))
+                        .time(post.getTime())
                         .avgTemp(50)                      //TODO 수정필요
                         .isLetter(post.getIsLetter())
                         .isLike(isLike)
@@ -161,12 +165,13 @@ public class MapService {
     public ResponseEntity<MapResponseDto<?>> detailsMap(List<String> categories, int joinCount, int distance,
                            Double latitude, Double longitude, User user) throws java.text.ParseException {
         List<MapListDto> mapListDtos = new ArrayList<>();
+
 //        List<Post> posts = postRepository.findAll();
         for (String category : categories) {
             List<Post> postList = postRepository.findAllByCategories(category);
-            List<Post> posts = DeduplicationUtils.deduplication(postList, Post::getId);
 
-            for (Post post : posts) {
+
+            for (Post post : postList) {
                 double theta = longitude - post.getLongitude();
                 double dist = Math.sin(deg2rad(latitude)) * Math.sin(deg2rad(post.getLatitude()))
                         + Math.cos(deg2rad(latitude)) * Math.cos(deg2rad(post.getLatitude())) * Math.cos(deg2rad(theta));
@@ -194,7 +199,7 @@ public class MapService {
                             .joinCount(1)                       //TODO 수정필요
                             .place(post.getPlace())
                             .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
-                            .time(postService.timeCheck(post.getTime()))
+                            .time(timeCheck(post.getTime()))
                             .avgTemp(50)                      //TODO 수정필요
                             .isLetter(post.getIsLetter())
                             .isLike(isLike)
@@ -206,7 +211,8 @@ public class MapService {
                 }
             }
         }
-        return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공",mapListDtos), HttpStatus.OK);
+        List<MapListDto> mapListDoubleCheckDto = DeduplicationUtils.deduplication(mapListDtos, MapListDto::getId);
+        return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공",mapListDoubleCheckDto), HttpStatus.OK);
     }
 
 
@@ -266,5 +272,15 @@ public class MapService {
         return (rad * 180 / Math.PI);
     }
 
+    public String timeCheck(String time) throws java.text.ParseException {
+        DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime localDateTime = LocalDateTime.parse(time, inputFormat);
+        if(!localDateTime.isAfter(LocalDateTime.now())){
+            Duration duration = Duration.between(localDateTime, LocalDateTime.now());
+            System.out.println(duration.getSeconds());
+            return duration.getSeconds()/60 + "분 경과";
+        }
+        return localDateTime.getHour() + "시 시작 예정";
+    }
 
 }

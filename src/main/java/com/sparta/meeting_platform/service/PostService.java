@@ -230,7 +230,7 @@ public class PostService {
 
     @Transactional
     // 게시글 등록
-    public ResponseEntity<FinalResponseDto<?>> createPost(Long userId, PostTestDto requestDto, List<MultipartFile> files) throws IOException, org.json.simple.parser.ParseException {
+    public ResponseEntity<FinalResponseDto<?>> createPost(Long userId, PostTestDto requestDto, List<MultipartFile> files) throws Exception {
         User user = userRepository.findById(userId).orElse(null);
 
         if (user==null) {
