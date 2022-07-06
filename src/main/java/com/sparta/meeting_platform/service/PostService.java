@@ -7,6 +7,8 @@ import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
+import com.sparta.meeting_platform.dto.PostTestDto;
+import com.sparta.meeting_platform.dto.SearchMapDto;
 import com.sparta.meeting_platform.dto.user.MyPageDto;
 import com.sparta.meeting_platform.repository.LikeRepository;
 import com.sparta.meeting_platform.repository.PostRepository;
@@ -20,12 +22,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -35,6 +39,8 @@ public class PostService {
     private final UserRepository userRepository;
     private final LikeRepository likeRepository;
     private final S3Service s3Service;
+
+    private final MapService mapService;
 
     //게시글 전체 조회(4개만)
     @Transactional(readOnly = true)
@@ -224,7 +230,7 @@ public class PostService {
 
     @Transactional
     // 게시글 등록
-    public ResponseEntity<FinalResponseDto<?>> createPost(Long userId, PostRequestDto requestDto, List<MultipartFile> files) {
+    public ResponseEntity<FinalResponseDto<?>> createPost(Long userId, PostTestDto requestDto, List<MultipartFile> files) throws IOException, org.json.simple.parser.ParseException {
         User user = userRepository.findById(userId).orElse(null);
 
         if (user==null) {
@@ -240,7 +246,10 @@ public class PostService {
             }
             requestDto.setPostUrls(postUrls);
         }
-        Post post = postRepository.save(new Post(user, requestDto));
+        SearchMapDto searchMapDto = mapService.searchLatAndLong(requestDto.getPlace());
+        Double longitude = searchMapDto.getLongitude();
+        Double latitude = searchMapDto.getLatitude();
+        Post post = postRepository.save(new Post(user, requestDto,longitude,latitude));
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공"), HttpStatus.OK);
     }
 

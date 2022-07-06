@@ -175,7 +175,7 @@ public class MapService {
                 dist = rad2deg(dist);
                 dist = dist * 60 * 1.1515 * 1.609344;
 
-                if (dist <= distance) {
+                if (dist <= distance && post.getPersonnel() == joinCount) {
 
                     Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId()).orElse(null);
 

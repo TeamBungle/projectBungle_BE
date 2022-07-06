@@ -1,6 +1,7 @@
 package com.sparta.meeting_platform.domain;
 
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
+import com.sparta.meeting_platform.dto.PostTestDto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -65,7 +66,7 @@ public class Post {
     @Column(nullable = false)
     private Double longitude;
 
-    public Post(User user, PostRequestDto requestDto){
+    public Post(User user, PostTestDto requestDto, Double longitude, Double latitude){
         this.user = user;
         this.title = requestDto.getTitle();
         this.time = requestDto.getTime();
@@ -75,8 +76,8 @@ public class Post {
         this.categories = requestDto.getCategories();
         this.tags = requestDto.getTags();
         this.postUrls = requestDto.getPostUrls();
-        this.latitude= requestDto.getLatitude();
-        this.longitude = requestDto.getLongitude();
+        this.latitude= latitude;
+        this.longitude = longitude;
         this.createdAt = LocalDateTime.now();
         this.modifiedAt = LocalDateTime.now();
     }
