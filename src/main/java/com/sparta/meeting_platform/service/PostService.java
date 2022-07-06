@@ -16,6 +16,8 @@ import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.repository.mapping.PostMapping;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.io.WKTReader;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -249,9 +251,26 @@ public class PostService {
         SearchMapDto searchMapDto = mapService.searchLatAndLong(requestDto.getPlace());
         Double longitude = searchMapDto.getLongitude();
         Double latitude = searchMapDto.getLatitude();
-        Post post = postRepository.save(new Post(user, requestDto,longitude,latitude));
+
+        String pointWKT = String.format("POINT(%s %s)", longitude, latitude);
+        // WKTReader를 통해 WKT를 실제 타입으로 변환합니다.
+        Point point = (Point) new WKTReader().read(pointWKT);
+
+        postRepository.save(new Post(user, requestDto,longitude,latitude,point));
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공"), HttpStatus.OK);
     }
+
+//    public void saveUser() {
+//        String name = "momentjin";
+//        Double latitude = 32.123;
+//        Double longitude = 127.123;
+//        String pointWKT = String.format("POINT(%s %s)", longitude, latitude);
+//
+//        // WKTReader를 통해 WKT를 실제 타입으로 변환합니다.
+//        Point point = (Point) new WKTReader().read(pointWKT);
+//        User user = new User(name, point);
+//        userRepository.save(driverLocation);
+//    }
 
     // 게시글 수정
     @Transactional

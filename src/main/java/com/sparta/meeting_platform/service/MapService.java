@@ -1,15 +1,17 @@
 package com.sparta.meeting_platform.service;
 
+import com.sparta.meeting_platform.Location;
 import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.domain.User;
-import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.MapListDto;
 import com.sparta.meeting_platform.dto.MapResponseDto;
 import com.sparta.meeting_platform.dto.SearchMapDto;
 import com.sparta.meeting_platform.repository.LikeRepository;
 import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.util.DeduplicationUtils;
+import com.sparta.meeting_platform.util.Direction;
+import com.sparta.meeting_platform.util.GeometryUtil;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -20,6 +22,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -31,8 +35,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -40,6 +42,8 @@ import java.util.List;
 public class MapService {
     private final PostRepository postRepository;
     private final LikeRepository likeRepository;
+
+    private final EntityManager em;
 
     String geocodingUrl = "http://dapi.kakao.com/v2/local/search/address.json?query=";
 
@@ -61,21 +65,29 @@ public class MapService {
 //
 //        System.out.println("최종 거리" + dist + "km");
 
+        Double distance = 2.0;
+        Location northEast = GeometryUtil
+                .calculate(latitude, longitude, distance, Direction.NORTHEAST.getBearing());
+        Location southWest = GeometryUtil
+                .calculate(latitude, longitude, distance, Direction.SOUTHWEST.getBearing());
+
+        double x1 = northEast.getLatitude();
+        double y1 = northEast.getLongitude();
+        double x2 = southWest.getLatitude();
+        double y2 = southWest.getLongitude();
+
+        String pointFormat = String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2);
+        Query query = em.createNativeQuery("SELECT p.id,p.title,p.time,p.personnel, p.user_id, "
+                        + "p.place,p.is_letter, p.location, "
+                        + "p.latitude, p.longitude "
+                        + "FROM post AS p "
+                        + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)", Post.class)
+                .setMaxResults(1);
+
+        List<Post> posts = query.getResultList();
         List<MapListDto> mapListDtos = new ArrayList<>();
-
-        List<Post> posts = postRepository.findAll();
-        for (Post post : posts) {
-            double theta = longitude - post.getLongitude();
-            double dist = Math.sin(deg2rad(latitude)) * Math.sin(deg2rad(post.getLatitude()))
-                    + Math.cos(deg2rad(latitude)) * Math.cos(deg2rad(post.getLatitude())) * Math.cos(deg2rad(theta));
-
-            dist = Math.acos(dist);
-            dist = rad2deg(dist);
-            dist = dist * 60 * 1.1515 * 1.609344;
-
-            if (dist <= 7000) {
-
-                Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId()).orElse(null);
+        for(Post post : posts){
+            Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId()).orElse(null);
 
                 Boolean isLike;
 
@@ -96,18 +108,68 @@ public class MapService {
                         .avgTemp(50)                      //TODO 수정필요
                         .isLetter(post.getIsLetter())
                         .isLike(isLike)
-                        .latitude(post.getLatitude())
-                        .longitude(post.getLongitude())
+//                        .latitude(post.getLocation())
+//                        .longitude(post.getLongitude())
                         .build();
 
                 mapListDtos.add(mapListDto);
             }
-        }// 리스트가 아무것도 없을시 예외처리해야함
+        return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공",mapListDtos), HttpStatus.OK);
+        }
+
+
+
+
+
+
+
+//        List<MapListDto> mapListDtos = new ArrayList<>();
+//
+//        List<Post> posts = postRepository.findAll();
+//        for (Post post : posts) {
+//            double theta = longitude - post.getLongitude();
+//            double dist = Math.sin(deg2rad(latitude)) * Math.sin(deg2rad(post.getLatitude()))
+//                    + Math.cos(deg2rad(latitude)) * Math.cos(deg2rad(post.getLatitude())) * Math.cos(deg2rad(theta));
+//
+//            dist = Math.acos(dist);
+//            dist = rad2deg(dist);
+//            dist = dist * 60 * 1.1515 * 1.609344;
+//
+//            if (dist <= 7000) {
+//
+//                Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId()).orElse(null);
+//
+//                Boolean isLike;
+//
+//                if(like == null){
+//                    isLike = false;
+//                }else {
+//                    isLike = like.getIsLike();
+//                }
+//
+//                MapListDto mapListDto =MapListDto.builder()
+//                        .id(post.getId())
+//                        .title(post.getTitle())
+//                        .personnel(post.getPersonnel())
+//                        .joinCount(1)                       //TODO 수정필요
+//                        .place(post.getPlace())
+//                        .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
+//                        .time(post.getTime())
+//                        .avgTemp(50)                      //TODO 수정필요
+//                        .isLetter(post.getIsLetter())
+//                        .isLike(isLike)
+//                        .latitude(post.getLatitude())
+//                        .longitude(post.getLongitude())
+//                        .build();
+//
+//                mapListDtos.add(mapListDto);
+//            }
+//        }// 리스트가 아무것도 없을시 예외처리해야함
         // 본인게시글 보이지 않게?
         // 순서는 어떻게?
-        return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공",mapListDtos), HttpStatus.OK);
-
-    }
+//        return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공",mapListDtos), HttpStatus.OK);
+//
+//    }
 
     public ResponseEntity<MapResponseDto<?>> searchMap(String address,User user) throws IOException, ParseException, java.text.ParseException {
         SearchMapDto searchMapDto = searchLatAndLong(address);
