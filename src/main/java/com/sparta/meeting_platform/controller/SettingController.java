@@ -45,5 +45,4 @@ public class SettingController {
         return SettingService.creatOpinion(requestDto,userId);
     }
 
-
 }

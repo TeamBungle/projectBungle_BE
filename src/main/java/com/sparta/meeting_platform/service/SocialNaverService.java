@@ -4,6 +4,7 @@ package com.sparta.meeting_platform.service;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.sparta.meeting_platform.domain.User;
+import com.sparta.meeting_platform.domain.UserRoleEnum;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.Naver.NaverUserDto;
 import com.sparta.meeting_platform.repository.UserRepository;
@@ -29,6 +30,7 @@ public class SocialNaverService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final  UserRoleCheckService userRoleCheckService;
 
     public ResponseEntity<FinalResponseDto<?>> naverLogin(String code, String state, HttpServletResponse response) {
 
@@ -37,6 +39,9 @@ public class SocialNaverService {
             NaverUserDto naverUser = getNaverUserInfo(code, state);
             String password = UUID.randomUUID().toString();
             String encodedPassword = passwordEncoder.encode(password);
+
+            // 재가입 방지
+            int mannerTemp = userRoleCheckService.userResignCheck(naverUser.getEmail());
             // 네이버 ID로 유저 정보 DB 에서 조회
             User user = userRepository.findByNaverId(naverUser.getNaverId()).orElse(null);
 
@@ -48,10 +53,15 @@ public class SocialNaverService {
                         .nickName(naverUser.getNickName())
                         .profileUrl(naverUser.getProfileUrl())
                         .naverId(naverUser.getNaverId())
-                        .mannerTemp(36)
+                        .mannerTemp(mannerTemp)
+                        .role(UserRoleEnum.USER)
                         .build();
                 userRepository.save(user);
             }
+
+            // User 권한 확인
+            userRoleCheckService.userRoleCheck(user);
+
             // 강제 로그인
             Authentication authentication = new UsernamePasswordAuthenticationToken(user.getUsername(), null);
             UserDetailsImpl userDetailsImpl = ((UserDetailsImpl) authentication.getPrincipal());

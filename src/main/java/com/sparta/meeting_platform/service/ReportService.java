@@ -28,12 +28,12 @@ public class ReportService {
         if (user==null || reportedUser==null || reporterId.equals(badMannserId)) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "신고하기 실패"), HttpStatus.BAD_REQUEST);
         }
-        Boolean isReport = reportRepository.existsByUserIdAndBadMannerId(reporterId, badMannserId);
+        Boolean isReport = reportRepository.existsByReporterIdAndBadMannerId(reporterId, badMannserId);
 
         if(isReport.equals(true)){
             return new ResponseEntity<>(new FinalResponseDto<>(false, "신고하기 실패"), HttpStatus.BAD_REQUEST);
         }
-        Report report = new Report(user, badMannserId);
+        Report report = new Report(reporterId, badMannserId);
         reportRepository.save(report);
         reportedUser.setReport();
         return new ResponseEntity<>(new FinalResponseDto<>(true, "신고하기 성공"), HttpStatus.OK);
@@ -45,7 +45,7 @@ public class ReportService {
         User user = userRepository.findById(id).orElseThrow(
                 ()-> new NullPointerException("신고 내역 조회 실패")
         );
-        List<Report> report = reportRepository.findAllByUserId(user.getId());
+        List<Report> report = reportRepository.findAllByReporterId(user.getId());
 
         if (report.size() < 1){
             return new ResponseEntity<>(new FinalResponseDto<>(false,"신고내역이 존재하지 않습니다"),HttpStatus.BAD_REQUEST);

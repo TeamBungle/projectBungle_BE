@@ -1,6 +1,7 @@
 package com.sparta.meeting_platform.domain;
 
-import com.sparta.meeting_platform.dto.user.SignUpRequestDto;
+import com.sparta.meeting_platform.dto.user.ProfileRequestDto;
+import com.sparta.meeting_platform.dto.user.SignupRequestDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,7 +26,7 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
+    @Column
     private String nickName;
 
     @Column
@@ -41,7 +42,7 @@ public class User {
     private String naverId;
 
     @CreatedDate
-    private LocalDateTime createdAt;
+    private LocalDateTime checkTime;
 
     @Column(nullable = false)
     private int mannerTemp;
@@ -55,21 +56,21 @@ public class User {
     @Column
     private int bungCount;
 
+    @Column(nullable = false)
+    @Enumerated(value = EnumType.STRING)
+    private  UserRoleEnum role;
 
-
-
-
-    public User(SignUpRequestDto requestDto,String userUrl) {
+    public User(SignupRequestDto requestDto, int mannerTemp) {
         this.username = requestDto.getUsername();
         this.password = requestDto.getPassword();
-        this.nickName = requestDto.getNickName();
-        this.mannerTemp = 50;
-        this.profileUrl = userUrl;
+        this.checkTime = LocalDateTime.now();
+        this.mannerTemp = mannerTemp;
+        this.role = UserRoleEnum.NEW_USER;
     }
 
     @Builder
     public User(String username, String password, String nickName, String profileUrl, Long kakaoId, String googleId,
-                String naverId, LocalDateTime createdAt, int mannerTemp, Boolean isOwner, String intro, int bungCount) {
+                String naverId, LocalDateTime createdAt, int mannerTemp, Boolean isOwner, String intro, int bungCount, UserRoleEnum role) {
         this.username = username;
         this.password = password;
         this.nickName = nickName;
@@ -77,15 +78,26 @@ public class User {
         this.kakaoId = kakaoId;
         this.googleId = googleId;
         this.naverId = naverId;
-        this.createdAt = createdAt;
+        this.checkTime = createdAt;
         this.mannerTemp = mannerTemp;
         this.isOwner = isOwner;
         this.intro = intro;
         this.bungCount = bungCount;
+        this.role = role;
     }
 
     public void setReport(){
-        this.mannerTemp -= 5;
+        this.mannerTemp -= 26;
+        if (this.mannerTemp < 26){
+            this.role = UserRoleEnum.STOP_USER;
+            this.checkTime = LocalDateTime.now();
+        }
+    }
+
+    public void updateProfile(ProfileRequestDto requestDto, String profileUrl){
+        this.nickName = requestDto.getNickName();
+        this.profileUrl = profileUrl;
+        this.intro = requestDto.getIntro();
     }
 
 }

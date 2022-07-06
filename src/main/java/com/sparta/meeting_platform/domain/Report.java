@@ -18,9 +18,7 @@ public class Report {
     @Id
     private Long id;
 
-    @JoinColumn(name = "REPORTER_ID")
-    @ManyToOne
-    private User user;
+    private Long reporterId;
 
     @Column(nullable = false, name = "BAD_MANNER_ID")
     private Long badMannerId;
@@ -29,8 +27,8 @@ public class Report {
     private LocalDateTime createdAt;
 
 
-    public Report(User user, Long badMannerId) {
-        this.user = user;
+    public Report(Long reporterId, Long badMannerId) {
+        this.reporterId = reporterId;
         this.badMannerId = badMannerId;
         this.createdAt = LocalDateTime.now();
     }

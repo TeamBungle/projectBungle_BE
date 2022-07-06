@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.sparta.meeting_platform.config.GoogleConfig;
 import com.sparta.meeting_platform.domain.User;
+import com.sparta.meeting_platform.domain.UserRoleEnum;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.GoogleDto.GoogleLoginDto;
 import com.sparta.meeting_platform.dto.GoogleDto.GoogleLoginRequestDto;
@@ -35,6 +36,7 @@ public class SocialGoogleService {
     private final GoogleConfig googleConfig;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final  UserRoleCheckService userRoleCheckService;
 
     public ResponseEntity<FinalResponseDto<?>> googleLogin
             (String authCode, HttpServletResponse httpServletResponse) throws JsonProcessingException {
@@ -48,11 +50,11 @@ public class SocialGoogleService {
 
         // Gooogle Oauth Access Token 요청용 Dto
         GoogleLoginRequestDto googleLoginRequestDto = GoogleLoginRequestDto.builder()
-                .clientId(googleConfig.getGoogleClientId())
-                .clientSecret(googleConfig.getGoogleSecret())
-                .code(authCode)
-                .redirectUri(googleConfig.getGoogleRedirectUri())
-                .grantType("authorization_code")
+                .clientId(googleConfig.getGoogleClientId())     // API Console Credentials page 에서 가져온 클라이언트 ID
+                .clientSecret(googleConfig.getGoogleSecret())       // Credentials page 에서 가져온 API Console 클라이언트 보안 비밀번호
+                .code(authCode)     // 초기 요청에서 반환된 승인 코드
+                .redirectUri(googleConfig.getGoogleRedirectUri())       // 지정된 client_id의 API ConsoleCredentials page 에서 프로젝트에 나열된 리디렉션 URI중 하나
+                .grantType("authorization_code")        // OAuth 2.0 사양에 정의된 대로 이 필드 값을 authorization_code로 설정
                 .build();
 
         // Http Header 설정
@@ -88,6 +90,8 @@ public class SocialGoogleService {
         }
 
         // 3번 회원가입
+        // 재가입 방지
+        int mannerTemp = userRoleCheckService.userResignCheck(userInfoDto.getEmail());
         User user = userRepository.findByUsername(userInfoDto.getEmail()).orElse(null);
 
         if (user == null) {
@@ -98,7 +102,6 @@ public class SocialGoogleService {
             String profileImage = userInfoDto.getPicture(); // profileImage: google profile image
             LocalDateTime createdAt = LocalDateTime.now();
             String googleId = userInfoDto.getSub(); // 구글 고유키
-            int mannerTemp = 36;
             user = User.builder()
                     .username(username)
                     .nickName(nickName)
@@ -107,6 +110,8 @@ public class SocialGoogleService {
                     .createdAt(createdAt)
                     .googleId(googleId)
                     .mannerTemp(mannerTemp)
+                    .isOwner(false)
+                    .role(UserRoleEnum.USER)
                     .build();
             userRepository.save(user);
         }
@@ -117,13 +122,16 @@ public class SocialGoogleService {
                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
+        // User 권한 확인
+        userRoleCheckService.userRoleCheck(user);
+
         // 5번 response Header에 JWT 토큰 추가
         String jwt_token = jwtTokenProvider.generateJwtToken(userDetails);
         headers.set("Authorization", "BEARER" + " " + jwt_token);
-        httpServletResponse.addHeader("Authorization", "BEARER" + " " + jwt_token);
+        httpServletResponse.addHeader("Authorization", "Bearer" + " " + jwt_token);
 
         return new ResponseEntity<>(new FinalResponseDto<>
-                (true, "로그인 성공!!", user.getNickName(), 36), HttpStatus.OK);
+                (true, "로그인 성공!!", user.getNickName(), user.getMannerTemp()), HttpStatus.OK);
     }
 
 }
