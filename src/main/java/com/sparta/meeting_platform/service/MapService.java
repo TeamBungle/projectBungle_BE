@@ -65,7 +65,7 @@ public class MapService {
 //
 //        System.out.println("최종 거리" + dist + "km");
 
-        Double distance = 2.0;
+        Double distance = 3.0;
         Location northEast = GeometryUtil
                 .calculate(latitude, longitude, distance, Direction.NORTHEAST.getBearing());
         Location southWest = GeometryUtil
@@ -77,12 +77,17 @@ public class MapService {
         double y2 = southWest.getLongitude();
 
         String pointFormat = String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2);
-        Query query = em.createNativeQuery("SELECT p.id,p.title,p.time,p.personnel, p.user_id, "
-                        + "p.place,p.is_letter, p.location, "
-                        + "p.latitude, p.longitude "
-                        + "FROM post AS p "
+        Query query = em.createNativeQuery("SELECT * FROM post AS p "
                         + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)", Post.class)
-                .setMaxResults(1);
+                .setMaxResults(2);
+
+//        Query query = em.createNativeQuery("" +
+//                "SELECT * FROM post AS g \n" +
+//                "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2) + ", g.location)"
+//        );
+//        query.setParameter(1, longitude);
+//        query.setParameter(2, latitude);
+//        query.setParameter(3, distance * 1000);
 
         List<Post> posts = query.getResultList();
         List<MapListDto> mapListDtos = new ArrayList<>();
