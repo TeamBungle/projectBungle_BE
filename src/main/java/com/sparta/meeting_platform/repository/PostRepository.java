@@ -20,5 +20,11 @@ public interface PostRepository extends JpaRepository<Post,Long> {
 
     Post findByUserId(Long UserId);
 
+
+//    List<Post> findAllByCategoriesAndJoinCount(String category, int joinCount);
+
+    List<Post> findAllByOrderByCreatedAtDesc();
+
+
     void deleteByUserId(Long userId);
 }

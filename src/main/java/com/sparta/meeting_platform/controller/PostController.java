@@ -3,6 +3,7 @@ package com.sparta.meeting_platform.controller;
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
+import com.sparta.meeting_platform.dto.PostTestDto;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.service.LikeService;
 import com.sparta.meeting_platform.service.PostService;
@@ -12,6 +13,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
 
@@ -30,9 +32,11 @@ public class PostController {
 
     //게시긇 전체 조회
     @GetMapping("")
-    public ResponseEntity<FinalResponseDto<?>> getPosts(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<FinalResponseDto<?>> getPosts(@RequestParam(value = "latitude") Double latitude,
+                                                        @RequestParam(value = "longitude") Double longitude,
+                                                        @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
         Long userId = getUserId(userDetails);
-        return postService.getPosts(userId);
+        return postService.getPosts(userId,latitude,longitude);
     }
 
     // 카테고리별 게시글 조회
@@ -72,11 +76,11 @@ public class PostController {
     }
 
     // 게시글 작성
-    @PostMapping("/letter")
+    @PostMapping("")
     public ResponseEntity<FinalResponseDto<?>> createPost(
             @RequestPart(value = "postDto") PostRequestDto requestDto,
             @RequestPart(value = "postImg") List<MultipartFile> files,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws Exception {
 
         return postService.createPost(getUserId(userDetails), requestDto, files);
     }
@@ -87,7 +91,7 @@ public class PostController {
             @PathVariable Long postId,
             @RequestPart(value = "postDto") PostRequestDto requestDto,
             @RequestPart(value = "postImg") List<MultipartFile> files,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws Exception {
 
         return postService.updatePost(postId, getUserId(userDetails), requestDto, files);
     }

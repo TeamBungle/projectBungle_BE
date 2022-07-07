@@ -1,9 +1,11 @@
 package com.sparta.meeting_platform.domain;
 
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
+import com.sparta.meeting_platform.dto.PostTestDto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.locationtech.jts.geom.Point;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import javax.persistence.*;
@@ -59,13 +61,16 @@ public class Post {
     @Column(name = "tag")
     private List<String> tags;
 
-    @Column(nullable = false)
+    @Column
+    private Point location;
+
+    @Column
     private Double latitude;
 
-    @Column(nullable = false)
+    @Column
     private Double longitude;
 
-    public Post(User user, PostRequestDto requestDto){
+    public Post(User user, PostRequestDto requestDto,Double longitude,Double latitude, Point location){
         this.user = user;
         this.title = requestDto.getTitle();
         this.time = requestDto.getTime();
@@ -75,8 +80,9 @@ public class Post {
         this.categories = requestDto.getCategories();
         this.tags = requestDto.getTags();
         this.postUrls = requestDto.getPostUrls();
-        this.latitude= requestDto.getLatitude();
-        this.longitude = requestDto.getLongitude();
+        this.location = location;
+        this.latitude= latitude;
+        this.longitude = longitude;
         this.createdAt = LocalDateTime.now();
         this.modifiedAt = LocalDateTime.now();
     }
