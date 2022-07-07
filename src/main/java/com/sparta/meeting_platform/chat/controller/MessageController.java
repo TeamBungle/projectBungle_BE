@@ -1,7 +1,7 @@
 package com.sparta.meeting_platform.chat.controller;
 
 import com.sparta.meeting_platform.chat.dto.ChatMessageDto;
-import com.sparta.meeting_platform.chat.service.ChatService;
+import com.sparta.meeting_platform.chat.repository.service.ChatService;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 

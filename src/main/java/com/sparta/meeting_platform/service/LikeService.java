@@ -35,8 +35,8 @@ public class LikeService {
             if(post == null || user == null){
                 return new ResponseEntity<>(new FinalResponseDto<>(false, "찜하기 실패"), HttpStatus.BAD_REQUEST);
             }
-            Like hearts = new Like(post, user);
-            likeRepository.save(hearts);
+            Like likes = new Like(post, user);
+            likeRepository.save(likes);
         }
         return  new ResponseEntity<>(new FinalResponseDto<>(true, "찜하기 성공"), HttpStatus.OK);
     }

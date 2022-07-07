@@ -3,9 +3,12 @@ package com.sparta.meeting_platform.security;
 
 
 import com.sparta.meeting_platform.domain.User;
+import com.sparta.meeting_platform.domain.UserRoleEnum;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 // 시큐리티가 어떤 주소로 요청이 오면 낚아채서 로그인을 진행시킨다.
@@ -41,7 +44,13 @@ public class UserDetailsImpl implements UserDetails {
     //해당유저의 권한을 리턴한다
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        UserRoleEnum role = user.getRole();
+        String authority = role.getAuthority();
+
+        SimpleGrantedAuthority simpleGrantedAuthority = new SimpleGrantedAuthority(authority);
+        Collection<GrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(simpleGrantedAuthority);
+        return authorities;
     }
 
     // isAccountNonExpired 만료되었니??

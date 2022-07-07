@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.meeting_platform.domain.User;
+import com.sparta.meeting_platform.domain.UserRoleEnum;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.KakaoDto.KakaoUserInfoDto;
 import com.sparta.meeting_platform.repository.UserRepository;
@@ -40,6 +41,7 @@ public class SocialKakaoService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserRoleCheckService userRoleCheckService;
 
     public ResponseEntity<FinalResponseDto<?>> kakaoLogin(String code, HttpServletResponse response)
             throws JsonProcessingException {
@@ -54,6 +56,9 @@ public class SocialKakaoService {
 
         //4. 강제 로그인 처리
         Authentication authentication = forceLoginKakaoUser(kakaoUser);
+
+        // User 권한 확인
+        userRoleCheckService.userRoleCheck(kakaoUser);
 
         // 5. response Header에 JWT 토큰 추가
         kakaoUsersAuthorizationInput(authentication, response);
@@ -129,6 +134,8 @@ public class SocialKakaoService {
 
     // 3번
     private User signupKakaoUser(KakaoUserInfoDto kakaoUserInfoDto) {
+        // 재가입 방지
+        int mannerTemp = userRoleCheckService.userResignCheck(kakaoUserInfoDto.getEmail());
         // DB 에 중복된 Kakao Id 가 있는지 확인
         Long kakaoId = kakaoUserInfoDto.getKakaoId();
         User findKakao = userRepository.findByKakaoId(kakaoId)
@@ -142,7 +149,6 @@ public class SocialKakaoService {
             String password = UUID.randomUUID().toString();
             String encodedPassword = passwordEncoder.encode(password);
             LocalDateTime createdAt = LocalDateTime.now();
-            int mannerTemp = 50;
             User kakaoUser = User.builder()
                     .username(email)
                     .nickName(nickName)
@@ -151,6 +157,7 @@ public class SocialKakaoService {
                     .createdAt(createdAt)
                     .kakaoId(kakaoId)
                     .mannerTemp(mannerTemp)
+                    .role(UserRoleEnum.USER)
                     .build();
             userRepository.save(kakaoUser);
             log.info("카카오 아이디로 회원가입 {}", kakaoUser);
@@ -177,7 +184,7 @@ public class SocialKakaoService {
         UserDetailsImpl userDetailsImpl = ((UserDetailsImpl) authentication.getPrincipal());
         String token = jwtTokenProvider.generateJwtToken(userDetailsImpl);
 
-        response.addHeader("Authorization", "BEARER" + " " + token);
+        response.addHeader("Authorization", "Bearer" + " " + token);
 
         log.info("액세스 토큰 {}", token);
     }

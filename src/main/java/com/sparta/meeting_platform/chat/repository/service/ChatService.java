@@ -1,4 +1,4 @@
-package com.sparta.meeting_platform.chat.service;
+package com.sparta.meeting_platform.chat.repository.service;
 
 import com.sparta.meeting_platform.chat.dto.ChatMessageDto;
 import com.sparta.meeting_platform.chat.dto.RoomIdDto;

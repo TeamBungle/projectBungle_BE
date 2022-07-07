@@ -8,6 +8,8 @@ import java.util.Optional;
 
 public interface PostRepository extends JpaRepository<Post,Long> {
 
+    List<Post> findTop4ByOrderByCreatedAtDesc();
+
     Optional<Post> findByIdAndUserId(Long postId, Long userId);
 
     List<Post> findAllByCategories(String categories);
@@ -23,4 +25,6 @@ public interface PostRepository extends JpaRepository<Post,Long> {
 
     List<Post> findAllByOrderByCreatedAtDesc();
 
+
+    void deleteByUserId(Long userId);
 }
