@@ -24,14 +24,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -248,7 +246,7 @@ public class PostService {
             }
             requestDto.setPostUrls(postUrls);
         }
-        SearchMapDto searchMapDto = mapService.searchLatAndLong(requestDto.getPlace());
+        SearchMapDto searchMapDto = mapService.findLatAndLong(requestDto.getPlace());
         Double longitude = searchMapDto.getLongitude();
         Double latitude = searchMapDto.getLatitude();
 

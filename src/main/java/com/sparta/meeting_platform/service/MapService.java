@@ -177,7 +177,7 @@ public class MapService {
 //    }
 
     public ResponseEntity<MapResponseDto<?>> searchMap(String address,User user) throws IOException, ParseException, java.text.ParseException {
-        SearchMapDto searchMapDto = searchLatAndLong(address);
+        SearchMapDto searchMapDto = findLatAndLong(address);
         Double latitude = searchMapDto.getLatitude();
         Double longitude = searchMapDto.getLongitude();
 
@@ -284,7 +284,7 @@ public class MapService {
 
 
 
-    public SearchMapDto searchLatAndLong(String location) throws IOException, ParseException {
+    public SearchMapDto findLatAndLong(String location) throws IOException, ParseException {
 
         URL obj;
         //인코딩한 String을 넘겨야 원하는 데이터를 받을 수 있다.
