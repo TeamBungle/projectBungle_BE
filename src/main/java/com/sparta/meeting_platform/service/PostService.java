@@ -1,5 +1,6 @@
 package com.sparta.meeting_platform.service;
 
+import com.sparta.meeting_platform.chat.dto.ChatRoom;
 import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.domain.User;
@@ -7,7 +8,6 @@ import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
-import com.sparta.meeting_platform.dto.PostTestDto;
 import com.sparta.meeting_platform.dto.SearchMapDto;
 import com.sparta.meeting_platform.dto.user.MyPageDto;
 import com.sparta.meeting_platform.repository.LikeRepository;
@@ -18,13 +18,15 @@ import com.sparta.meeting_platform.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.WKTReader;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.text.ParseException;
+import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -42,6 +44,16 @@ public class PostService {
 
     private final MapService mapService;
 
+    private HashOperations<String, Long, ChatRoom> opsHashChatRoom;
+
+    private static final String CHAT_ROOMS = "CHAT_ROOM";
+
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    @PostConstruct
+    private void init() {
+        opsHashChatRoom = redisTemplate.opsForHash();
+    }
 
     public double deg2rad(double deg) {
         return (deg * Math.PI / 180.0);
@@ -291,9 +303,17 @@ public class PostService {
         // WKTReader를 통해 WKT를 실제 타입으로 변환합니다.
         Point point = (Point) new WKTReader().read(pointWKT);
 
-        postRepository.save(new Post(user, requestDto,longitude,latitude,point));
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공"), HttpStatus.OK);
+        Post post = postRepository.save(new Post(user, requestDto,longitude,latitude,point));
+        ChatRoom chatRoom = new ChatRoom();
+        chatRoom.setRoomId(post.getId());
+        chatRoom.setName(post.getTitle());
+        opsHashChatRoom.put(CHAT_ROOMS, chatRoom.getRoomId(), chatRoom);
+
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공",post.getId()), HttpStatus.OK);
     }
+
+
+
 
 //    public void saveUser() {
 //        String name = "momentjin";
