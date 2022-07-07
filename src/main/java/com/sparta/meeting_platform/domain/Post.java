@@ -96,8 +96,8 @@ public class Post {
         this.categories = requestDto.getCategories();
         this.tags = requestDto.getTags();
         this.postUrls = requestDto.getPostUrls();
-//        this.longitude = requestDto.getLongitude();
-//        this.latitude = requestDto.getLatitude();
+        this.longitude = requestDto.getLongitude();
+        this.latitude = requestDto.getLatitude();
         this.modifiedAt = LocalDateTime.now();
     }
 }

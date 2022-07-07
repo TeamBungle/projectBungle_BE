@@ -51,21 +51,64 @@ public class MapService {
 
     public ResponseEntity<MapResponseDto<?>> readMap(Double latitude, Double longitude, User user) throws java.text.ParseException {
 
-    //거리계산
+        Double distance = 3.0;
+        Location northEast = GeometryUtil
+                .calculate(latitude, longitude, distance, Direction.NORTHEAST.getBearing());
+        Location southWest = GeometryUtil
+                .calculate(latitude, longitude, distance, Direction.SOUTHWEST.getBearing());
+
+        double x1 = northEast.getLatitude();
+        double y1 = northEast.getLongitude();
+        double x2 = southWest.getLatitude();
+        double y2 = southWest.getLongitude();
+
+        String pointFormat = String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2);
+        Query query = em.createNativeQuery("SELECT * FROM post AS p "
+                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)", Post.class);
+//                .setMaxResults(3);
+
+        List<Post> posts = query.getResultList();
+        if (posts.size() < 1) {
+            throw new IllegalArgumentException("50km 내에 모임이 존재하지 않습니다.");
+        }
+        List<MapListDto> mapListDtos = new ArrayList<>();
+        for (Post post : posts) {
+            Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId()).orElse(null);
+            Boolean isLike;
+
+            if (like == null) {
+                isLike = false;
+            } else {
+                isLike = like.getIsLike();
+            }
+            MapListDto mapListDto = MapListDto.builder()
+                    .id(post.getId())
+                    .title(post.getTitle())
+                    .personnel(post.getPersonnel())
+                    .joinCount(1)                       //TODO 수정필요
+                    .place(post.getPlace())
+                    .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
+                    .time(post.getTime())
+                    .avgTemp(50)                      //TODO 수정필요
+                    .isLetter(post.getIsLetter())
+                    .isLike(isLike)
+                    .latitude(post.getLatitude())
+                    .longitude(post.getLongitude())
+                    .build();
+
+            mapListDtos.add(mapListDto);
+        }
+        return new ResponseEntity<>(new MapResponseDto<>(true, "50km 내에 위치한 모임", mapListDtos), HttpStatus.OK);
+    }
+    // 순서는 어떻게?
+    // 화면에 몇개? 밑 슬라이스에 몇개?
 
 
-//        double lati = 35.37158186664697;
-//        double longi = 129.143196249161;
-//
-//        double theta = longitude - longi;
-//        double dist = Math.sin(deg2rad(latitude)) * Math.sin(deg2rad(lati))
-//                + Math.cos(deg2rad(latitude)) * Math.cos(deg2rad(lati)) * Math.cos(deg2rad(theta));
-//
-//        dist = Math.acos(dist);
-//        dist = rad2deg(dist);
-//        dist = dist * 60 * 1.1515 * 1.609344;
-//
-//        System.out.println("최종 거리" + dist + "km");
+    // 주소 검색 결과
+    public ResponseEntity<MapResponseDto<?>> searchMap(String address, User user) throws IOException, ParseException, java.text.ParseException {
+        SearchMapDto searchMapDto = findLatAndLong(address);
+        Double latitude = searchMapDto.getLatitude();
+        Double longitude = searchMapDto.getLongitude();
 
         Double distance = 3.0;
         Location northEast = GeometryUtil
@@ -80,178 +123,75 @@ public class MapService {
 
         String pointFormat = String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2);
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
-                        + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)", Post.class)
-                .setMaxResults(3);
-
-//        Query query = em.createNativeQuery("" +
-//                "SELECT * FROM post AS g \n" +
-//                "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2) + ", g.location)"
-//        );
-//        query.setParameter(1, longitude);
-//        query.setParameter(2, latitude);
-//        query.setParameter(3, distance * 1000);
+                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)", Post.class);
+//                .setMaxResults(3);
 
         List<Post> posts = query.getResultList();
-        List<MapListDto> mapListDtos = new ArrayList<>();
-        for(Post post : posts){
-            Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId()).orElse(null);
-
-                Boolean isLike;
-
-                if(like == null){
-                    isLike = false;
-                }else {
-                    isLike = like.getIsLike();
-                }
-
-                MapListDto mapListDto =MapListDto.builder()
-                        .id(post.getId())
-                        .title(post.getTitle())
-                        .personnel(post.getPersonnel())
-                        .joinCount(1)                       //TODO 수정필요
-                        .place(post.getPlace())
-                        .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
-                        .time(post.getTime())
-                        .avgTemp(50)                      //TODO 수정필요
-                        .isLetter(post.getIsLetter())
-                        .isLike(isLike)
-//                        .latitude(post.getLocation())
-//                        .longitude(post.getLongitude())
-                        .build();
-
-                mapListDtos.add(mapListDto);
-            }
-        return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공",mapListDtos), HttpStatus.OK);
+        if (posts.size() < 1) {
+            throw new IllegalArgumentException("50km 내에 모임이 존재하지 않습니다.");
         }
-
-
-
-
-
-
-
-//        List<MapListDto> mapListDtos = new ArrayList<>();
-//
-//        List<Post> posts = postRepository.findAll();
-//        for (Post post : posts) {
-//            double theta = longitude - post.getLongitude();
-//            double dist = Math.sin(deg2rad(latitude)) * Math.sin(deg2rad(post.getLatitude()))
-//                    + Math.cos(deg2rad(latitude)) * Math.cos(deg2rad(post.getLatitude())) * Math.cos(deg2rad(theta));
-//
-//            dist = Math.acos(dist);
-//            dist = rad2deg(dist);
-//            dist = dist * 60 * 1.1515 * 1.609344;
-//
-//            if (dist <= 7000) {
-//
-//                Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId()).orElse(null);
-//
-//                Boolean isLike;
-//
-//                if(like == null){
-//                    isLike = false;
-//                }else {
-//                    isLike = like.getIsLike();
-//                }
-//
-//                MapListDto mapListDto =MapListDto.builder()
-//                        .id(post.getId())
-//                        .title(post.getTitle())
-//                        .personnel(post.getPersonnel())
-//                        .joinCount(1)                       //TODO 수정필요
-//                        .place(post.getPlace())
-//                        .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
-//                        .time(post.getTime())
-//                        .avgTemp(50)                      //TODO 수정필요
-//                        .isLetter(post.getIsLetter())
-//                        .isLike(isLike)
-//                        .latitude(post.getLatitude())
-//                        .longitude(post.getLongitude())
-//                        .build();
-//
-//                mapListDtos.add(mapListDto);
-//            }
-//        }// 리스트가 아무것도 없을시 예외처리해야함
-        // 본인게시글 보이지 않게?
-        // 순서는 어떻게?
-//        return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공",mapListDtos), HttpStatus.OK);
-//
-//    }
-
-    public ResponseEntity<MapResponseDto<?>> searchMap(String address,User user) throws IOException, ParseException, java.text.ParseException {
-        SearchMapDto searchMapDto = findLatAndLong(address);
-        Double latitude = searchMapDto.getLatitude();
-        Double longitude = searchMapDto.getLongitude();
-
         List<MapListDto> mapListDtos = new ArrayList<>();
 
-        List<Post> posts = postRepository.findAll();
         for (Post post : posts) {
-            double theta = longitude - post.getLongitude();
-            double dist = Math.sin(deg2rad(latitude)) * Math.sin(deg2rad(post.getLatitude()))
-                    + Math.cos(deg2rad(latitude)) * Math.cos(deg2rad(post.getLatitude())) * Math.cos(deg2rad(theta));
+            Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId()).orElse(null);
+            Boolean isLike;
 
-            dist = Math.acos(dist);
-            dist = rad2deg(dist);
-            dist = dist * 60 * 1.1515 * 1.609344;
-
-            if (dist <= 7000) {
-
-                Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId()).orElse(null);
-
-                Boolean isLike;
-
-                if(like == null){
-                    isLike = false;
-                }else {
-                    isLike = like.getIsLike();
-                }
-
-                MapListDto mapListDto =MapListDto.builder()
-                        .id(post.getId())
-                        .title(post.getTitle())
-                        .personnel(post.getPersonnel())
-                        .joinCount(1)                       //TODO 수정필요
-                        .place(post.getPlace())
-                        .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
-                        .time(post.getTime())
-                        .avgTemp(50)                      //TODO 수정필요
-                        .isLetter(post.getIsLetter())
-                        .isLike(isLike)
-                        .latitude(post.getLatitude())
-                        .longitude(post.getLongitude())
-                        .build();
-
-                mapListDtos.add(mapListDto);
-
+            if (like == null) {
+                isLike = false;
+            } else {
+                isLike = like.getIsLike();
             }
+            MapListDto mapListDto = MapListDto.builder()
+                    .id(post.getId())
+                    .title(post.getTitle())
+                    .personnel(post.getPersonnel())
+                    .joinCount(1)                       //TODO 수정필요
+                    .place(post.getPlace())
+                    .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
+                    .time(post.getTime())
+                    .avgTemp(50)                      //TODO 수정필요
+                    .isLetter(post.getIsLetter())
+                    .isLike(isLike)
+                    .latitude(post.getLatitude())
+                    .longitude(post.getLongitude())
+                    .build();
+
+            mapListDtos.add(mapListDto);
         }
-        return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공",mapListDtos), HttpStatus.OK);
-    }
+        return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공", mapListDtos), HttpStatus.OK);
+    }// 순서는 어떻게?
+    // 화면에 몇개? 밑 슬라이스에 몇개?
 
 
+    //지도 세부 설정 검색
+    public ResponseEntity<MapResponseDto<?>> detailsMap(List<String> categories, int joinCount, Double distance,
+                                                        Double latitude, Double longitude, User user) throws java.text.ParseException {
 
+        Location northEast = GeometryUtil
+                .calculate(latitude, longitude, distance, Direction.NORTHEAST.getBearing());
+        Location southWest = GeometryUtil
+                .calculate(latitude, longitude, distance, Direction.SOUTHWEST.getBearing());
 
+        double x1 = northEast.getLatitude();
+        double y1 = northEast.getLongitude();
+        double x2 = southWest.getLatitude();
+        double y2 = southWest.getLongitude();
 
-    public ResponseEntity<MapResponseDto<?>> detailsMap(List<String> categories, int joinCount, int distance,
-                           Double latitude, Double longitude, User user) throws java.text.ParseException {
-        List<MapListDto> mapListDtos = new ArrayList<>();
+        String pointFormat = String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2);
+        Query query = em.createNativeQuery("SELECT * FROM post AS p "
+                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)", Post.class);
+//                .setMaxResults(3);
 
-//        List<Post> posts = postRepository.findAll();
-        for (String category : categories) {
-            List<Post> postList = postRepository.findAllByCategories(category);
+        List<Post> posts = query.getResultList();
+        if(categories != null){
+            for(Post post : posts) {
+                for (String category : categories) {
+                    if(po)
+        }
 
+                List<Post> postList = postRepository.findAllByCategories(category);
 
-            for (Post post : postList) {
-                double theta = longitude - post.getLongitude();
-                double dist = Math.sin(deg2rad(latitude)) * Math.sin(deg2rad(post.getLatitude()))
-                        + Math.cos(deg2rad(latitude)) * Math.cos(deg2rad(post.getLatitude())) * Math.cos(deg2rad(theta));
-
-                dist = Math.acos(dist);
-                dist = rad2deg(dist);
-                dist = dist * 60 * 1.1515 * 1.609344;
-
-                if (dist <= distance && post.getPersonnel() == joinCount) {
+                if ( && post.getPersonnel() == joinCount) {
 
                     Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId()).orElse(null);
 
@@ -283,11 +223,11 @@ public class MapService {
             }
         }
         List<MapListDto> mapListDoubleCheckDto = DeduplicationUtils.deduplication(mapListDtos, MapListDto::getId);
-        return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공",mapListDoubleCheckDto), HttpStatus.OK);
+        return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공", mapListDoubleCheckDto), HttpStatus.OK);
     }
 
 
-    //위도 경도 찾아 오기
+    //위도 경도 찾아 오기 함수
     public SearchMapDto findLatAndLong(String location) throws IOException, ParseException {
 
         URL obj;
@@ -333,12 +273,37 @@ public class MapService {
 
         System.out.println(longi);
         System.out.println(lati);
-//            System.out.println(response.toString());
-
         return new SearchMapDto(longi, lati);
     }
 
+    //특정 반경 내에 위치한 모임 찾아오기 메소드
+    public List<Post> findPostsWithinDistance(Double latitude, Double longitude, Double distance) {
+        Location northEast = GeometryUtil
+                .calculate(latitude, longitude, distance, Direction.NORTHEAST.getBearing());
+        Location southWest = GeometryUtil
+                .calculate(latitude, longitude, distance, Direction.SOUTHWEST.getBearing());
 
+        double x1 = northEast.getLatitude();
+        double y1 = northEast.getLongitude();
+        double x2 = southWest.getLatitude();
+        double y2 = southWest.getLongitude();
+
+        String pointFormat = String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2);
+        Query query = em.createNativeQuery("SELECT * FROM post AS p "
+                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)", Post.class);
+//                .setMaxResults(3);
+
+        return query.getResultList();
+    }
+
+    //    double theta = longitude - post.getLongitude();
+//    double dist = Math.sin(deg2rad(latitude)) * Math.sin(deg2rad(post.getLatitude()))
+//            + Math.cos(deg2rad(latitude)) * Math.cos(deg2rad(post.getLatitude())) * Math.cos(deg2rad(theta));
+//
+//    dist = Math.acos(dist);
+//    dist = rad2deg(dist);
+//    dist = dist * 60 * 1.1515 * 1.609344;
+//
     public double deg2rad(double deg) {
         return (deg * Math.PI / 180.0);
     }
@@ -350,10 +315,10 @@ public class MapService {
     public String timeCheck(String time) throws java.text.ParseException {
         DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime localDateTime = LocalDateTime.parse(time, inputFormat);
-        if(!localDateTime.isAfter(LocalDateTime.now())){
+        if (!localDateTime.isAfter(LocalDateTime.now())) {
             Duration duration = Duration.between(localDateTime, LocalDateTime.now());
             System.out.println(duration.getSeconds());
-            return duration.getSeconds()/60 + "분 경과";
+            return duration.getSeconds() / 60 + "분 경과";
         }
         return localDateTime.getHour() + "시 시작 예정";
     }

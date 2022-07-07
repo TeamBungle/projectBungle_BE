@@ -52,6 +52,6 @@ public class MapController {
                            @RequestParam(value = "longitude") Double longitude,
                            @AuthenticationPrincipal UserDetailsImpl userDetails) throws java.text.ParseException {
         User user = userDetails.getUser();
-       return mapService.detailsMap(categories,joinCount,distance,latitude,longitude,user);
+       return mapService.detailsMap(categories,joinCount,(double)distance,latitude,longitude,user);
     }
 }
