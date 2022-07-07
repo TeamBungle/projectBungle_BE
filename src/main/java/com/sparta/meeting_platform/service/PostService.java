@@ -56,7 +56,7 @@ public class PostService {
 
     //게시글 전체 조회(4개만)
     @Transactional(readOnly = true)
-    public ResponseEntity<FinalResponseDto<?>> getPosts(Long userId, Double latitude, Double longitude) throws ParseException {
+    public ResponseEntity<FinalResponseDto<?>> getPosts(Long userId, Double latitude, Double longitude) {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
@@ -258,7 +258,7 @@ public class PostService {
 
     // 게시글 등록
     @Transactional
-    public ResponseEntity<FinalResponseDto<?>> createPost(Long userId, PostTestDto requestDto, List<MultipartFile> files) throws Exception {
+    public ResponseEntity<FinalResponseDto<?>> createPost(Long userId, PostRequestDto requestDto, List<MultipartFile> files) throws Exception {
 
         User user = userRepository.findById(userId).orElse(null);
 
@@ -276,7 +276,7 @@ public class PostService {
 
         if (files.isEmpty()) {
             requestDto.setPostUrls(null);
-            ; // 기본 이미지로 변경 필요
+             // 기본 이미지로 변경 필요
         } else {
             for (MultipartFile file : files) {
                 List<String> postUrls = new ArrayList<>();
@@ -318,7 +318,7 @@ public class PostService {
 
         if (files.isEmpty()) {
             requestDto.setPostUrls(null);
-            ; // 기본 이미지로 변경 필요
+             // 기본 이미지로 변경 필요
         } else {
             List<String> postUrls = new ArrayList<>();
             for (MultipartFile file : files) {

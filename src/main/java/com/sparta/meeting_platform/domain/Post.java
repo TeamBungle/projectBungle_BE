@@ -70,7 +70,7 @@ public class Post {
     @Column
     private Double longitude;
 
-    public Post(User user, PostTestDto requestDto,Double longitude,Double latitude, Point location){
+    public Post(User user, PostRequestDto requestDto,Double longitude,Double latitude, Point location){
         this.user = user;
         this.title = requestDto.getTitle();
         this.time = requestDto.getTime();
