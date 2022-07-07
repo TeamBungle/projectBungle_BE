@@ -87,7 +87,7 @@ public class User {
     }
 
     public void setReport(){
-        this.mannerTemp -= 26;
+        this.mannerTemp -= 5;
         if (this.mannerTemp < 26){
             this.role = UserRoleEnum.STOP_USER;
             this.checkTime = LocalDateTime.now();

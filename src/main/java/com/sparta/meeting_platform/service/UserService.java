@@ -64,6 +64,8 @@ public class UserService {
 
         requestDto.setPassword(passwordEncoder.encode(requestDto.getPassword()));
         userRepository.save(new User(requestDto, mannerTemp));
+
+        // 인증 메일 전송
         emailConfirmTokenService.createEmailConfirmationToken(requestDto.getUsername());
 
         return new ResponseEntity<>(new FinalResponseDto<>(true, "회원가입 성공"), HttpStatus.OK);

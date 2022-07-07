@@ -2,14 +2,6 @@ package com.sparta.meeting_platform.domain;
 
 public enum UserRoleEnum {
 
-//    BEFORE_CONFIRM(false),  // 사용자 권한
-//    OK_CONFIRM(true);  // 관리자 권한
-//
-//    boolean code;
-//
-//    UserRoleEnum(boolean code) {
-//        this.code = code;
-//    }
     NEW_USER(Authority.NEW_USER),
     USER(Authority.USER),
     RESIGN_USER(Authority.RESIGN_USER),
