@@ -181,17 +181,10 @@ public class MapService {
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
                 + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)", Post.class);
 //                .setMaxResults(3);
-
+        List<MapListDto> mapListDtos = new ArrayList<>();
         List<Post> posts = query.getResultList();
         if(categories != null){
             for(Post post : posts) {
-                for (String category : categories) {
-                    if(po)
-        }
-
-                List<Post> postList = postRepository.findAllByCategories(category);
-
-                if ( && post.getPersonnel() == joinCount) {
 
                     Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId()).orElse(null);
 
@@ -221,7 +214,6 @@ public class MapService {
                     mapListDtos.add(mapListDto);
                 }
             }
-        }
         List<MapListDto> mapListDoubleCheckDto = DeduplicationUtils.deduplication(mapListDtos, MapListDto::getId);
         return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공", mapListDoubleCheckDto), HttpStatus.OK);
     }

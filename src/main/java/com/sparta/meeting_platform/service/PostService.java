@@ -242,11 +242,15 @@ public class PostService {
         Post post = postRepository.findById(postid).orElseThrow(
                 () -> new NullPointerException("해당 게시글이 존재하지 않습니다.")
         );
+        User user = userRepository.findById(userId).orElseThrow(
+                ()-> new NullPointerException("존재하지 않는 사용자 입니다.")
+        );
 
         if (!post.getUser().getId().equals(userId)) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "본인 게시글이 아닙니다."), HttpStatus.BAD_REQUEST);
         } else {
             postRepository.deleteById(postid);
+            user.setIsOwner(false);
             return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공"), HttpStatus.OK);
         }
     }
@@ -257,6 +261,14 @@ public class PostService {
     public ResponseEntity<FinalResponseDto<?>> createPost(Long userId, PostTestDto requestDto, List<MultipartFile> files) throws Exception {
 
         User user = userRepository.findById(userId).orElse(null);
+
+        //        Boolean isOwner = user.getIsOwner();
+//
+//        if(isOwner){
+//            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
+//        }else{
+//            user.setIsOwner(true);
+//        }
 
         if (user == null) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
