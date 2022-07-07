@@ -17,6 +17,12 @@ public class EmailController {
     @GetMapping("/confirmEmail")
     public String viewConfirmEmail(@Valid @RequestParam String token){
         userService.confirmEmail(token);
+        return "redirect:http://localhost:3000/main";
+    }
+
+    @GetMapping("/confirmEmail2")
+    public String viewConfirmEmail2(@Valid @RequestParam String token){
+        userService.confirmEmail(token);
         return "redirect:https://www.naver.com";
     }
 
