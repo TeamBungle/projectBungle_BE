@@ -10,5 +10,6 @@ public class SearchMapDto {
     public SearchMapDto(Double latitude, Double longitude) {
         this.latitude = latitude;
         this.longitude = longitude;
+
     }
 }

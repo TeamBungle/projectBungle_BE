@@ -42,7 +42,6 @@ import java.util.List;
 public class MapService {
     private final PostRepository postRepository;
     private final LikeRepository likeRepository;
-
     private final EntityManager em;
 
     String geocodingUrl = "http://dapi.kakao.com/v2/local/search/address.json?query=";
@@ -51,6 +50,9 @@ public class MapService {
     private String geocoding;
 
     public ResponseEntity<MapResponseDto<?>> readMap(Double latitude, Double longitude, User user) throws java.text.ParseException {
+
+    //거리계산
+
 
 //        double lati = 35.37158186664697;
 //        double longi = 129.143196249161;
@@ -221,10 +223,12 @@ public class MapService {
                         .build();
 
                 mapListDtos.add(mapListDto);
+
             }
         }
         return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공",mapListDtos), HttpStatus.OK);
     }
+
 
 
 
@@ -283,19 +287,22 @@ public class MapService {
     }
 
 
-
+    //위도 경도 찾아 오기
     public SearchMapDto findLatAndLong(String location) throws IOException, ParseException {
 
         URL obj;
+
+        String geocodingUrl = "http://dapi.kakao.com/v2/local/search/address.json?query=";
         //인코딩한 String을 넘겨야 원하는 데이터를 받을 수 있다.
         String address = URLEncoder.encode(location, "UTF-8");
 
         obj = new URL(geocodingUrl + address);
 
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-
+        String auth = "KakaoAK " + geocoding;
         con.setRequestMethod("GET");
-        con.setRequestProperty("Authorization","KakaoAK " + geocoding);
+        con.setRequestProperty("Authorization", auth);
+
         con.setRequestProperty("content-type", "application/json");
         con.setDoOutput(true);
         con.setUseCaches(false);
@@ -330,6 +337,7 @@ public class MapService {
 
         return new SearchMapDto(longi, lati);
     }
+
 
     public double deg2rad(double deg) {
         return (deg * Math.PI / 180.0);

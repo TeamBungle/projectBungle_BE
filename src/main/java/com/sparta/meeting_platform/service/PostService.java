@@ -42,41 +42,62 @@ public class PostService {
 
     private final MapService mapService;
 
+
+    public double deg2rad(double deg) {
+        return (deg * Math.PI / 180.0);
+    }
+
+    public double rad2deg(double rad) {
+        return (rad * 180 / Math.PI);
+    }
+
+    private int distance = 50;
+
+
     //게시글 전체 조회(4개만)
     @Transactional(readOnly = true)
-    public ResponseEntity<FinalResponseDto<?>> getPosts(Long userId) throws ParseException {
+    public ResponseEntity<FinalResponseDto<?>> getPosts(Long userId, Double latitude, Double longitude) throws ParseException {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 조회 실패"), HttpStatus.BAD_REQUEST);
         }
-        List<PostResponseDto> postList = new ArrayList<>();
-        List<Post> posts = postRepository.findTop4ByOrderByCreatedAtDesc();
+        List<PostResponseDto> postList = new ArrayList<>(4);
+        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
 
         for (Post post : posts) {
             Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
             Boolean isLike;
 
-            if(like == null){
+            if (like == null) {
                 isLike = false;
-            }else {
+            } else {
                 isLike = like.getIsLike();
             }
-            PostResponseDto postResponseDto =PostResponseDto.builder()
-                    .id(post.getId())
-                    .title(post.getTitle())
-                    .personnel(post.getPersonnel())
-                    .joinCount(1)                       //TODO 수정필요
-                    .place(post.getPlace())
-                    .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
-                    .time(timeCheck(post.getTime()))
-                    .avgTemp(50)                      //TODO 수정필요
-                    .isLetter(post.getIsLetter())
-                    .isLike(isLike)
-                    .build();
-            postList.add(postResponseDto);
-            }
 
+            double theta = longitude - post.getLongitude();
+            double dist = Math.sin(deg2rad(latitude)) * Math.sin(deg2rad(post.getLatitude()))
+                    + Math.cos(deg2rad(latitude)) * Math.cos(deg2rad(post.getLatitude())) * Math.cos(deg2rad(theta));
+
+            dist = Math.acos(dist);
+            dist = rad2deg(dist);
+            dist = dist * 60 * 1.1515 * 1.609344;
+            if (dist <= distance) {
+                PostResponseDto postResponseDto = PostResponseDto.builder()
+                        .id(post.getId())
+                        .title(post.getTitle())
+                        .personnel(post.getPersonnel())
+                        .joinCount(1)                       //TODO 수정필요
+                        .place(post.getPlace())
+                        .postUrl("asdasd") //TODO 수정필요
+                        .time(timeCheck(post.getTime()))
+                        .avgTemp(50)                      //TODO 수정필요
+                        .isLetter(post.getIsLetter())
+                        .isLike(isLike)
+                        .build();
+                postList.add(postResponseDto);
+            }
+        }
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
     }
 
@@ -92,19 +113,19 @@ public class PostService {
 
         for (String category : categories) {
             List<Post> posts = postRepository.findAllByCategories(category);
-            if(posts.size() < 1){
+            if (posts.size() < 1) {
                 return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 조회해주세요"), HttpStatus.BAD_REQUEST);
             }
             for (Post post : posts) {
                 Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
                 Boolean isLike;
 
-                if(like == null){
+                if (like == null) {
                     isLike = false;
-                }else {
+                } else {
                     isLike = like.getIsLike();
                 }
-                PostResponseDto postResponseDto =PostResponseDto.builder()
+                PostResponseDto postResponseDto = PostResponseDto.builder()
                         .id(post.getId())
                         .title(post.getTitle())
                         .personnel(post.getPersonnel())
@@ -122,6 +143,7 @@ public class PostService {
 
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
     }
+
     //태그별 게시글 조회
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getPostsByTags(Long userId, List<String> tags) throws ParseException {
@@ -135,7 +157,7 @@ public class PostService {
 
         for (String tag : tags) {
             List<Post> posts = postRepository.findAllByTags(tag);
-            if(posts.size() < 1){
+            if (posts.size() < 1) {
                 return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 조회해주세요"), HttpStatus.BAD_REQUEST);
             }
 
@@ -143,12 +165,12 @@ public class PostService {
                 Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
                 Boolean isLike;
 
-                if(like == null){
+                if (like == null) {
                     isLike = false;
-                }else {
+                } else {
                     isLike = like.getIsLike();
                 }
-                PostResponseDto postResponseDto =PostResponseDto.builder()
+                PostResponseDto postResponseDto = PostResponseDto.builder()
                         .id(post.getId())
                         .title(post.getTitle())
                         .personnel(post.getPersonnel())
@@ -171,7 +193,7 @@ public class PostService {
 
     //게시글 상세 조회
     @Transactional(readOnly = true)
-    public ResponseEntity<FinalResponseDto<?>>getPostsDetails(Long postId, Long userId) throws ParseException {
+    public ResponseEntity<FinalResponseDto<?>> getPostsDetails(Long postId, Long userId) throws ParseException {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
@@ -183,9 +205,9 @@ public class PostService {
         Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
         Boolean isLike;
 
-        if(like == null){
+        if (like == null) {
             isLike = false;
-        }else {
+        } else {
             isLike = like.getIsLike();
         }
         List<String> joinPeopleurls = new ArrayList<>(); //TODO 수정필요
@@ -194,7 +216,7 @@ public class PostService {
         List<String> joinPeopleNicknames = new ArrayList<>(); //TODO 수정필요
         joinPeopleNicknames.add("test1");
         joinPeopleNicknames.add("test2");
-        PostDetailsResponseDto postDetailsResponseDto =PostDetailsResponseDto.builder()
+        PostDetailsResponseDto postDetailsResponseDto = PostDetailsResponseDto.builder()
                 .title(post.getTitle())
                 .time(timeCheck(post.getTime()))
                 .personnel(post.getPersonnel())
@@ -211,40 +233,43 @@ public class PostService {
                 .isLike(isLike)
                 .build();
 
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공",postDetailsResponseDto), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postDetailsResponseDto), HttpStatus.OK);
     }
+
     //게시글 삭제
     @Transactional
-    public ResponseEntity<FinalResponseDto<?>>deletePost(Long postid, Long userId) {
+    public ResponseEntity<FinalResponseDto<?>> deletePost(Long postid, Long userId) {
         Post post = postRepository.findById(postid).orElseThrow(
                 () -> new NullPointerException("해당 게시글이 존재하지 않습니다.")
         );
 
         if (!post.getUser().getId().equals(userId)) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "본인 게시글이 아닙니다."),HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "본인 게시글이 아닙니다."), HttpStatus.BAD_REQUEST);
         } else {
             postRepository.deleteById(postid);
             return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공"), HttpStatus.OK);
         }
     }
 
-    @Transactional
+
     // 게시글 등록
+    @Transactional
     public ResponseEntity<FinalResponseDto<?>> createPost(Long userId, PostTestDto requestDto, List<MultipartFile> files) throws Exception {
+
         User user = userRepository.findById(userId).orElse(null);
 
-        if (user==null) {
+        if (user == null) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
         }
 
-        if(files.isEmpty()){
-            requestDto.setPostUrls(null);  // 기본 이미지로 변경 필요
+        if (files.isEmpty()) {
+            requestDto.setPostUrls(null);
+            ; // 기본 이미지로 변경 필요
         } else {
-            List<String> postUrls = new ArrayList<>();
-            for(MultipartFile file : files){
+            for (MultipartFile file : files) {
+                List<String> postUrls = new ArrayList<>();
                 postUrls.add(s3Service.upload(file));
             }
-            requestDto.setPostUrls(postUrls);
         }
         SearchMapDto searchMapDto = mapService.findLatAndLong(requestDto.getPlace());
         Double longitude = searchMapDto.getLongitude();
@@ -272,26 +297,33 @@ public class PostService {
 
     // 게시글 수정
     @Transactional
-    public ResponseEntity<FinalResponseDto<?>> updatePost(Long postId, Long userId, PostRequestDto requestDto, List<MultipartFile> files) {
-        Post post = postRepository.findByIdAndUserId(postId, userId).orElse(null);
+    public ResponseEntity<FinalResponseDto<?>> updatePost(Long postId, Long userId, PostRequestDto requestDto, List<MultipartFile> files) throws Exception {
+        User user = userRepository.findById(userId).orElse(null);
 
-        if(post == null){
+        if (user == null) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 수정 실패"), HttpStatus.BAD_REQUEST);
         }
 
-        if(files.isEmpty()){
-            requestDto.setPostUrls(null);  // 기본 이미지로 변경 필요
+        if (files.isEmpty()) {
+            requestDto.setPostUrls(null);
+            ; // 기본 이미지로 변경 필요
         } else {
             List<String> postUrls = new ArrayList<>();
-            for(MultipartFile file : files){
+            for (MultipartFile file : files) {
                 postUrls.add(s3Service.upload(file));
             }
             requestDto.setPostUrls(postUrls);
         }
-        // DB 업데이트
-        post.update(requestDto);
 
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 수정 성공"), HttpStatus.OK);
+        SearchMapDto searchMapDto = mapService.findLatAndLong(requestDto.getPlace());
+        requestDto.setLatitude(searchMapDto.getLatitude());
+        requestDto.setLongitude(searchMapDto.getLongitude());
+
+        Post post = postRepository.findById(postId).orElseThrow(
+                () -> new NullPointerException("존재하지 않는 게시물 입니다."));
+
+        post.update(requestDto);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 수정 성공", post.getId(), post.getPostUrls()), HttpStatus.OK);
 
     }
 
@@ -310,10 +342,10 @@ public class PostService {
 
         for (PostMapping post : posts) {
             Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getPost().getId()).orElseThrow(
-                    ()-> new NullPointerException("찜한 게시글이 없습니다.")
+                    () -> new NullPointerException("찜한 게시글이 없습니다.")
             );
 
-            PostResponseDto postResponseDto =PostResponseDto.builder()
+            PostResponseDto postResponseDto = PostResponseDto.builder()
                     .id(post.getPost().getId())
                     .title(post.getPost().getTitle())
                     .personnel(post.getPost().getPersonnel())
@@ -334,15 +366,16 @@ public class PostService {
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getMyPage(UserDetailsImpl userDetails) {
         User user = userRepository.findById(userDetails.getUser().getId()).orElseThrow(
-                ()-> new NullPointerException("해당 유저를 찾을 수 없습니다.")
+                () -> new NullPointerException("해당 유저를 찾을 수 없습니다.")
         );
-        MyPageDto myPageDto = new MyPageDto(user.getNickName(),user.getMannerTemp(),user.getProfileUrl(),user.getBungCount());
-        return new ResponseEntity<>(new FinalResponseDto<>(true,"나의 번개 페이지 조회 성공", myPageDto), HttpStatus.OK);
+        MyPageDto myPageDto = new MyPageDto(user.getNickName(), user.getMannerTemp(), user.getProfileUrl(), user.getBungCount());
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "나의 번개 페이지 조회 성공", myPageDto), HttpStatus.OK);
     }
+
     //내 벙글 확인하기
     public ResponseEntity<FinalResponseDto<?>> getMyPagePost(UserDetailsImpl userDetails) throws ParseException {
         User user = userRepository.findById(userDetails.getUser().getId()).orElseThrow(
-                ()-> new NullPointerException("해당 유저를 찾을 수 없습니다.")
+                () -> new NullPointerException("해당 유저를 찾을 수 없습니다.")
         );
         Post post = postRepository.findByUserId(user.getId());
 
@@ -350,12 +383,12 @@ public class PostService {
 
         Boolean isLike;
 
-        if(like == null){
+        if (like == null) {
             isLike = false;
-        }else {
+        } else {
             isLike = like.getIsLike();
         }
-        PostResponseDto postResponseDto =PostResponseDto.builder()
+        PostResponseDto postResponseDto = PostResponseDto.builder()
                 .id(post.getId())
                 .title(post.getTitle())
                 .personnel(post.getPersonnel())
@@ -368,17 +401,17 @@ public class PostService {
                 .isLike(isLike)
                 .build();
 
-        return new ResponseEntity<>(new FinalResponseDto<>(true,"나의 번개 페이지 조회 성공", postResponseDto), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "나의 번개 페이지 조회 성공", postResponseDto), HttpStatus.OK);
     }
 
     // Time 변환
     public String timeCheck(String time) throws ParseException {
         DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime localDateTime = LocalDateTime.parse(time, inputFormat);
-        if(!localDateTime.isAfter(LocalDateTime.now())){
+        if (!localDateTime.isAfter(LocalDateTime.now())) {
             Duration duration = Duration.between(localDateTime, LocalDateTime.now());
             System.out.println(duration.getSeconds());
-            return duration.getSeconds()/60 + "분 경과";
+            return duration.getSeconds() / 60 + "분 경과";
         }
         return localDateTime.getHour() + "시 시작 예정";
     }

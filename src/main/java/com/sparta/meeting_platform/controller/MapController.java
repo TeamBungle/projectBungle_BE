@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.json.simple.parser.ParseException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,8 +27,8 @@ public class MapController {
 
     @GetMapping("/map")
     public ResponseEntity<MapResponseDto<?>> readMap(@RequestParam(value = "latitude") Double latitude,
-                        @RequestParam(value = "longitude") Double longitude,
-                        @AuthenticationPrincipal UserDetailsImpl userDetails) throws java.text.ParseException {
+                                                     @RequestParam(value = "longitude") Double longitude,
+                                                     @AuthenticationPrincipal UserDetailsImpl userDetails) throws java.text.ParseException {
         User user = userDetails.getUser();
        return mapService.readMap(latitude,longitude,user);
     }
