@@ -2,7 +2,7 @@ package com.sparta.meeting_platform.chat.controller;
 
 import com.sparta.meeting_platform.chat.dto.RoomIdDto;
 import com.sparta.meeting_platform.chat.model.ChatRoom;
-import com.sparta.meeting_platform.chat.service.ChatService;
+import com.sparta.meeting_platform.chat.repository.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;

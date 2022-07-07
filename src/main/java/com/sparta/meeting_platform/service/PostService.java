@@ -38,7 +38,7 @@ public class PostService {
 
     //게시글 전체 조회(4개만)
     @Transactional(readOnly = true)
-    public ResponseEntity<FinalResponseDto<?>> getPosts(Long userId) throws ParseException {
+    public ResponseEntity<FinalResponseDto<?>> getPosts(Long userId) {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
@@ -76,7 +76,7 @@ public class PostService {
 
     //카테고리별 게시글 조회
     @Transactional(readOnly = true)
-    public ResponseEntity<FinalResponseDto<?>> getPostsByCategories(Long userId, List<String> categories) throws ParseException {
+    public ResponseEntity<FinalResponseDto<?>> getPostsByCategories(Long userId, List<String> categories)  {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
@@ -118,7 +118,7 @@ public class PostService {
     }
     //태그별 게시글 조회
     @Transactional(readOnly = true)
-    public ResponseEntity<FinalResponseDto<?>> getPostsByTags(Long userId, List<String> tags) throws ParseException {
+    public ResponseEntity<FinalResponseDto<?>> getPostsByTags(Long userId, List<String> tags)  {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
@@ -165,7 +165,7 @@ public class PostService {
 
     //게시글 상세 조회
     @Transactional(readOnly = true)
-    public ResponseEntity<FinalResponseDto<?>>getPostsDetails(Long postId, Long userId) throws ParseException {
+    public ResponseEntity<FinalResponseDto<?>>getPostsDetails(Long postId, Long userId) {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
@@ -271,7 +271,7 @@ public class PostService {
 
     // 찜한 게시글 전체 조회
     @Transactional(readOnly = true)
-    public ResponseEntity<FinalResponseDto<?>> getLikedPosts(Long userId) throws ParseException {
+    public ResponseEntity<FinalResponseDto<?>> getLikedPosts(Long userId) {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
@@ -314,7 +314,7 @@ public class PostService {
         return new ResponseEntity<>(new FinalResponseDto<>(true,"나의 번개 페이지 조회 성공", myPageDto), HttpStatus.OK);
     }
     //내 벙글 확인하기
-    public ResponseEntity<FinalResponseDto<?>> getMyPagePost(UserDetailsImpl userDetails) throws ParseException {
+    public ResponseEntity<FinalResponseDto<?>> getMyPagePost(UserDetailsImpl userDetails) {
         User user = userRepository.findById(userDetails.getUser().getId()).orElseThrow(
                 ()-> new NullPointerException("해당 유저를 찾을 수 없습니다.")
         );
@@ -346,12 +346,11 @@ public class PostService {
     }
 
     // Time 변환
-    public String timeCheck(String time) throws ParseException {
+    public String timeCheck(String time) {
         DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime localDateTime = LocalDateTime.parse(time, inputFormat);
         if(!localDateTime.isAfter(LocalDateTime.now())){
             Duration duration = Duration.between(localDateTime, LocalDateTime.now());
-            System.out.println(duration.getSeconds());
             return duration.getSeconds()/60 + "분 경과";
         }
         return localDateTime.getHour() + "시 시작 예정";

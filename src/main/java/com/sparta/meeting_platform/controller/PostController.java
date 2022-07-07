@@ -30,7 +30,7 @@ public class PostController {
 
     //게시긇 전체 조회
     @GetMapping("")
-    public ResponseEntity<FinalResponseDto<?>> getPosts(@AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
+    public ResponseEntity<FinalResponseDto<?>> getPosts(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         Long userId = getUserId(userDetails);
         return postService.getPosts(userId);
     }
@@ -39,7 +39,7 @@ public class PostController {
     @GetMapping("/categories")
     public ResponseEntity<FinalResponseDto<?>> getPostsByCategories(
             @RequestParam(value = "categories",required = false, defaultValue = "") List<String> categories,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         Long userId = getUserId(userDetails);
         return postService.getPostsByCategories(userId,categories);
     }
@@ -48,7 +48,7 @@ public class PostController {
     @GetMapping("/tags")
     public ResponseEntity<FinalResponseDto<?>> getPostsByTags(
             @RequestParam(value = "tags",required = false,defaultValue = "") List<String> tags,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         Long userId = getUserId(userDetails);
         return postService.getPostsByTags(userId,tags);
     }
@@ -57,7 +57,7 @@ public class PostController {
     @GetMapping("/{postid}")
     public ResponseEntity<FinalResponseDto<?>> getPostDetails(
             @PathVariable Long postid,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         Long userId = getUserId(userDetails);
         return postService.getPostsDetails(postid, userId);
     }
@@ -103,7 +103,7 @@ public class PostController {
 
     // 찜한 게시글 전체 조회
     @GetMapping("/like")
-    public ResponseEntity<FinalResponseDto<?>> getLiedPosts(@AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
+    public ResponseEntity<FinalResponseDto<?>> getLiedPosts(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         return postService.getLikedPosts(getUserId(userDetails));
     }
 
@@ -114,7 +114,7 @@ public class PostController {
     }
     //내 벙글 조회
     @GetMapping("/mypage/post")
-    public ResponseEntity<FinalResponseDto<?>> getMyPagePost(@AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
+    public ResponseEntity<FinalResponseDto<?>> getMyPagePost(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         return postService.getMyPagePost(userDetails);
     }
 
