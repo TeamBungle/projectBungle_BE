@@ -11,8 +11,8 @@ public class ChatRoom implements Serializable {
 
     private static final long serialVersionUID = 6494678977089006639L;
 
-    private Long roomId;
-    private String name;
-
-
+    private Long postId;
+    private String title;
+    private long userCount;
 }
+

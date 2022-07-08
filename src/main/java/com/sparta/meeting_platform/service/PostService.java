@@ -307,10 +307,10 @@ public class PostService {
 
         Post post = postRepository.save(new Post(user, requestDto,longitude,latitude,point));
         ChatRoom chatRoom = new ChatRoom();
-        chatRoom.setRoomId(post.getId());
-        log.info("roomId = {}", chatRoom.getRoomId());
-        chatRoom.setName(post.getTitle());
-        opsHashChatRoom.put(CHAT_ROOMS, chatRoom.getRoomId(), chatRoom);
+        chatRoom.setPostId(post.getId());
+        log.info("roomId = {}", chatRoom.getPostId());
+        chatRoom.setTitle(post.getTitle());
+        opsHashChatRoom.put(CHAT_ROOMS, chatRoom.getPostId(), chatRoom);
         log.info("방생성");
 
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공",post.getId()), HttpStatus.OK);

@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -59,17 +58,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //                .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
                 // 회원 관리 처리 API 전부를 login 없이 허용
                 .antMatchers("/user/**").permitAll()
-                .antMatchers(HttpMethod.GET, "/api/post/**").permitAll()
                 .antMatchers("/ws/chat/**").permitAll()
-                .anyRequest().permitAll()
-//                .anyRequest().authenticated()
+                .antMatchers("/confirmEmail").permitAll()
+                .antMatchers("/confirmEmail2").permitAll()
+                // 그 외 어떤 요청이든 '인증'
+                .anyRequest().authenticated()
                 .and()
                 .logout()
                 .logoutUrl("/user/logout")
-//                .deleteCookies("token")
-//                .antMatchers("/kakao/callback").permitAll()
-//                .antMatchers("/**").permitAll()
-                // 그 외 어떤 요청이든 '인증'
                 .and()
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
     }

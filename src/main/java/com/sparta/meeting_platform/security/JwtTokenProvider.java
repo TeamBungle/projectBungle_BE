@@ -1,5 +1,7 @@
 package com.sparta.meeting_platform.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sparta.meeting_platform.domain.User;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
@@ -21,6 +23,8 @@ public class JwtTokenProvider {
     private String secretKey = "rewind";
     public final HttpServletResponse response;
     private final UserDetailsService userDetailsService;
+
+    private ObjectMapper objectMapper;
 
     @PostConstruct
     protected void init() {
@@ -62,8 +66,6 @@ public class JwtTokenProvider {
             Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(jwtToken);
             return !claims.getBody().getExpiration().before(new Date());
         } catch (Exception e) {
-            System.out.println(e.getMessage());
-            System.out.println(e);
             System.out.println("여기서에러!");
             throw new JwtException("JWT 인증에 실패하셨습니다");
         }
@@ -76,5 +78,20 @@ public class JwtTokenProvider {
                 = userDetailsService.loadUserByUsername
                         (Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().getSubject());
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
+    }
+//
+//    public Long getUserId(String token){
+//       Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
+//       return claims.getBody().get
+//    }
+
+    public User getUser(String token) throws Exception {
+        Jws<Claims> claims = null;
+        try {
+            claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
+        } catch (Exception e) {
+            throw new Exception("decodeing failed");
+        }
+        return objectMapper.convertValue(claims.getBody().get(secretKey), User.class);
     }
 }
