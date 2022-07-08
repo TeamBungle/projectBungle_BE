@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,7 @@ public class EmailConfirmTokenService {
     private final EmailConfirmTokenRepository emailConfirmTokenRepository;
     private final JavaMailSender javaMailSender;
 
+    @Async
     public void createEmailConfirmationToken(String receiverEmail) throws MessagingException {
 
 //      인증 Token 정보 DB 저장

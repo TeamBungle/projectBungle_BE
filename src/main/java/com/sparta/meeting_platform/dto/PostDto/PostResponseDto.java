@@ -16,6 +16,8 @@ public class PostResponseDto {
 
     private String title;
 
+    private String content;
+
     private String time;
 
     private int personnel;
@@ -50,12 +52,13 @@ public class PostResponseDto {
     private String postUrl;
 
     @Builder
-    public PostResponseDto(Long id, String title, String time, int personnel, String place, List<String> postUrls,
+    public PostResponseDto(Long id, String title, String content,String time, int personnel, String place, List<String> postUrls,
                            List<String> tags, List<String> categories, int bungCount, int mannerTemp, List<String> joinPeopleUrl,
                            List<String> joinPeopleNickname, int joinCount, Boolean isLetter, Boolean isLike,
                            int avgTemp, String postUrl) {
         this.id = id;
         this.title = title;
+        this.content = content;
         this.time = time;
         this.personnel = personnel;
         this.place = place;

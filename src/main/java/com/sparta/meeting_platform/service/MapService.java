@@ -84,6 +84,7 @@ public class MapService {
             MapListDto mapListDto = MapListDto.builder()
                     .id(post.getId())
                     .title(post.getTitle())
+                    .content(post.getContent())
                     .personnel(post.getPersonnel())
                     .joinCount(1)                       //TODO 수정필요
                     .place(post.getPlace())
@@ -144,6 +145,7 @@ public class MapService {
             MapListDto mapListDto = MapListDto.builder()
                     .id(post.getId())
                     .title(post.getTitle())
+                    .content(post.getContent())
                     .personnel(post.getPersonnel())
                     .joinCount(1)                       //TODO 수정필요
                     .place(post.getPlace())
@@ -158,7 +160,7 @@ public class MapService {
 
             mapListDtos.add(mapListDto);
         }
-        return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공", mapListDtos), HttpStatus.OK);
+        return new ResponseEntity<>(new MapResponseDto<>(true, "50km 내에 위치한 모임", mapListDtos), HttpStatus.OK);
     }// 순서는 어떻게?
     // 화면에 몇개? 밑 슬라이스에 몇개?
 
@@ -199,6 +201,7 @@ public class MapService {
                     MapListDto mapListDto = MapListDto.builder()
                             .id(post.getId())
                             .title(post.getTitle())
+                            .content(post.getContent())
                             .personnel(post.getPersonnel())
                             .joinCount(1)                       //TODO 수정필요
                             .place(post.getPlace())
@@ -215,7 +218,7 @@ public class MapService {
                 }
             }
         List<MapListDto> mapListDoubleCheckDto = DeduplicationUtils.deduplication(mapListDtos, MapListDto::getId);
-        return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공", mapListDoubleCheckDto), HttpStatus.OK);
+        return new ResponseEntity<>(new MapResponseDto<>(true, "세부조회 성공", mapListDoubleCheckDto), HttpStatus.OK);
     }
 
 

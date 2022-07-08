@@ -12,6 +12,8 @@ public class PostDetailsResponseDto {
 
     private String title;
 
+    private String content;
+
     private String time;
 
     private int personnel;
@@ -39,11 +41,12 @@ public class PostDetailsResponseDto {
     private Boolean isLike = false;
 
     @Builder
-    public PostDetailsResponseDto(String title, String time, int personnel, String place, List<String> postUrls,
+    public PostDetailsResponseDto(String title,String content, String time, int personnel, String place, List<String> postUrls,
                                   List<String> tags, List<String> categories, int bungCount,
                                   int mannerTemp, List<String> joinPeopleUrl, List<String> joinPeopleNickname,
                                   int joinCount, Boolean isLetter, Boolean isLike) {
         this.title = title;
+        this.content = content;
         this.time = time;
         this.personnel = personnel;
         this.place = place;

@@ -86,6 +86,7 @@ public class PostService {
                 PostResponseDto postResponseDto = PostResponseDto.builder()
                         .id(post.getId())
                         .title(post.getTitle())
+                        .content(post.getContent())
                         .personnel(post.getPersonnel())
                         .joinCount(1)                       //TODO 수정필요
                         .place(post.getPlace())
@@ -128,6 +129,7 @@ public class PostService {
                 PostResponseDto postResponseDto = PostResponseDto.builder()
                         .id(post.getId())
                         .title(post.getTitle())
+                        .content(post.getContent())
                         .personnel(post.getPersonnel())
                         .joinCount(1)                       //TODO 수정필요
                         .place(post.getPlace())
@@ -173,6 +175,7 @@ public class PostService {
                 PostResponseDto postResponseDto = PostResponseDto.builder()
                         .id(post.getId())
                         .title(post.getTitle())
+                        .content(post.getContent())
                         .personnel(post.getPersonnel())
                         .joinCount(1)                       //TODO 수정필요
                         .place(post.getPlace())
@@ -218,6 +221,7 @@ public class PostService {
         joinPeopleNicknames.add("test2");
         PostDetailsResponseDto postDetailsResponseDto = PostDetailsResponseDto.builder()
                 .title(post.getTitle())
+                .content(post.getContent())
                 .time(timeCheck(post.getTime()))
                 .personnel(post.getPersonnel())
                 .place(post.getPlace())
@@ -278,9 +282,10 @@ public class PostService {
             requestDto.setPostUrls(null);
              // 기본 이미지로 변경 필요
         } else {
+            List<String> postUrls = new ArrayList<>();
             for (MultipartFile file : files) {
-                List<String> postUrls = new ArrayList<>();
                 postUrls.add(s3Service.upload(file));
+                requestDto.setPostUrls(postUrls);
             }
         }
         SearchMapDto searchMapDto = mapService.findLatAndLong(requestDto.getPlace());
@@ -361,6 +366,7 @@ public class PostService {
             PostResponseDto postResponseDto = PostResponseDto.builder()
                     .id(post.getPost().getId())
                     .title(post.getPost().getTitle())
+                    .content(post.getPost().getContent())
                     .personnel(post.getPost().getPersonnel())
                     .joinCount(1)                                     //TODO 수정필요
                     .place(post.getPost().getPlace())
@@ -404,6 +410,7 @@ public class PostService {
         PostResponseDto postResponseDto = PostResponseDto.builder()
                 .id(post.getId())
                 .title(post.getTitle())
+                .content(post.getContent())
                 .personnel(post.getPersonnel())
                 .joinCount(1)                       //TODO 수정필요
                 .place(post.getPlace())
