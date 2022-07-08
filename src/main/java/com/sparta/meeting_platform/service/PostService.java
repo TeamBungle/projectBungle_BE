@@ -159,25 +159,27 @@ public class PostService {
             Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
             Boolean isLike;
 
-            if (like == null) {
-                isLike = false;
-            } else {
-                isLike = like.getIsLike();
+                if (like == null) {
+                    isLike = false;
+                } else {
+                    isLike = like.getIsLike();
+                }
+                PostResponseDto postResponseDto = PostResponseDto.builder()
+                        .id(post.getId())
+                        .title(post.getTitle())
+                        .content(post.getContent())
+                        .personnel(post.getPersonnel())
+                        .joinCount(1)                       //TODO 수정필요
+                        .place(post.getPlace())
+                        .postUrl("asdf") //TODO 수정필요
+                        .time(timeCheck(post.getTime()))
+                        .avgTemp(50)                      //TODO 수정필요
+                        .isLetter(post.getIsLetter())
+                        .isLike(isLike)
+                        .build();
+                postList.add(postResponseDto);
             }
-            PostResponseDto postResponseDto = PostResponseDto.builder()
-                    .id(post.getId())
-                    .title(post.getTitle())
-                    .personnel(post.getPersonnel())
-                    .joinCount(1)                       //TODO 수정필요
-                    .place(post.getPlace())
-                    .postUrl("asdfasdf") //TODO 수정필요
-                    .time(timeCheck(post.getTime()))
-                    .avgTemp(50)                      //TODO 수정필요
-                    .isLetter(post.getIsLetter())
-                    .isLike(isLike)
-                    .build();
-            postList.add(postResponseDto);
-        }
+
         return new ResponseEntity<>(new FinalResponseDto<>(true,"게시글 조회 성공",postList),HttpStatus.OK);
 }
 
@@ -210,6 +212,7 @@ public class PostService {
                 PostResponseDto postResponseDto = PostResponseDto.builder()
                         .id(post.getId())
                         .title(post.getTitle())
+                        .content(post.getContent())
                         .personnel(post.getPersonnel())
                         .joinCount(1)                       //TODO 수정필요
                         .place(post.getPlace())
@@ -255,6 +258,7 @@ public class PostService {
         joinPeopleNicknames.add("test2");
         PostDetailsResponseDto postDetailsResponseDto = PostDetailsResponseDto.builder()
                 .title(post.getTitle())
+                .content(post.getContent())
                 .time(timeCheck(post.getTime()))
                 .personnel(post.getPersonnel())
                 .place(post.getPlace())
@@ -311,16 +315,15 @@ public class PostService {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
         }
 
-        if (files.isEmpty()) {
+        if (files == null) {
             requestDto.setPostUrls(null);
-            // 기본 이미지로 변경 필요
+             // 기본 이미지로 변경 필요
         } else {
             List<String> postUrls = new ArrayList<>();
             for (MultipartFile file : files) {
-
                 postUrls.add(s3Service.upload(file));
+                requestDto.setPostUrls(postUrls);
             }
-            requestDto.setPostUrls(postUrls);
         }
         SearchMapDto searchMapDto = mapService.findLatAndLong(requestDto.getPlace());
         Double longitude = searchMapDto.getLongitude();
@@ -355,9 +358,9 @@ public class PostService {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 수정 실패"), HttpStatus.BAD_REQUEST);
         }
 
-        if (files.isEmpty()) {
+        if (files==null) {
             requestDto.setPostUrls(null);
-            // 기본 이미지로 변경 필요
+             // 기본 이미지로 변경 필요
         } else {
             List<String> postUrls = new ArrayList<>();
             for (MultipartFile file : files) {
@@ -400,6 +403,7 @@ public class PostService {
             PostResponseDto postResponseDto = PostResponseDto.builder()
                     .id(post.getPost().getId())
                     .title(post.getPost().getTitle())
+                    .content(post.getPost().getContent())
                     .personnel(post.getPost().getPersonnel())
                     .joinCount(1)                                     //TODO 수정필요
                     .place(post.getPost().getPlace())
@@ -443,6 +447,7 @@ public class PostService {
         PostResponseDto postResponseDto = PostResponseDto.builder()
                 .id(post.getId())
                 .title(post.getTitle())
+                .content(post.getContent())
                 .personnel(post.getPersonnel())
                 .joinCount(1)                       //TODO 수정필요
                 .place(post.getPlace())

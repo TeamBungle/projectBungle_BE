@@ -51,7 +51,7 @@ public class MapService {
     private String geocoding;
 
     public ResponseEntity<MapResponseDto<?>> readMap(Double latitude, Double longitude, User user) throws java.text.ParseException {
-        int dis = 20;
+
         Double distance = 6.0;
         Location northEast = GeometryUtil
                 .calculate(latitude, longitude, distance, Direction.NORTHEAST.getBearing());
@@ -70,8 +70,6 @@ public class MapService {
                         + " WHERE u.category in ('술','캠핑'))", Post.class)
                 .setMaxResults(5);
 
-
-//        .category in ("변수")
         List<Post> posts = query.getResultList();
         if (posts.size() < 1) {
             throw new IllegalArgumentException("50km 내에 모임이 존재하지 않습니다.");
@@ -89,6 +87,7 @@ public class MapService {
             MapListDto mapListDto = MapListDto.builder()
                     .id(post.getId())
                     .title(post.getTitle())
+                    .content(post.getContent())
                     .personnel(post.getPersonnel())
                     .joinCount(1)                       //TODO 수정필요
                     .place(post.getPlace())
@@ -149,6 +148,7 @@ public class MapService {
             MapListDto mapListDto = MapListDto.builder()
                     .id(post.getId())
                     .title(post.getTitle())
+                    .content(post.getContent())
                     .personnel(post.getPersonnel())
                     .joinCount(1)                       //TODO 수정필요
                     .place(post.getPlace())
@@ -163,7 +163,7 @@ public class MapService {
 
             mapListDtos.add(mapListDto);
         }
-        return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공", mapListDtos), HttpStatus.OK);
+        return new ResponseEntity<>(new MapResponseDto<>(true, "50km 내에 위치한 모임", mapListDtos), HttpStatus.OK);
     }// 순서는 어떻게?
     // 화면에 몇개? 밑 슬라이스에 몇개?
 
@@ -206,6 +206,7 @@ public class MapService {
                     MapListDto mapListDto = MapListDto.builder()
                             .id(post.getId())
                             .title(post.getTitle())
+                            .content(post.getContent())
                             .personnel(post.getPersonnel())
                             .joinCount(1)                       //TODO 수정필요
                             .place(post.getPlace())
