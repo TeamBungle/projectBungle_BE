@@ -278,7 +278,7 @@ public class PostService {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
         }
 
-        if (files.isEmpty()) {
+        if (files == null) {
             requestDto.setPostUrls(null);
              // 기본 이미지로 변경 필요
         } else {
@@ -321,7 +321,7 @@ public class PostService {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 수정 실패"), HttpStatus.BAD_REQUEST);
         }
 
-        if (files.isEmpty()) {
+        if (files==null) {
             requestDto.setPostUrls(null);
              // 기본 이미지로 변경 필요
         } else {

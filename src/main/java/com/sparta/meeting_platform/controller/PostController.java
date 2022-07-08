@@ -79,7 +79,7 @@ public class PostController {
     @PostMapping("")
     public ResponseEntity<FinalResponseDto<?>> createPost(
             @RequestPart(value = "postDto") PostRequestDto requestDto,
-            @RequestPart(value = "postImg") List<MultipartFile> files,
+            @RequestPart(value = "postImg",required = false) List<MultipartFile> files,
             @AuthenticationPrincipal UserDetailsImpl userDetails) throws Exception {
 
         return postService.createPost(getUserId(userDetails), requestDto, files);
@@ -90,7 +90,7 @@ public class PostController {
     public ResponseEntity<FinalResponseDto<?>> updatePost(
             @PathVariable Long postId,
             @RequestPart(value = "postDto") PostRequestDto requestDto,
-            @RequestPart(value = "postImg") List<MultipartFile> files,
+            @RequestPart(value = "postImg",required = false) List<MultipartFile> files,
             @AuthenticationPrincipal UserDetailsImpl userDetails) throws Exception {
 
         return postService.updatePost(postId, getUserId(userDetails), requestDto, files);
