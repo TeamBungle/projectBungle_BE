@@ -1,5 +1,6 @@
 package com.sparta.meeting_platform.service;
 
+import com.sparta.meeting_platform.Location;
 import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.domain.User;
@@ -15,6 +16,8 @@ import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.repository.mapping.PostMapping;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
+import com.sparta.meeting_platform.util.Direction;
+import com.sparta.meeting_platform.util.GeometryUtil;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.WKTReader;
@@ -24,6 +27,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -42,6 +47,8 @@ public class PostService {
 
     private final MapService mapService;
 
+    private final EntityManager em;
+
 
     public double deg2rad(double deg) {
         return (deg * Math.PI / 180.0);
@@ -51,7 +58,7 @@ public class PostService {
         return (rad * 180 / Math.PI);
     }
 
-    private int distance = 50;
+    private Double distance = 8.0;
 
 
     //게시글 전체 조회(4개만)
@@ -62,9 +69,28 @@ public class PostService {
         if (!user.isPresent()) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 조회 실패"), HttpStatus.BAD_REQUEST);
         }
-        List<PostResponseDto> postList = new ArrayList<>(4);
-        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
 
+        Location northEast = GeometryUtil
+                .calculate(latitude, longitude, distance, Direction.NORTHEAST.getBearing());
+        Location southWest = GeometryUtil
+                .calculate(latitude, longitude, distance, Direction.SOUTHWEST.getBearing());
+
+        double x1 = northEast.getLatitude();
+        double y1 = northEast.getLongitude();
+        double x2 = southWest.getLatitude();
+        double y2 = southWest.getLongitude();
+
+        String pointFormat = String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2);
+        Query query = em.createNativeQuery("SELECT * FROM post AS p "
+                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+                + "ORDER BY p.time desc", Post.class)
+                .setMaxResults(4);
+        List<Post> posts = query.getResultList();
+
+
+//        List<PostResponseDto> postList = new ArrayList<>(4);
+//        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
+        List<PostResponseDto> postList = new ArrayList<>();
         for (Post post : posts) {
             Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
             Boolean isLike;
@@ -74,22 +100,13 @@ public class PostService {
             } else {
                 isLike = like.getIsLike();
             }
-
-            double theta = longitude - post.getLongitude();
-            double dist = Math.sin(deg2rad(latitude)) * Math.sin(deg2rad(post.getLatitude()))
-                    + Math.cos(deg2rad(latitude)) * Math.cos(deg2rad(post.getLatitude())) * Math.cos(deg2rad(theta));
-
-            dist = Math.acos(dist);
-            dist = rad2deg(dist);
-            dist = dist * 60 * 1.1515 * 1.609344;
-            if (dist <= distance) {
                 PostResponseDto postResponseDto = PostResponseDto.builder()
                         .id(post.getId())
                         .title(post.getTitle())
                         .personnel(post.getPersonnel())
                         .joinCount(1)                       //TODO 수정필요
                         .place(post.getPlace())
-                        .postUrl("asdasd") //TODO 수정필요
+                        .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
                         .time(timeCheck(post.getTime()))
                         .avgTemp(50)                      //TODO 수정필요
                         .isLetter(post.getIsLetter())
@@ -97,7 +114,6 @@ public class PostService {
                         .build();
                 postList.add(postResponseDto);
             }
-        }
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
     }
 

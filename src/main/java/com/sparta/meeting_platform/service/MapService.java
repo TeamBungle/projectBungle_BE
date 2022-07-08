@@ -18,6 +18,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -50,7 +51,7 @@ public class MapService {
     private String geocoding;
 
     public ResponseEntity<MapResponseDto<?>> readMap(Double latitude, Double longitude, User user) throws java.text.ParseException {
-
+        int dis = 20;
         Double distance = 6.0;
         Location northEast = GeometryUtil
                 .calculate(latitude, longitude, distance, Direction.NORTHEAST.getBearing());
@@ -65,10 +66,12 @@ public class MapService {
         String pointFormat = String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2);
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
                 + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                        + "AND personnel <= 3 AND p.", Post.class)
+                        + "AND personnel <= " + dis + " AND p.id in (select u.post_id from post_categories u"
+                        + " WHERE u.category in ('술','캠핑'))", Post.class)
                 .setMaxResults(5);
 
-        .category in ("변수")
+
+//        .category in ("변수")
         List<Post> posts = query.getResultList();
         if (posts.size() < 1) {
             throw new IllegalArgumentException("50km 내에 모임이 존재하지 않습니다.");
@@ -166,7 +169,7 @@ public class MapService {
 
 
     //지도 세부 설정 검색
-    public ResponseEntity<MapResponseDto<?>> detailsMap(List<String> categories, int joinCount, Double distance,
+    public ResponseEntity<MapResponseDto<?>> detailsMap(List<String> categories, int personnel, Double distance,
                                                         Double latitude, Double longitude, User user) throws java.text.ParseException {
 
         Location northEast = GeometryUtil
@@ -181,11 +184,13 @@ public class MapService {
 
         String pointFormat = String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2);
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
-                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)", Post.class);
-//                .setMaxResults(3);
-        List<MapListDto> mapListDtos = new ArrayList<>();
+                        + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+                        + "AND personnel <= " + personnel + " AND p.id in (select u.post_id from post_categories u"
+                        + " WHERE u.category in (?categories))", Post.class);
+//                .setMaxResults(5);
         List<Post> posts = query.getResultList();
-        if(categories != null){
+        List<MapListDto> mapListDtos = new ArrayList<>();
+
             for(Post post : posts) {
 
                     Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId()).orElse(null);
@@ -215,9 +220,9 @@ public class MapService {
 
                     mapListDtos.add(mapListDto);
                 }
-            }
-        List<MapListDto> mapListDoubleCheckDto = DeduplicationUtils.deduplication(mapListDtos, MapListDto::getId);
-        return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공", mapListDoubleCheckDto), HttpStatus.OK);
+
+//        List<MapListDto> mapListDoubleCheckDto = DeduplicationUtils.deduplication(mapListDtos, MapListDto::getId);
+        return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공", mapListDtos), HttpStatus.OK);
     }
 
 
