@@ -67,6 +67,8 @@ public class MapService {
                 + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
                         + "AND personnel <= 3 AND p.", Post.class)
                 .setMaxResults(5);
+
+        .category in ("변수")
         List<Post> posts = query.getResultList();
         if (posts.size() < 1) {
             throw new IllegalArgumentException("50km 내에 모임이 존재하지 않습니다.");

@@ -17,7 +17,7 @@ public class RestApiExceptionHandler {
 
         return new ResponseEntity<>(
                 restApiException,
-                HttpStatus.BAD_REQUEST
+                HttpStatus.OK
         );
     }
 
@@ -29,7 +29,7 @@ public class RestApiExceptionHandler {
 
         return new ResponseEntity<>(
                 restApiException,
-                HttpStatus.BAD_REQUEST
+                HttpStatus.OK
         );
     }
     @ExceptionHandler(value = {MethodArgumentNotValidException.class})
@@ -40,7 +40,7 @@ public class RestApiExceptionHandler {
 
         return new ResponseEntity<>(
                 restApiException,
-                HttpStatus.BAD_REQUEST
+                HttpStatus.OK
         );
     }
 
