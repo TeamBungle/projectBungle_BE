@@ -119,7 +119,7 @@ public class PostService {
 
     //카테고리별 게시글 조회
     @Transactional(readOnly = true)
-    public ResponseEntity<FinalResponseDto<?>> getPostsByCategories(Long userId, List<String> categories) {
+    public ResponseEntity<FinalResponseDto<?>> getPostsByCategories(Long userId, List<String> categories,Double latitude, Double longitude) {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
@@ -135,12 +135,19 @@ public class PostService {
         double y1 = northEast.getLongitude();
         double x2 = southWest.getLatitude();
         double y2 = southWest.getLongitude();
+        String searchCategory = "";
+        for(String category : categories) {
+            searchCategory += "'"+category+"',";
+        }
+        searchCategory = searchCategory.substring(0,searchCategory.length()-1);
+        System.out.println(searchCategory);
 
         String pointFormat = String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2);
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
                         + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                        + "ORDER BY p.time desc", Post.class)
-                .setMaxResults(4);
+                        + " AND p.id in (select u.post_id from post_categories u"
+                        + " WHERE u.category in (" + searchCategory + "))", Post.class);
+
         List<Post> posts = query.getResultList();
 
         List<PostResponseDto> postList = new ArrayList<>();
@@ -163,7 +170,7 @@ public class PostService {
                     .personnel(post.getPersonnel())
                     .joinCount(1)                       //TODO 수정필요
                     .place(post.getPlace())
-                    .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
+                    .postUrl("asdfasdf") //TODO 수정필요
                     .time(timeCheck(post.getTime()))
                     .avgTemp(50)                      //TODO 수정필요
                     .isLetter(post.getIsLetter())
@@ -176,7 +183,7 @@ public class PostService {
 
     //태그별 게시글 조회
     @Transactional(readOnly = true)
-    public ResponseEntity<FinalResponseDto<?>> getPostsByTags(Long userId, List<String> tags) {
+    public ResponseEntity<FinalResponseDto<?>> getPostsByTags(Long userId, List<String> tags,Double latitude, Double longitude) {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {

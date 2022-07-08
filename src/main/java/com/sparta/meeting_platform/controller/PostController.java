@@ -43,18 +43,22 @@ public class PostController {
     @GetMapping("/categories")
     public ResponseEntity<FinalResponseDto<?>> getPostsByCategories(
             @RequestParam(value = "categories",required = false, defaultValue = "") List<String> categories,
+            @RequestParam(value = "latitude") Double latitude,
+            @RequestParam(value = "longitude") Double longitude,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
         Long userId = getUserId(userDetails);
-        return postService.getPostsByCategories(userId,categories);
+        return postService.getPostsByCategories(userId,categories,latitude,longitude);
     }
 
     //태그별 게시글 조회
     @GetMapping("/tags")
     public ResponseEntity<FinalResponseDto<?>> getPostsByTags(
             @RequestParam(value = "tags",required = false,defaultValue = "") List<String> tags,
+            @RequestParam(value = "latitude") Double latitude,
+            @RequestParam(value = "longitude") Double longitude,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
         Long userId = getUserId(userDetails);
-        return postService.getPostsByTags(userId,tags);
+        return postService.getPostsByTags(userId,tags,latitude,longitude);
     }
 
     //게시글 상세 조회

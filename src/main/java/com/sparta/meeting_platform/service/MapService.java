@@ -295,14 +295,14 @@ public class MapService {
         return query.getResultList();
     }
 
-    //    double theta = longitude - post.getLongitude();
+//    double theta = longitude - post.getLongitude();
 //    double dist = Math.sin(deg2rad(latitude)) * Math.sin(deg2rad(post.getLatitude()))
 //            + Math.cos(deg2rad(latitude)) * Math.cos(deg2rad(post.getLatitude())) * Math.cos(deg2rad(theta));
 //
 //    dist = Math.acos(dist);
 //    dist = rad2deg(dist);
 //    dist = dist * 60 * 1.1515 * 1.609344;
-//
+
     public double deg2rad(double deg) {
         return (deg * Math.PI / 180.0);
     }
