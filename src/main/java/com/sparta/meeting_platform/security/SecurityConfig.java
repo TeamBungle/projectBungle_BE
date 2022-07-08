@@ -44,10 +44,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         // 서버에서 인증은 JWT로 인증하기 때문에 Session의 생성을 막습니다.
         http
-                .cors()
-                .configurationSource(corsConfigurationSource())
+                .csrf().disable()
+                .headers()
+                .frameOptions().sameOrigin()
                 .and()
-                .csrf().disable();
+                .cors()
+                .configurationSource(corsConfigurationSource());
+
+        http
+                .authorizeRequests()
+                .antMatchers("GET,/ws/**").permitAll()
+                .antMatchers("GET,/ws/chat").permitAll()
+                .antMatchers("/ws/chat").permitAll()
+                .antMatchers("/ws/**").permitAll();
+
+
 
         // 서버에서 인증은 JWT로 인증하기 때문에 Session의 생성을 막습니다.
         http.sessionManagement()

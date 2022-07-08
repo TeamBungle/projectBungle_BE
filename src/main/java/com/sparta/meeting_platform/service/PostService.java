@@ -16,6 +16,7 @@ import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.repository.mapping.PostMapping;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.WKTReader;
 import org.springframework.data.redis.core.HashOperations;
@@ -35,6 +36,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class PostService {
     private final PostRepository postRepository;
@@ -306,8 +308,10 @@ public class PostService {
         Post post = postRepository.save(new Post(user, requestDto,longitude,latitude,point));
         ChatRoom chatRoom = new ChatRoom();
         chatRoom.setRoomId(post.getId());
+        log.info("roomId = {}", chatRoom.getRoomId());
         chatRoom.setName(post.getTitle());
         opsHashChatRoom.put(CHAT_ROOMS, chatRoom.getRoomId(), chatRoom);
+        log.info("방생성");
 
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공",post.getId()), HttpStatus.OK);
     }

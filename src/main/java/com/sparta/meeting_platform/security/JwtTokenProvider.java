@@ -2,6 +2,7 @@ package com.sparta.meeting_platform.security;
 
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,6 +16,7 @@ import java.util.Date;
 
 @RequiredArgsConstructor
 @Component
+@ToString
 public class JwtTokenProvider {
     private String secretKey = "rewind";
     public final HttpServletResponse response;
@@ -60,6 +62,9 @@ public class JwtTokenProvider {
             Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(jwtToken);
             return !claims.getBody().getExpiration().before(new Date());
         } catch (Exception e) {
+            System.out.println(e.getMessage());
+            System.out.println(e);
+            System.out.println("여기서에러!");
             throw new JwtException("JWT 인증에 실패하셨습니다");
         }
     }

@@ -1,5 +1,8 @@
 package com.sparta.meeting_platform.chat.config;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -7,15 +10,18 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 @Configuration
 @EnableWebSocketMessageBroker
+@RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    private final StompHandler stompHandler;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry
                 .addEndpoint("/ws/chat")
                 .setAllowedOriginPatterns("*")
-                .setAllowedOriginPatterns("http://52.79.214.48")
-                .setAllowedOriginPatterns("http://localhost:3000")
+                .setAllowedOriginPatterns("http://52.79.214.48/")
+                .setAllowedOriginPatterns("http://localhost:3000/")
                 .withSockJS();
     }
 
@@ -24,6 +30,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry
                 .setApplicationDestinationPrefixes("/pub")
                 .enableSimpleBroker("/sub");
+    }
+
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration
+                .interceptors(stompHandler);
     }
 
 
