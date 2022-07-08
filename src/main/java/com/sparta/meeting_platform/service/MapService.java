@@ -66,7 +66,7 @@ public class MapService {
         String pointFormat = String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2);
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
                 + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                        + "AND personnel <= " + dis + " AND p.id in (select u.post_id from post_categories u"
+                        + " AND p.id in (select u.post_id from post_categories u"
                         + " WHERE u.category in ('술','캠핑'))", Post.class)
                 .setMaxResults(5);
 
