@@ -18,6 +18,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -51,7 +52,7 @@ public class MapService {
 
     public ResponseEntity<MapResponseDto<?>> readMap(Double latitude, Double longitude, User user) throws java.text.ParseException {
 
-        Double distance = 3.0;
+        Double distance = 6.0;
         Location northEast = GeometryUtil
                 .calculate(latitude, longitude, distance, Direction.NORTHEAST.getBearing());
         Location southWest = GeometryUtil
@@ -64,8 +65,10 @@ public class MapService {
 
         String pointFormat = String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2);
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
-                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)", Post.class);
-//                .setMaxResults(3);
+                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+                        + "AND personnel <= " + dis + " AND p.id in (select u.post_id from post_categories u"
+                        + " WHERE u.category in ('술','캠핑'))", Post.class)
+                .setMaxResults(5);
 
         List<Post> posts = query.getResultList();
         if (posts.size() < 1) {
@@ -84,6 +87,7 @@ public class MapService {
             MapListDto mapListDto = MapListDto.builder()
                     .id(post.getId())
                     .title(post.getTitle())
+                    .content(post.getContent())
                     .personnel(post.getPersonnel())
                     .joinCount(1)                       //TODO 수정필요
                     .place(post.getPlace())
@@ -144,6 +148,7 @@ public class MapService {
             MapListDto mapListDto = MapListDto.builder()
                     .id(post.getId())
                     .title(post.getTitle())
+                    .content(post.getContent())
                     .personnel(post.getPersonnel())
                     .joinCount(1)                       //TODO 수정필요
                     .place(post.getPlace())
@@ -158,13 +163,13 @@ public class MapService {
 
             mapListDtos.add(mapListDto);
         }
-        return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공", mapListDtos), HttpStatus.OK);
+        return new ResponseEntity<>(new MapResponseDto<>(true, "50km 내에 위치한 모임", mapListDtos), HttpStatus.OK);
     }// 순서는 어떻게?
     // 화면에 몇개? 밑 슬라이스에 몇개?
 
 
     //지도 세부 설정 검색
-    public ResponseEntity<MapResponseDto<?>> detailsMap(List<String> categories, int joinCount, Double distance,
+    public ResponseEntity<MapResponseDto<?>> detailsMap(List<String> categories, int personnel, Double distance,
                                                         Double latitude, Double longitude, User user) throws java.text.ParseException {
 
         Location northEast = GeometryUtil
@@ -179,11 +184,13 @@ public class MapService {
 
         String pointFormat = String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2);
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
-                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)", Post.class);
-//                .setMaxResults(3);
-        List<MapListDto> mapListDtos = new ArrayList<>();
+                        + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+                        + "AND personnel <= " + personnel + " AND p.id in (select u.post_id from post_categories u"
+                        + " WHERE u.category in (?categories))", Post.class);
+//                .setMaxResults(5);
         List<Post> posts = query.getResultList();
-        if(categories != null){
+        List<MapListDto> mapListDtos = new ArrayList<>();
+
             for(Post post : posts) {
 
                     Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId()).orElse(null);
@@ -199,6 +206,7 @@ public class MapService {
                     MapListDto mapListDto = MapListDto.builder()
                             .id(post.getId())
                             .title(post.getTitle())
+                            .content(post.getContent())
                             .personnel(post.getPersonnel())
                             .joinCount(1)                       //TODO 수정필요
                             .place(post.getPlace())
@@ -213,9 +221,9 @@ public class MapService {
 
                     mapListDtos.add(mapListDto);
                 }
-            }
-        List<MapListDto> mapListDoubleCheckDto = DeduplicationUtils.deduplication(mapListDtos, MapListDto::getId);
-        return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공", mapListDoubleCheckDto), HttpStatus.OK);
+
+//        List<MapListDto> mapListDoubleCheckDto = DeduplicationUtils.deduplication(mapListDtos, MapListDto::getId);
+        return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공", mapListDtos), HttpStatus.OK);
     }
 
 
@@ -288,14 +296,14 @@ public class MapService {
         return query.getResultList();
     }
 
-    //    double theta = longitude - post.getLongitude();
+//    double theta = longitude - post.getLongitude();
 //    double dist = Math.sin(deg2rad(latitude)) * Math.sin(deg2rad(post.getLatitude()))
 //            + Math.cos(deg2rad(latitude)) * Math.cos(deg2rad(post.getLatitude())) * Math.cos(deg2rad(theta));
 //
 //    dist = Math.acos(dist);
 //    dist = rad2deg(dist);
 //    dist = dist * 60 * 1.1515 * 1.609344;
-//
+
     public double deg2rad(double deg) {
         return (deg * Math.PI / 180.0);
     }

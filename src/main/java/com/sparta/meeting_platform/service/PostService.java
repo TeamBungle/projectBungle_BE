@@ -1,5 +1,6 @@
 package com.sparta.meeting_platform.service;
 
+import com.sparta.meeting_platform.Location;
 import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.domain.User;
@@ -15,6 +16,8 @@ import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.repository.mapping.PostMapping;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
+import com.sparta.meeting_platform.util.Direction;
+import com.sparta.meeting_platform.util.GeometryUtil;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.WKTReader;
@@ -24,6 +27,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -42,6 +47,8 @@ public class PostService {
 
     private final MapService mapService;
 
+    private final EntityManager em;
+
 
     public double deg2rad(double deg) {
         return (deg * Math.PI / 180.0);
@@ -51,7 +58,7 @@ public class PostService {
         return (rad * 180 / Math.PI);
     }
 
-    private int distance = 50;
+    private Double distance = 8.0;
 
 
     //게시글 전체 조회(4개만)
@@ -62,9 +69,28 @@ public class PostService {
         if (!user.isPresent()) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 조회 실패"), HttpStatus.BAD_REQUEST);
         }
-        List<PostResponseDto> postList = new ArrayList<>(4);
-        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
 
+        Location northEast = GeometryUtil
+                .calculate(latitude, longitude, distance, Direction.NORTHEAST.getBearing());
+        Location southWest = GeometryUtil
+                .calculate(latitude, longitude, distance, Direction.SOUTHWEST.getBearing());
+
+        double x1 = northEast.getLatitude();
+        double y1 = northEast.getLongitude();
+        double x2 = southWest.getLatitude();
+        double y2 = southWest.getLongitude();
+
+        String pointFormat = String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2);
+        Query query = em.createNativeQuery("SELECT * FROM post AS p "
+                        + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+                        + "ORDER BY p.time desc", Post.class)
+                .setMaxResults(4);
+        List<Post> posts = query.getResultList();
+
+
+//        List<PostResponseDto> postList = new ArrayList<>(4);
+//        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
+        List<PostResponseDto> postList = new ArrayList<>();
         for (Post post : posts) {
             Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
             Boolean isLike;
@@ -74,51 +100,64 @@ public class PostService {
             } else {
                 isLike = like.getIsLike();
             }
-
-            double theta = longitude - post.getLongitude();
-            double dist = Math.sin(deg2rad(latitude)) * Math.sin(deg2rad(post.getLatitude()))
-                    + Math.cos(deg2rad(latitude)) * Math.cos(deg2rad(post.getLatitude())) * Math.cos(deg2rad(theta));
-
-            dist = Math.acos(dist);
-            dist = rad2deg(dist);
-            dist = dist * 60 * 1.1515 * 1.609344;
-            if (dist <= distance) {
-                PostResponseDto postResponseDto = PostResponseDto.builder()
-                        .id(post.getId())
-                        .title(post.getTitle())
-                        .personnel(post.getPersonnel())
-                        .joinCount(1)                       //TODO 수정필요
-                        .place(post.getPlace())
-                        .postUrl("asdasd") //TODO 수정필요
-                        .time(timeCheck(post.getTime()))
-                        .avgTemp(50)                      //TODO 수정필요
-                        .isLetter(post.getIsLetter())
-                        .isLike(isLike)
-                        .build();
-                postList.add(postResponseDto);
-            }
+            PostResponseDto postResponseDto = PostResponseDto.builder()
+                    .id(post.getId())
+                    .title(post.getTitle())
+                    .personnel(post.getPersonnel())
+                    .joinCount(1)                       //TODO 수정필요
+                    .place(post.getPlace())
+                    .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
+                    .time(timeCheck(post.getTime()))
+                    .avgTemp(50)                      //TODO 수정필요
+                    .isLetter(post.getIsLetter())
+                    .isLike(isLike)
+                    .build();
+            postList.add(postResponseDto);
         }
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
     }
 
     //카테고리별 게시글 조회
     @Transactional(readOnly = true)
-    public ResponseEntity<FinalResponseDto<?>> getPostsByCategories(Long userId, List<String> categories)  {
+    public ResponseEntity<FinalResponseDto<?>> getPostsByCategories(Long userId, List<String> categories,Double latitude, Double longitude) {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 조회 실패"), HttpStatus.BAD_REQUEST);
         }
+
+        Location northEast = GeometryUtil
+                .calculate(latitude, longitude, distance, Direction.NORTHEAST.getBearing());
+        Location southWest = GeometryUtil
+                .calculate(latitude, longitude, distance, Direction.SOUTHWEST.getBearing());
+
+        double x1 = northEast.getLatitude();
+        double y1 = northEast.getLongitude();
+        double x2 = southWest.getLatitude();
+        double y2 = southWest.getLongitude();
+        String searchCategory = "";
+        for(String category : categories) {
+            searchCategory += "'"+category+"',";
+        }
+        searchCategory = searchCategory.substring(0,searchCategory.length()-1);
+        System.out.println(searchCategory);
+
+        String pointFormat = String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2);
+        Query query = em.createNativeQuery("SELECT * FROM post AS p "
+                        + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+                        + " AND p.id in (select u.post_id from post_categories u"
+                        + " WHERE u.category in (" + searchCategory + "))", Post.class);
+
+        List<Post> posts = query.getResultList();
+
         List<PostResponseDto> postList = new ArrayList<>();
 
-        for (String category : categories) {
-            List<Post> posts = postRepository.findAllByCategories(category);
-            if (posts.size() < 1) {
-                return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 조회해주세요"), HttpStatus.BAD_REQUEST);
-            }
-            for (Post post : posts) {
-                Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
-                Boolean isLike;
+        if (posts.size() < 1) {
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 조회해주세요"), HttpStatus.BAD_REQUEST);
+        }
+        for (Post post : posts) {
+            Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
+            Boolean isLike;
 
                 if (like == null) {
                     isLike = false;
@@ -128,10 +167,11 @@ public class PostService {
                 PostResponseDto postResponseDto = PostResponseDto.builder()
                         .id(post.getId())
                         .title(post.getTitle())
+                        .content(post.getContent())
                         .personnel(post.getPersonnel())
                         .joinCount(1)                       //TODO 수정필요
                         .place(post.getPlace())
-                        .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
+                        .postUrl("asdf") //TODO 수정필요
                         .time(timeCheck(post.getTime()))
                         .avgTemp(50)                      //TODO 수정필요
                         .isLetter(post.getIsLetter())
@@ -139,14 +179,13 @@ public class PostService {
                         .build();
                 postList.add(postResponseDto);
             }
-        }
 
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
-    }
+        return new ResponseEntity<>(new FinalResponseDto<>(true,"게시글 조회 성공",postList),HttpStatus.OK);
+}
 
     //태그별 게시글 조회
     @Transactional(readOnly = true)
-    public ResponseEntity<FinalResponseDto<?>> getPostsByTags(Long userId, List<String> tags)  {
+    public ResponseEntity<FinalResponseDto<?>> getPostsByTags(Long userId, List<String> tags,Double latitude, Double longitude) {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
@@ -173,6 +212,7 @@ public class PostService {
                 PostResponseDto postResponseDto = PostResponseDto.builder()
                         .id(post.getId())
                         .title(post.getTitle())
+                        .content(post.getContent())
                         .personnel(post.getPersonnel())
                         .joinCount(1)                       //TODO 수정필요
                         .place(post.getPlace())
@@ -193,7 +233,7 @@ public class PostService {
 
     //게시글 상세 조회
     @Transactional(readOnly = true)
-    public ResponseEntity<FinalResponseDto<?>>getPostsDetails(Long postId, Long userId) {
+    public ResponseEntity<FinalResponseDto<?>> getPostsDetails(Long postId, Long userId) {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
@@ -218,6 +258,7 @@ public class PostService {
         joinPeopleNicknames.add("test2");
         PostDetailsResponseDto postDetailsResponseDto = PostDetailsResponseDto.builder()
                 .title(post.getTitle())
+                .content(post.getContent())
                 .time(timeCheck(post.getTime()))
                 .personnel(post.getPersonnel())
                 .place(post.getPlace())
@@ -243,7 +284,7 @@ public class PostService {
                 () -> new NullPointerException("해당 게시글이 존재하지 않습니다.")
         );
         User user = userRepository.findById(userId).orElseThrow(
-                ()-> new NullPointerException("존재하지 않는 사용자 입니다.")
+                () -> new NullPointerException("존재하지 않는 사용자 입니다.")
         );
 
         if (!post.getUser().getId().equals(userId)) {
@@ -274,13 +315,14 @@ public class PostService {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
         }
 
-        if (files.isEmpty()) {
+        if (files == null) {
             requestDto.setPostUrls(null);
              // 기본 이미지로 변경 필요
         } else {
+            List<String> postUrls = new ArrayList<>();
             for (MultipartFile file : files) {
-                List<String> postUrls = new ArrayList<>();
                 postUrls.add(s3Service.upload(file));
+                requestDto.setPostUrls(postUrls);
             }
         }
         SearchMapDto searchMapDto = mapService.findLatAndLong(requestDto.getPlace());
@@ -291,7 +333,7 @@ public class PostService {
         // WKTReader를 통해 WKT를 실제 타입으로 변환합니다.
         Point point = (Point) new WKTReader().read(pointWKT);
 
-        postRepository.save(new Post(user, requestDto,longitude,latitude,point));
+        postRepository.save(new Post(user, requestDto, longitude, latitude, point));
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공"), HttpStatus.OK);
     }
 
@@ -316,7 +358,7 @@ public class PostService {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 수정 실패"), HttpStatus.BAD_REQUEST);
         }
 
-        if (files.isEmpty()) {
+        if (files==null) {
             requestDto.setPostUrls(null);
              // 기본 이미지로 변경 필요
         } else {
@@ -361,6 +403,7 @@ public class PostService {
             PostResponseDto postResponseDto = PostResponseDto.builder()
                     .id(post.getPost().getId())
                     .title(post.getPost().getTitle())
+                    .content(post.getPost().getContent())
                     .personnel(post.getPost().getPersonnel())
                     .joinCount(1)                                     //TODO 수정필요
                     .place(post.getPost().getPlace())
@@ -404,6 +447,7 @@ public class PostService {
         PostResponseDto postResponseDto = PostResponseDto.builder()
                 .id(post.getId())
                 .title(post.getTitle())
+                .content(post.getContent())
                 .personnel(post.getPersonnel())
                 .joinCount(1)                       //TODO 수정필요
                 .place(post.getPlace())
@@ -423,7 +467,7 @@ public class PostService {
         LocalDateTime localDateTime = LocalDateTime.parse(time, inputFormat);
         if (!localDateTime.isAfter(LocalDateTime.now())) {
             Duration duration = Duration.between(localDateTime, LocalDateTime.now());
-            return duration.getSeconds()/60 + "분 경과";
+            return duration.getSeconds() / 60 + "분 경과";
         }
         return localDateTime.getHour() + "시 시작 예정";
     }

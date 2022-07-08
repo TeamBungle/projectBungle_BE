@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.mail.MessagingException;
+import javax.validation.Valid;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,13 +23,13 @@ public class UserController {
 
     //유저네임 중복 체크
     @PostMapping("/user/duplicate/username")
-    public ResponseEntity<FinalResponseDto<?>> duplicateUsername (@RequestBody DuplicateRequestDto requestDto){
+    public ResponseEntity<FinalResponseDto<?>> duplicateUsername (@Valid @RequestBody DuplicateRequestDto requestDto){
         return userService.duplicateUsername(requestDto);
     }
 
     //회원가입
     @PostMapping("/user/signup")
-    public ResponseEntity<FinalResponseDto<?>> signup (@RequestBody SignupRequestDto requestDto) throws MessagingException {
+    public ResponseEntity<FinalResponseDto<?>> signup (@Valid @RequestBody SignupRequestDto requestDto) throws MessagingException {
         return userService.signup(requestDto);
     }
 

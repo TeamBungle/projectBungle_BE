@@ -27,6 +27,8 @@ public class Post {
 
     @Column(nullable = false)
     private String title;
+    @Column
+    private String content;
 
     @Column(nullable = false)
     private String time;
@@ -73,6 +75,7 @@ public class Post {
     public Post(User user, PostRequestDto requestDto,Double longitude,Double latitude, Point location){
         this.user = user;
         this.title = requestDto.getTitle();
+        this.content = requestDto.getContent();
         this.time = requestDto.getTime();
         this.personnel = requestDto.getPersonnel();
         this.place = requestDto.getPlace();
@@ -90,6 +93,7 @@ public class Post {
     public void update(PostRequestDto requestDto) {
         this.title = requestDto.getTitle();
         this.time = requestDto.getTime();
+        this.content = requestDto.getContent();
         this.personnel = requestDto.getPersonnel();
         this.place = requestDto.getPlace();
         this.isLetter = requestDto.getIsLetter();

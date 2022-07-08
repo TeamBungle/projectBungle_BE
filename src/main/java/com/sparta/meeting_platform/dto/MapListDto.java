@@ -17,6 +17,8 @@ public class MapListDto {
 
     private String title;
 
+    private String content;
+
     private String time;
 
     private int personnel;
@@ -41,11 +43,12 @@ public class MapListDto {
     private Double longitude;
 
     @Builder
-    public MapListDto(Long id, String title, String time, int personnel, String place, List<String> postUrls,
+    public MapListDto(Long id, String title, String content, String time, int personnel, String place, List<String> postUrls,
                       int joinCount, Boolean isLetter, Boolean isLike,int avgTemp,
                       String postUrl, Double latitude, Double longitude) {
         this.id = id;
         this.title = title;
+        this.content =content;
         this.time = time;
         this.personnel = personnel;
         this.place = place;

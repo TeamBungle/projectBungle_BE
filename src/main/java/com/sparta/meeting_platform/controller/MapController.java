@@ -46,12 +46,12 @@ public class MapController {
 
     @GetMapping("/map/details")
     public ResponseEntity<MapResponseDto<?>> detailsMap(@RequestParam(value = "categories",defaultValue = "") List<String> categories,
-                           @RequestParam(value = "joinCount",defaultValue = "") int joinCount,
+                           @RequestParam(value = "personnel",defaultValue = "") int personnel,
                            @RequestParam(value = "distance",defaultValue = "") int distance,
                            @RequestParam(value = "latitude") Double latitude,
                            @RequestParam(value = "longitude") Double longitude,
                            @AuthenticationPrincipal UserDetailsImpl userDetails) throws java.text.ParseException {
         User user = userDetails.getUser();
-       return mapService.detailsMap(categories,joinCount,(double)distance,latitude,longitude,user);
+       return mapService.detailsMap(categories,personnel,(double)distance,latitude,longitude,user);
     }
 }
