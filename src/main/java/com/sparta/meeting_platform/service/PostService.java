@@ -278,10 +278,12 @@ public class PostService {
             requestDto.setPostUrls(null);
              // 기본 이미지로 변경 필요
         } else {
+            List<String> postUrls = new ArrayList<>();
             for (MultipartFile file : files) {
-                List<String> postUrls = new ArrayList<>();
+
                 postUrls.add(s3Service.upload(file));
             }
+            requestDto.setPostUrls(postUrls);
         }
         SearchMapDto searchMapDto = mapService.findLatAndLong(requestDto.getPlace());
         Double longitude = searchMapDto.getLongitude();

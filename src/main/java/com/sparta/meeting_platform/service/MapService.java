@@ -51,7 +51,7 @@ public class MapService {
 
     public ResponseEntity<MapResponseDto<?>> readMap(Double latitude, Double longitude, User user) throws java.text.ParseException {
 
-        Double distance = 3.0;
+        Double distance = 6.0;
         Location northEast = GeometryUtil
                 .calculate(latitude, longitude, distance, Direction.NORTHEAST.getBearing());
         Location southWest = GeometryUtil
@@ -64,9 +64,9 @@ public class MapService {
 
         String pointFormat = String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2);
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
-                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)", Post.class);
-//                .setMaxResults(3);
-
+                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+                        + "AND personnel <= 3", Post.class)
+                .setMaxResults(5);
         List<Post> posts = query.getResultList();
         if (posts.size() < 1) {
             throw new IllegalArgumentException("50km 내에 모임이 존재하지 않습니다.");
