@@ -51,14 +51,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .cors()
                 .configurationSource(corsConfigurationSource());
 
-        http
-                .authorizeRequests()
-                .antMatchers("GET,/ws/**").permitAll()
-                .antMatchers("GET,/ws/chat").permitAll()
-                .antMatchers("/ws/chat").permitAll()
-                .antMatchers("/ws/**").permitAll();
-
-
 
         // 서버에서 인증은 JWT로 인증하기 때문에 Session의 생성을 막습니다.
         http.sessionManagement()
@@ -75,6 +67,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests()
 //            .antMatchers("/user/**").authenticated() //("/user/**") 일때는 권한 필요
 //            .antMatchers("/adimin/**").access("hasRole('ROLE_ADMIN')") //("/adimin/**")일때는 권한과 엑세스도 필요
+                .antMatchers("/ws/chat/**").permitAll()
                 .anyRequest().permitAll() //나머지 요청은 토큰말고 세션 id 다 허용
                 .and()
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)

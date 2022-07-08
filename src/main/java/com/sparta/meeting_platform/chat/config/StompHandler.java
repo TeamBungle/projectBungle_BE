@@ -32,6 +32,7 @@ public class StompHandler implements ChannelInterceptor {
             String jwtToken = token.replace("Bearer ", "");
             jwtTokenProvider.validateToken(jwtToken);
         }
+        System.out.println("토큰 유효성 검사 완료");
         return message;
     }
 }
