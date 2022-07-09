@@ -33,7 +33,7 @@ public class LikeService {
             Post post = postRepository.findById(postId).orElse(null);
             User user = userRepository.findById(userId).orElse(null);
             if(post == null || user == null){
-                return new ResponseEntity<>(new FinalResponseDto<>(false, "찜하기 실패"), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(new FinalResponseDto<>(false, "찜하기 실패"), HttpStatus.OK);
             }
             Like likes = new Like(post, user);
             likeRepository.save(likes);

@@ -21,6 +21,14 @@ public class GeometryUtil {
         return new Location(toDegree(latitude), toDegree(longitude));
     }
 
+    /*
+     * coordinate : 각도 (위도 값, 경도 값)
+     * Math.PI : 윈주율
+     * Radian : 호의 길이가 반지름과 같을 때 1
+     * degrees => radians : 각도 * 원주율 / 180
+     * radians => degrees : 라디안 * 180 / 원주율
+     */
+
     private static Double toRadian(Double coordinate) {
         return coordinate * Math.PI / 180.0;
     }

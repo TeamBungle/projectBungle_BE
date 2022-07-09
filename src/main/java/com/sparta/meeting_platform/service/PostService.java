@@ -8,9 +8,9 @@ import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
-import com.sparta.meeting_platform.dto.PostTestDto;
 import com.sparta.meeting_platform.dto.SearchMapDto;
 import com.sparta.meeting_platform.dto.user.MyPageDto;
+import com.sparta.meeting_platform.exception.PostApiException;
 import com.sparta.meeting_platform.repository.LikeRepository;
 import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.repository.UserRepository;
@@ -29,7 +29,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import java.text.ParseException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -44,22 +43,13 @@ public class PostService {
     private final UserRepository userRepository;
     private final LikeRepository likeRepository;
     private final S3Service s3Service;
-
     private final MapService mapService;
-
     private final EntityManager em;
-
-
     public double deg2rad(double deg) {
         return (deg * Math.PI / 180.0);
     }
-
-    public double rad2deg(double rad) {
-        return (rad * 180 / Math.PI);
-    }
-
+    public double rad2deg(double rad) {return (rad * 180 / Math.PI);}
     private Double distance = 8.0;
-
 
     //게시글 전체 조회(4개만)
     @Transactional(readOnly = true)
@@ -67,7 +57,7 @@ public class PostService {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 조회 실패"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 조회 실패"), HttpStatus.OK);
         }
 
         Location northEast = GeometryUtil
@@ -100,6 +90,11 @@ public class PostService {
             } else {
                 isLike = like.getIsLike();
             }
+
+            if(post.getPostUrls().size()<1){
+                post.getPostUrls().add(null);
+            }
+
             PostResponseDto postResponseDto = PostResponseDto.builder()
                     .id(post.getId())
                     .title(post.getTitle())
@@ -123,7 +118,7 @@ public class PostService {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 조회 실패"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 조회 실패"), HttpStatus.OK);
         }
 
         Location northEast = GeometryUtil
@@ -153,7 +148,7 @@ public class PostService {
         List<PostResponseDto> postList = new ArrayList<>();
 
         if (posts.size() < 1) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 조회해주세요"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 조회해주세요"), HttpStatus.OK);
         }
         for (Post post : posts) {
             Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
@@ -189,7 +184,7 @@ public class PostService {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 조회 실패"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 조회 실패"), HttpStatus.OK);
         }
 
         List<PostResponseDto> postList = new ArrayList<>();
@@ -197,13 +192,15 @@ public class PostService {
         for (String tag : tags) {
             List<Post> posts = postRepository.findAllByTags(tag);
             if (posts.size() < 1) {
-                return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 조회해주세요"), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 조회해주세요"), HttpStatus.OK);
             }
 
             for (Post post : posts) {
                 Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
                 Boolean isLike;
-
+                if(post.getPostUrls().size()<1){
+                    post.getPostUrls().add(null);
+                }
                 if (like == null) {
                     isLike = false;
                 } else {
@@ -237,10 +234,10 @@ public class PostService {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 조회 실패"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 조회 실패"), HttpStatus.OK);
         }
         Post post = postRepository.findById(postId).orElseThrow(
-                () -> new NullPointerException("존재하지 않는 게시물 입니다.")
+                () -> new PostApiException("존재하지 않는 게시물 입니다.")
         );
         Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
         Boolean isLike;
@@ -281,14 +278,14 @@ public class PostService {
     @Transactional
     public ResponseEntity<FinalResponseDto<?>> deletePost(Long postid, Long userId) {
         Post post = postRepository.findById(postid).orElseThrow(
-                () -> new NullPointerException("해당 게시글이 존재하지 않습니다.")
+                () -> new PostApiException("해당 게시글이 존재하지 않습니다.")
         );
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new NullPointerException("존재하지 않는 사용자 입니다.")
+                () -> new PostApiException("존재하지 않는 사용자 입니다.")
         );
 
         if (!post.getUser().getId().equals(userId)) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "본인 게시글이 아닙니다."), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "본인 게시글이 아닙니다."), HttpStatus.OK);
         } else {
             postRepository.deleteById(postid);
             user.setIsOwner(false);
@@ -312,7 +309,7 @@ public class PostService {
 //        }
 
         if (user == null) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.OK);
         }
 
         if (files == null) {
@@ -355,7 +352,7 @@ public class PostService {
         User user = userRepository.findById(userId).orElse(null);
 
         if (user == null) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 수정 실패"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 수정 실패"), HttpStatus.OK);
         }
 
         if (files==null) {
@@ -374,7 +371,7 @@ public class PostService {
         requestDto.setLongitude(searchMapDto.getLongitude());
 
         Post post = postRepository.findById(postId).orElseThrow(
-                () -> new NullPointerException("존재하지 않는 게시물 입니다."));
+                () -> new PostApiException("존재하지 않는 게시물 입니다."));
 
         post.update(requestDto);
 
@@ -388,7 +385,7 @@ public class PostService {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "좋아요한 게시글 조회 실패"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "좋아요한 게시글 조회 실패"), HttpStatus.OK);
         }
         List<PostMapping> posts = likeRepository.findAllByUserIdAndIsLikeTrue(userId);
 
@@ -397,7 +394,7 @@ public class PostService {
 
         for (PostMapping post : posts) {
             Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getPost().getId()).orElseThrow(
-                    () -> new NullPointerException("찜한 게시글이 없습니다.")
+                    () -> new PostApiException("찜한 게시글이 없습니다.")
             );
 
             PostResponseDto postResponseDto = PostResponseDto.builder()
@@ -422,7 +419,7 @@ public class PostService {
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getMyPage(UserDetailsImpl userDetails) {
         User user = userRepository.findById(userDetails.getUser().getId()).orElseThrow(
-                () -> new NullPointerException("해당 유저를 찾을 수 없습니다.")
+                () -> new PostApiException("해당 유저를 찾을 수 없습니다.")
         );
         MyPageDto myPageDto = new MyPageDto(user.getNickName(), user.getMannerTemp(), user.getProfileUrl(), user.getBungCount());
         return new ResponseEntity<>(new FinalResponseDto<>(true, "나의 번개 페이지 조회 성공", myPageDto), HttpStatus.OK);
@@ -431,7 +428,7 @@ public class PostService {
     //내 벙글 확인하기
     public ResponseEntity<FinalResponseDto<?>> getMyPagePost(UserDetailsImpl userDetails) {
         User user = userRepository.findById(userDetails.getUser().getId()).orElseThrow(
-                () -> new NullPointerException("해당 유저를 찾을 수 없습니다.")
+                () -> new PostApiException("해당 유저를 찾을 수 없습니다.")
         );
         Post post = postRepository.findByUserId(user.getId());
 

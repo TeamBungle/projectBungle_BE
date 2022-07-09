@@ -34,7 +34,7 @@ public class SettingService {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "공지사항 조회 실패"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "공지사항 조회 실패"), HttpStatus.OK);
         }
 
         List<Notice> foundNotice = noticeRepository.findAll();
@@ -55,7 +55,7 @@ public class SettingService {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "의견 보내기 실패"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "의견 보내기 실패"), HttpStatus.OK);
         }
         Opinion opinion = new Opinion(user.get(),requestDto);
         opinionRepository.save(opinion);
@@ -67,7 +67,7 @@ public class SettingService {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "공지 작성 실패"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "공지 작성 실패"), HttpStatus.OK);
         }
         Notice notice = new Notice(requestDto);
         noticeRepository.save(notice);
