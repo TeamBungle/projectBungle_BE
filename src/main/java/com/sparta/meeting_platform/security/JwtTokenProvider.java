@@ -1,7 +1,7 @@
 package com.sparta.meeting_platform.security;
 
 
-import com.sparta.meeting_platform.domain.User;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -34,6 +34,8 @@ public class JwtTokenProvider {
     private Long tokenValidTime = 24*60*60*1000L;
 
     private final UserDetailsService userDetailsService;
+
+    private final ObjectMapper objectMapper;
 
     @PostConstruct
     protected void init() {
@@ -74,9 +76,17 @@ public class JwtTokenProvider {
     public String getUserPk(String token) {
         return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().getSubject();
     }
-    public User getUser(String token){
-
-    }
+//    public User getUser(String token) throws Exception {
+//        Jws<Claims> claims;
+//        try {
+//            claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
+//            System.out.println("claims" + claims.toString());
+//            System.out.println("claims" + claims);
+//        } catch (Exception e) {
+//            throw new Exception("decodeing failed");
+//        }
+//        return objectMapper.convertValue(claims.getBody().get(secretKey), User.class);
+//    }
 
     // JWT 토큰에서 인증 정보 조회
     public Authentication getAuthentication(String token) {

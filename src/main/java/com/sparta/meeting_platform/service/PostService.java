@@ -1,6 +1,6 @@
 package com.sparta.meeting_platform.service;
 
-import com.sparta.meeting_platform.chat.dto.ChatRoom;
+import com.sparta.meeting_platform.chat.repository.ChatRoomRepository;
 import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.domain.User;
@@ -19,15 +19,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.WKTReader;
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -43,19 +40,13 @@ public class PostService {
     private final UserRepository userRepository;
     private final LikeRepository likeRepository;
     private final S3Service s3Service;
-
     private final MapService mapService;
 
-    private HashOperations<String, Long, ChatRoom> opsHashChatRoom;
+    private final ChatRoomRepository chatRoomRepository;
 
-    private static final String CHAT_ROOMS = "CHAT_ROOM";
 
-    private final RedisTemplate<String, Object> redisTemplate;
 
-    @PostConstruct
-    private void init() {
-        opsHashChatRoom = redisTemplate.opsForHash();
-    }
+
 
     public double deg2rad(double deg) {
         return (deg * Math.PI / 180.0);
@@ -66,7 +57,6 @@ public class PostService {
     }
 
     private int distance = 50;
-
 
     //게시글 전체 조회(4개만)
     @Transactional(readOnly = true)
@@ -306,12 +296,8 @@ public class PostService {
         Point point = (Point) new WKTReader().read(pointWKT);
 
         Post post = postRepository.save(new Post(user, requestDto,longitude,latitude,point));
-        ChatRoom chatRoom = new ChatRoom();
-        chatRoom.setPostId(post.getId());
-        log.info("roomId = {}", chatRoom.getPostId());
-        chatRoom.setTitle(post.getTitle());
-        opsHashChatRoom.put(CHAT_ROOMS, chatRoom.getPostId(), chatRoom);
-        log.info("방생성");
+        chatRoomRepository.createChatRoom(post);
+
 
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공",post.getId()), HttpStatus.OK);
     }
