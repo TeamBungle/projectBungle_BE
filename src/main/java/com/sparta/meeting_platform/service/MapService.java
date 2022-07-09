@@ -93,6 +93,8 @@ public class MapService {
         List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId);
         return new ResponseEntity<>(new MapResponseDto<>(true, "세부 조회 성공!!", mapListDtos), HttpStatus.OK);
     }//거리순
+    //디폴트 10km
+    //
 
     public User checkUser(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(

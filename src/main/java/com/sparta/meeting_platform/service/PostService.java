@@ -64,7 +64,9 @@ public class PostService {
         List<PostResponseDto> postListRealTime = postSearchService.searchPostList(posts, userId);
         List<PostResponseDto> postListEndTime = postSearchService.searchPostList(posts2, userId);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postListRealTime, postListEndTime), HttpStatus.OK);
-    }// endtime, manner도 같이 보내줘야함
+    }// manner도 같이 보내줘야함
+    // realtime은 지난 시간만
+    // endtime은 지나지 않는 시간만
 
 
     //카테고리별 게시글 조회
