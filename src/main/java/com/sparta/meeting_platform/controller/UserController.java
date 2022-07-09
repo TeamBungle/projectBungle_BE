@@ -42,8 +42,8 @@ public class UserController {
     @PostMapping("/user/profile")
     public ResponseEntity<FinalResponseDto<?>> setProfile (
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestPart(value = "profileDto") ProfileRequestDto requestDto,
-            @RequestPart(value = "profileImg") MultipartFile file) {
+            @Valid @RequestPart(value = "profileDto") ProfileRequestDto requestDto,
+            @RequestPart(value = "profileImg", required = false) MultipartFile file) {
         return userService.setProfile(userDetails.getUser().getId(), requestDto, file);
     }
 
@@ -51,6 +51,12 @@ public class UserController {
    @DeleteMapping("/user")
     public ResponseEntity<FinalResponseDto<?>> deleteUser(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         return userService.deleteUser(userDetails.getUser().getId());
+    }
+
+    // 프로필 페이지 이동
+    @GetMapping("/user/profile")
+    public ResponseEntity<FinalResponseDto<?>> getProfile(@AuthenticationPrincipal UserDetailsImpl userDetails){
+        return userService.getProfile(userDetails.getUser().getId());
     }
 
 }

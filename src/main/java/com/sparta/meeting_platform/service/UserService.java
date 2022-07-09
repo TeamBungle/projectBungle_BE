@@ -6,10 +6,7 @@ import com.sparta.meeting_platform.domain.ResignUser;
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.domain.UserRoleEnum;
-import com.sparta.meeting_platform.dto.user.DuplicateRequestDto;
-import com.sparta.meeting_platform.dto.user.LoginRequestDto;
-import com.sparta.meeting_platform.dto.user.ProfileRequestDto;
-import com.sparta.meeting_platform.dto.user.SignupRequestDto;
+import com.sparta.meeting_platform.dto.user.*;
 import com.sparta.meeting_platform.exception.EmailApiException;
 import com.sparta.meeting_platform.exception.UserApiException;
 import com.sparta.meeting_platform.repository.*;
@@ -126,7 +123,7 @@ public class UserService {
         }
         String profileUrl;
 
-        if(!file.isEmpty()){
+        if(file!=null){
             profileUrl = s3Service.upload(file);
         } else {
             profileUrl = user.get().getProfileUrl();
@@ -157,4 +154,13 @@ public class UserService {
         return new ResponseEntity<>(new FinalResponseDto<>(true, "회원 탈퇴 성공"), HttpStatus.OK);
     }
 
+    @Transactional(readOnly = true)
+    public ResponseEntity<FinalResponseDto<?>> getProfile(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(
+                ()->  new UserApiException("프로필 조회 실패")
+        );
+
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "프로필 조회 성공",new ProfileResponseDto(user)), HttpStatus.OK);
+
+    }
 }
