@@ -34,7 +34,7 @@ public class PostController {
     @GetMapping("")
     public ResponseEntity<FinalResponseDto<?>> getPosts(@RequestParam(value = "latitude") Double latitude,
                                                         @RequestParam(value = "longitude") Double longitude,
-                                                        @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
+                                                        @AuthenticationPrincipal UserDetailsImpl userDetails){
         Long userId = getUserId(userDetails);
         return postService.getPosts(userId,latitude,longitude);
     }
