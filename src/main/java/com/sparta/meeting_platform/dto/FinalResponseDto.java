@@ -4,9 +4,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
 import com.sparta.meeting_platform.dto.user.MyPageDto;
+import com.sparta.meeting_platform.dto.user.ProfileResponseDto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 
@@ -27,10 +29,12 @@ public class FinalResponseDto<T> {
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private int mannerTemp;
     private MyPageDto myPageDto;
+    private ProfileResponseDto profileResponseDto;
     private Long postId;
     private List<PostResponseDto> postListRealTime;
     private List<PostResponseDto> postListEndTime;
     private PostDetailsResponseDto postDetailsResponseDto;
+
 
     public FinalResponseDto(boolean response, String message, Long postId, List<String> postUrls) {
         this.response = response;
@@ -89,5 +93,11 @@ public class FinalResponseDto<T> {
         this.message = message;
         this.nickName = nickname;
         this.mannerTemp = mannerTemp;
+    }
+
+    public FinalResponseDto(boolean response, String message, ProfileResponseDto profileResponseDto) {
+        this.response = response;
+        this.message = message;
+        this.profileResponseDto = profileResponseDto;
     }
 }

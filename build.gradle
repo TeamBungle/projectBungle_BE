@@ -66,6 +66,9 @@ dependencies {
 //    compileOnly group: 'org.hibernate', name: 'hibernate-spatial', version: '5.4.20.Final'
 
 
+    //JPA Spatial Type 사용
+    implementation group: 'org.hibernate', name: 'hibernate-spatial', version: '5.5.7.Final'
+
     //	이메일
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-mail', version: '2.2.6.RELEASE'
 

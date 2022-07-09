@@ -9,6 +9,7 @@ import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
 import com.sparta.meeting_platform.dto.SearchMapDto;
 import com.sparta.meeting_platform.dto.user.MyPageDto;
+import com.sparta.meeting_platform.exception.PostApiException;
 import com.sparta.meeting_platform.repository.LikeRepository;
 import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.repository.UserRepository;
@@ -24,6 +25,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +43,7 @@ public class PostService {
     private final PostSearchService postSearchService;
     private final MapSearchService mapSearchService;
     private Double distance = 8.0;
+
 
     //게시글 전체 조회(4개만)
     @Transactional(readOnly = true)
