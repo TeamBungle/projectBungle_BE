@@ -7,9 +7,9 @@ import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.MapListDto;
 import com.sparta.meeting_platform.dto.MapResponseDto;
 import com.sparta.meeting_platform.dto.SearchMapDto;
+import com.sparta.meeting_platform.exception.MapApiException;
 import com.sparta.meeting_platform.repository.LikeRepository;
 import com.sparta.meeting_platform.repository.PostRepository;
-import com.sparta.meeting_platform.util.DeduplicationUtils;
 import com.sparta.meeting_platform.util.Direction;
 import com.sparta.meeting_platform.util.GeometryUtil;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -50,7 +49,7 @@ public class MapService {
     @Value("${geocoding}")
     private String geocoding;
 
-    public ResponseEntity<MapResponseDto<?>> readMap(Double latitude, Double longitude, User user) throws java.text.ParseException {
+    public ResponseEntity<MapResponseDto<?>> readMap(Double latitude, Double longitude, User user) {
 
         Double distance = 6.0;
         Location northEast = GeometryUtil
@@ -72,7 +71,7 @@ public class MapService {
 
         List<Post> posts = query.getResultList();
         if (posts.size() < 1) {
-            throw new IllegalArgumentException("50km 내에 모임이 존재하지 않습니다.");
+            throw new MapApiException("50km 내에 모임이 존재하지 않습니다.");
         }
         List<MapListDto> mapListDtos = new ArrayList<>();
         for (Post post : posts) {
@@ -132,7 +131,7 @@ public class MapService {
 
         List<Post> posts = query.getResultList();
         if (posts.size() < 1) {
-            throw new IllegalArgumentException("50km 내에 모임이 존재하지 않습니다.");
+            throw new MapApiException("50km 내에 모임이 존재하지 않습니다.");
         }
         List<MapListDto> mapListDtos = new ArrayList<>();
 
@@ -312,7 +311,7 @@ public class MapService {
         return (rad * 180 / Math.PI);
     }
 
-    public String timeCheck(String time) throws java.text.ParseException {
+    public String timeCheck(String time) {
         DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime localDateTime = LocalDateTime.parse(time, inputFormat);
         if (!localDateTime.isAfter(LocalDateTime.now())) {

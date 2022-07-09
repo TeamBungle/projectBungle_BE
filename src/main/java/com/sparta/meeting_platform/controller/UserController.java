@@ -13,7 +13,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.mail.MessagingException;
 import javax.validation.Valid;
 
 @RestController
@@ -29,7 +28,7 @@ public class UserController {
 
     //회원가입
     @PostMapping("/user/signup")
-    public ResponseEntity<FinalResponseDto<?>> signup (@Valid @RequestBody SignupRequestDto requestDto) throws MessagingException {
+    public ResponseEntity<FinalResponseDto<?>> signup (@Valid @RequestBody SignupRequestDto requestDto) {
         return userService.signup(requestDto);
     }
 

@@ -10,6 +10,8 @@ import com.sparta.meeting_platform.dto.user.DuplicateRequestDto;
 import com.sparta.meeting_platform.dto.user.LoginRequestDto;
 import com.sparta.meeting_platform.dto.user.ProfileRequestDto;
 import com.sparta.meeting_platform.dto.user.SignupRequestDto;
+import com.sparta.meeting_platform.exception.EmailApiException;
+import com.sparta.meeting_platform.exception.UserApiException;
 import com.sparta.meeting_platform.repository.*;
 import com.sparta.meeting_platform.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -37,26 +39,27 @@ public class UserService {
     private final OpinionRepository opinionRepository;
     private final PostRepository postRepository;
     private final UserRoleCheckService userRoleCheckService;
+    private final EmailConfirmTokenRepository emailConfirmTokenRepository;
 
     // 아이디(이메일) 중복 확인
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> duplicateUsername(DuplicateRequestDto requestDto) {
 
         if (userRepository.existsByUsername(requestDto.getUsername())) {
-            throw new IllegalArgumentException("중복된 이메일이 존재합니다.");
+            throw new UserApiException("중복된 이메일이 존재합니다.");
         }
         return new ResponseEntity<>(new FinalResponseDto<>(true, "사용 가능한 이메일입니다."), HttpStatus.OK);
     }
 
     // 회원 가입
     @Transactional
-    public ResponseEntity<FinalResponseDto<?>> signup(SignupRequestDto requestDto) throws MessagingException {
+    public ResponseEntity<FinalResponseDto<?>> signup(SignupRequestDto requestDto) {
 
         if (!requestDto.getPassword().equals(requestDto.getPasswordCheck())) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            throw new UserApiException("비밀번호가 일치하지 않습니다.");
         }
         if (userRepository.existsByUsername(requestDto.getUsername())) {
-            throw new IllegalArgumentException("이메일 중복체크는 필수입니다.");
+            throw new UserApiException("이메일 중복체크는 필수입니다.");
         }
 
         // 재가입 방지
@@ -73,15 +76,15 @@ public class UserService {
 
     // 로그인
     @Transactional
-    public ResponseEntity<FinalResponseDto<?>> login(LoginRequestDto requestDto) {
+    public ResponseEntity<FinalResponseDto<?>> login(LoginRequestDto requestDto){
         User user = userRepository.findByUsername(requestDto.getUsername()).orElseThrow(
-                () -> new IllegalArgumentException("해당 유저를 찾을 수 없습니다.")
+                () -> new UserApiException("해당 유저를 찾을 수 없습니다.")
         );
         // 유저 권한 확인
         userRoleCheckService.userRoleCheck(user);
 
         if (!passwordEncoder.matches(requestDto.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("비밀번호를 확인해 주세요");
+            throw new UserApiException("비밀번호를 확인해 주세요");
         }
         jwtTokenProvider.createToken(requestDto.getUsername());
 
@@ -91,15 +94,26 @@ public class UserService {
 
     // 이메일 인증 토큰 확인
     @Transactional
-    public void confirmEmail(String token) {
-        EmailToken emailToken = emailConfirmTokenService.findByIdAndExpirationDateAfterAndExpired(token);
-        Optional<User> user = userRepository.findByUsername(emailToken.getUserEmail());
-        emailToken.useToken();    // 토큰 만료
+    public String confirmEmail(String token){
+        EmailToken emailToken = emailConfirmTokenRepository.findById(token).orElseThrow(
+                ()-> new EmailApiException("토큰 정보가 없습니다.")
+        );
+        if(emailToken.getExpirationDate().isAfter(LocalDateTime.now())){
+            Optional<User> user = userRepository.findByUsername(emailToken.getUserEmail());
+            emailToken.useToken();    // 토큰 만료
 
-        if (!user.isPresent()) {
-            throw new NullPointerException("잘못된 토큰값");
+            if (!user.isPresent()) {
+                throw new UserApiException("잘못된 토큰값");
+            }
+            user.get().setRole(UserRoleEnum.USER);
+        } else {
+            // 새 인증 token 전송
+            emailConfirmTokenService.createEmailConfirmationToken(emailToken.getUserEmail());
+            // 만료된 token 삭제
+            emailConfirmTokenService.deleteExpiredDateToken(emailToken.getId());
+            return "기존 인증 코드가 만료되어 이메일 재발송 하였습니다.";
         }
-        user.get().setRole(UserRoleEnum.USER);
+        return "";
     }
 
     // 프로필 수정
@@ -108,7 +122,7 @@ public class UserService {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "프로필 설정 실패"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "프로필 설정 실패"), HttpStatus.OK);
         }
         String profileUrl;
 
@@ -128,7 +142,7 @@ public class UserService {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "회원 탈퇴 실패"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "회원 탈퇴 실패"), HttpStatus.OK);
         }
         // 탈퇴 회원 테이블에 저장(이메일, 시간, 매너온도)
         ResignUser resignUser = new ResignUser(user.get());
