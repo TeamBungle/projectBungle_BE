@@ -90,7 +90,7 @@ public class Post {
         this.modifiedAt = LocalDateTime.now();
     }
 
-    public void update(PostRequestDto requestDto) {
+    public void update(PostRequestDto requestDto,Point location) {
         this.title = requestDto.getTitle();
         this.time = requestDto.getTime();
         this.content = requestDto.getContent();
@@ -103,5 +103,6 @@ public class Post {
         this.longitude = requestDto.getLongitude();
         this.latitude = requestDto.getLatitude();
         this.modifiedAt = LocalDateTime.now();
+        this.location = location;
     }
 }

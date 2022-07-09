@@ -70,14 +70,7 @@ public class PostController {
         return postService.getPostsDetails(postid, userId);
     }
 
-    //게시글 삭제
-    @DeleteMapping("/{postid}")
-    public ResponseEntity<FinalResponseDto<?>> deletePost(
-            @PathVariable Long postid,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        Long userId = getUserId(userDetails);
-        return postService.deletePost(postid, userId);
-    }
+
 
     // 게시글 작성
     @PostMapping("")
@@ -90,7 +83,7 @@ public class PostController {
     }
 
     // 게시글 수정
-    @PutMapping("/post/{postId}")
+    @PutMapping("/{postId}")
     public ResponseEntity<FinalResponseDto<?>> updatePost(
             @PathVariable Long postId,
             @RequestPart(value = "postDto") PostRequestDto requestDto,
@@ -99,6 +92,16 @@ public class PostController {
 
         return postService.updatePost(postId, getUserId(userDetails), requestDto, files);
     }
+
+    //게시글 삭제
+    @DeleteMapping("/{postid}")
+    public ResponseEntity<FinalResponseDto<?>> deletePost(
+            @PathVariable Long postid,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        Long userId = getUserId(userDetails);
+        return postService.deletePost(postid, userId);
+    }
+
 
     // 찜하기
     @PostMapping("/like/{postId}")

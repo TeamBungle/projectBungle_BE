@@ -32,6 +32,7 @@ public class RestApiExceptionHandler {
                 HttpStatus.OK
         );
     }
+
     @ExceptionHandler(value = {MethodArgumentNotValidException.class})
     public ResponseEntity<RestApiException> handleUserRequestException (MethodArgumentNotValidException ex) {
         RestApiException restApiException = new RestApiException();
