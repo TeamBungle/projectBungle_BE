@@ -1,42 +1,20 @@
 package com.sparta.meeting_platform.service;
 
-import com.sparta.meeting_platform.Location;
-import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.MapListDto;
 import com.sparta.meeting_platform.dto.MapResponseDto;
 import com.sparta.meeting_platform.dto.SearchMapDto;
-import com.sparta.meeting_platform.repository.LikeRepository;
-import com.sparta.meeting_platform.repository.PostRepository;
-import com.sparta.meeting_platform.util.DeduplicationUtils;
-import com.sparta.meeting_platform.util.Direction;
-import com.sparta.meeting_platform.util.GeometryUtil;
+import com.sparta.meeting_platform.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -45,11 +23,12 @@ public class MapService {
     private final EntityManager em;
     private final PostSearchService postSearchService;
     private final MapSearchService mapSearchService;
+    private final UserRepository userRepository;
 
     //지도탭 입장
     @Transactional(readOnly = true)
     public ResponseEntity<MapResponseDto<?>> readMap(Double latitude, Double longitude, Long userId) {
-
+        checkUser(userId);
         Double distance = 6.0;
         String pointFormat = mapSearchService.searchPointFormat(distance,latitude,longitude);
 
@@ -58,18 +37,17 @@ public class MapService {
         List<Post> posts = query.getResultList();
 
         if (posts.size() < 1) {
-            throw new IllegalArgumentException("50km 내에 모임이 존재하지 않습니다.");
+            throw new IllegalArgumentException( distance+"km 내에 모임이 존재하지 않습니다.");
         }
         List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId);
         return new ResponseEntity<>(new MapResponseDto<>(true, "50km 내에 위치한 모임", mapListDtos), HttpStatus.OK);
-    }
-    // 순서는 어떻게?
-    // 화면에 몇개? 밑 슬라이스에 몇개?
+    }//거리순
 
 
     // 주소 검색 결과
     @Transactional(readOnly = true)
     public ResponseEntity<MapResponseDto<?>> searchMap(String address, Long userId) throws IOException, ParseException{
+        checkUser(userId);
         SearchMapDto searchMapDto = mapSearchService.findLatAndLong(address);
         Double distance = 6.0;
         String pointFormat
@@ -80,19 +58,18 @@ public class MapService {
         List<Post> posts = query.getResultList();
 
         if (posts.size() < 1) {
-            throw new IllegalArgumentException("50km 내에 모임이 존재하지 않습니다.");
+            throw new IllegalArgumentException(distance+"km 내에 모임이 존재하지 않습니다.");
         }
         List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId);
         return new ResponseEntity<>(new MapResponseDto<>(true, "50km 내에 위치한 모임", mapListDtos), HttpStatus.OK);
-    }// 순서는 어떻게?
-    // 화면에 몇개? 밑 슬라이스에 몇개?
+    }//거리순
 
 
     //지도 세부 설정 검색
     @Transactional(readOnly = true)
     public ResponseEntity<MapResponseDto<?>> detailsMap(List<String> categories, int personnel, Double distance,
                                                         Double latitude, Double longitude, Long userId){
-
+        checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance,latitude,longitude);
         String mergeList = postSearchService.categoryOrTagListMergeString(categories);
 
@@ -103,9 +80,14 @@ public class MapService {
         List<Post> posts = query.getResultList();
 
         List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId);
-        return new ResponseEntity<>(new MapResponseDto<>(true, "회원가입 성공", mapListDtos), HttpStatus.OK);
-    }
+        return new ResponseEntity<>(new MapResponseDto<>(true, "세부 조회 성공!!", mapListDtos), HttpStatus.OK);
+    }//거리순
 
+    public User checkUser(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new NullPointerException("해당 유저를 찾을 수 없습니다."));
+        return user;
+    }
 
 //    //위도 경도 찾아 오기 함수
 //    public SearchMapDto findLatAndLong(String location) throws IOException, ParseException {

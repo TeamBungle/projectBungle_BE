@@ -61,6 +61,16 @@ public class PostController {
         return postService.getPostsByTags(userId,tags,latitude,longitude);
     }
 
+    //게시글 더보기 조회
+    @GetMapping("/more")
+    public ResponseEntity<FinalResponseDto<?>> morePostList(@RequestParam(value = "latitude") Double latitude,
+                                                            @RequestParam(value = "longitude") Double longitude,
+                                                            @RequestParam(value = "status") String status,
+                                                            @AuthenticationPrincipal UserDetailsImpl userDetails){
+        Long userId = getUserId(userDetails);
+        return postService.morePostList(userId,status,latitude,longitude);
+    }
+
     //게시글 상세 조회
     @GetMapping("/{postid}")
     public ResponseEntity<FinalResponseDto<?>> getPostDetails(

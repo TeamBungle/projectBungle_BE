@@ -43,31 +43,29 @@ public class PostService {
     //게시글 전체 조회(4개만)
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getPosts(Long userId, Double latitude, Double longitude) {
-        Optional<User> user = userRepository.findById(userId);
-
-        if (!user.isPresent()) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 조회 실패"), HttpStatus.BAD_REQUEST);
-        }
+        checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
                         + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
                         + "ORDER BY p.time desc", Post.class)
                 .setMaxResults(4);
         List<Post> posts = query.getResultList();
+        Query query1 = em.createNativeQuery("SELECT * FROM post AS p "
+                        + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+                        + "ORDER BY p.time", Post.class)
+                .setMaxResults(4);
+        List<Post> posts2 = query1.getResultList();
 
-        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId);
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
+        List<PostResponseDto> postListRealTime = postSearchService.searchPostList(posts, userId);
+        List<PostResponseDto> postListEndTime = postSearchService.searchPostList(posts2, userId);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postListRealTime, postListEndTime), HttpStatus.OK);
     }// endtime, manner도 같이 보내줘야함
 
 
     //카테고리별 게시글 조회
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getPostsByCategories(Long userId, List<String> categories, Double latitude, Double longitude) {
-        Optional<User> user = userRepository.findById(userId);
-
-        if (!user.isPresent()) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 조회 실패"), HttpStatus.BAD_REQUEST);
-        }
+        checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
         String mergeList = postSearchService.categoryOrTagListMergeString(categories);
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
@@ -77,7 +75,7 @@ public class PostService {
         List<Post> posts = query.getResultList();
 
         if (posts.size() < 1) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 조회해주세요"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른 카테고리로 조회해주세요"), HttpStatus.OK);
         }
         List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
@@ -87,11 +85,7 @@ public class PostService {
     //태그별 게시글 조회
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getPostsByTags(Long userId, List<String> tags, Double latitude, Double longitude) {
-        Optional<User> user = userRepository.findById(userId);
-
-        if (!user.isPresent()) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 조회 실패"), HttpStatus.BAD_REQUEST);
-        }
+        checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
         String mergeList = postSearchService.categoryOrTagListMergeString(tags);
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
@@ -101,7 +95,7 @@ public class PostService {
         List<Post> posts = query.getResultList();
 
         if (posts.size() < 1) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 조회해주세요"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른 태그로 조회해주세요"), HttpStatus.OK);
         }
         List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
@@ -109,19 +103,35 @@ public class PostService {
 
 
     //게시글 더 보기 조회 추가 해야함
+    @Transactional(readOnly = true)
+    public ResponseEntity<FinalResponseDto<?>> morePostList(Long userId, String status, Double latitude, Double longitude) {
+        checkUser(userId);
+        String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
+        List<Post> posts = new ArrayList<>();
+        switch (status) {
+            case "realTime":
+                Query query = em.createNativeQuery("SELECT * FROM post AS p "
+                        + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+                        + "ORDER BY p.time desc", Post.class);
+                posts = query.getResultList();
+                break;
+            case "endTime":
+                Query query1 = em.createNativeQuery("SELECT * FROM post AS p "
+                        + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+                        + "ORDER BY p.time", Post.class);
+                posts = query1.getResultList();
+                break;
+        }
+        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
+    }
 
 
     //게시글 상세 조회
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getPostsDetails(Long postId, Long userId) {
-        Optional<User> user = userRepository.findById(userId);
-
-        if (!user.isPresent()) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 조회 실패"), HttpStatus.BAD_REQUEST);
-        }
-        Post post = postRepository.findById(postId).orElseThrow(
-                () -> new NullPointerException("존재하지 않는 게시물 입니다.")
-        );
+        checkUser(userId);
+        Post post = checkPost(postId);
         Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
         PostDetailsResponseDto postDetailsResponseDto = postSearchService.detailPost(like, post);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postDetailsResponseDto), HttpStatus.OK);
@@ -131,7 +141,7 @@ public class PostService {
     // 게시글 등록
     @Transactional
     public ResponseEntity<FinalResponseDto<?>> createPost(Long userId, PostRequestDto requestDto, List<MultipartFile> files) throws Exception {
-        User user = userRepository.findById(userId).orElse(null);
+        User user = checkUser(userId);
         //        Boolean isOwner = user.getIsOwner();
 //
 //        if(isOwner){
@@ -139,9 +149,6 @@ public class PostService {
 //        }else{
 //            user.setIsOwner(true);
 //        }
-        if (user == null) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
-        }
         if (files == null) {
             requestDto.setPostUrls(null);
             // 기본 이미지로 변경 필요
@@ -163,14 +170,8 @@ public class PostService {
     // 게시글 수정
     @Transactional
     public ResponseEntity<FinalResponseDto<?>> updatePost(Long postId, Long userId, PostRequestDto requestDto, List<MultipartFile> files) throws Exception {
-        User user = userRepository.findById(userId).orElse(null);
-
-        if (user == null) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 수정 실패"), HttpStatus.BAD_REQUEST);
-        }
-        Post post = postRepository.findById(postId).orElseThrow(
-                () -> new NullPointerException("존재하지 않는 게시물 입니다."));
-
+        checkUser(userId);
+        Post post = checkPost(postId);
         if (files == null) {
             requestDto.setPostUrls(null);
             // 기본 이미지로 변경 필요
@@ -191,17 +192,13 @@ public class PostService {
 
     //게시글 삭제
     @Transactional
-    public ResponseEntity<FinalResponseDto<?>> deletePost(Long postid, Long userId) {
-        Post post = postRepository.findById(postid).orElseThrow(
-                () -> new NullPointerException("해당 게시글이 존재하지 않습니다.")
-        );
-        User user = userRepository.findById(userId).orElseThrow(
-                () -> new NullPointerException("존재하지 않는 사용자 입니다.")
-        );
+    public ResponseEntity<FinalResponseDto<?>> deletePost(Long postId, Long userId) {
+        Post post = checkPost(postId);
+        User user = checkUser(userId);
         if (!post.getUser().getId().equals(userId)) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "본인 게시글이 아닙니다."), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "본인 게시글이 아닙니다."), HttpStatus.OK);
         } else {
-            postRepository.deleteById(postid);
+            postRepository.deleteById(postId);
             user.setIsOwner(false);
             return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공"), HttpStatus.OK);
         }
@@ -211,11 +208,7 @@ public class PostService {
     // 찜한 게시글 전체 조회
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getLikedPosts(Long userId) {
-        Optional<User> user = userRepository.findById(userId);
-
-        if (!user.isPresent()) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "좋아요한 게시글 조회 실패"), HttpStatus.BAD_REQUEST);
-        }
+        checkUser(userId);
         List<PostMapping> posts = likeRepository.findAllByUserIdAndIsLikeTrue(userId);
         List<PostResponseDto> postList = postSearchService.searchLikePostList(posts, userId);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "좋아요한 게시글 조회 성공", postList), HttpStatus.OK);
@@ -225,9 +218,7 @@ public class PostService {
     //나의 번개 페이지 조회
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getMyPage(UserDetailsImpl userDetails) {
-        User user = userRepository.findById(userDetails.getUser().getId()).orElseThrow(
-                () -> new NullPointerException("해당 유저를 찾을 수 없습니다.")
-        );
+        User user = checkUser(userDetails.getUser().getId());
         MyPageDto myPageDto = new MyPageDto(user.getNickName(), user.getMannerTemp(), user.getProfileUrl(), user.getBungCount());
         return new ResponseEntity<>(new FinalResponseDto<>(true, "나의 번개 페이지 조회 성공", myPageDto), HttpStatus.OK);
     }
@@ -235,9 +226,7 @@ public class PostService {
 
     //내 벙글 확인하기
     public ResponseEntity<FinalResponseDto<?>> getMyPagePost(UserDetailsImpl userDetails) {
-        User user = userRepository.findById(userDetails.getUser().getId()).orElseThrow(
-                () -> new NullPointerException("해당 유저를 찾을 수 없습니다.")
-        );
+        User user = checkUser(userDetails.getUser().getId());
         Post post = postRepository.findByUserId(user.getId());
         Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId()).orElse(null);
         PostResponseDto postResponseDto = postSearchService.searchMyPost(like, post);
@@ -245,6 +234,19 @@ public class PostService {
         return new ResponseEntity<>(new FinalResponseDto<>(true, "나의 번개 페이지 조회 성공", postResponseDto), HttpStatus.OK);
     }
 
+    // 유저 존재 여부
+    public User checkUser(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new NullPointerException("해당 유저를 찾을 수 없습니다."));
+        return user;
+    }
+
+    // 게시글 존재 여부
+    public Post checkPost(Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(
+                () -> new NullPointerException("존재하지 않는 게시물 입니다."));
+        return post;
+    }
 
 //    public double deg2rad(double deg) {
 //        return (deg * Math.PI / 180.0);
