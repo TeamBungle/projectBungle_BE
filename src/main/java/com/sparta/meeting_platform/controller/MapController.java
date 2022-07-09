@@ -1,7 +1,5 @@
 package com.sparta.meeting_platform.controller;
 
-
-import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.MapResponseDto;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.service.MapService;
@@ -10,6 +8,7 @@ import org.json.simple.parser.ParseException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,40 +17,40 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
+@RequestMapping("/map")
 public class MapController {
 
-//    private final MapService mapService;
     private final MapService mapService;
 
 
-
-    @GetMapping("/map")
+    //번개지도 화면 조회
+    @GetMapping("")
     public ResponseEntity<MapResponseDto<?>> readMap(@RequestParam(value = "latitude") Double latitude,
                                                      @RequestParam(value = "longitude") Double longitude,
-                                                     @AuthenticationPrincipal UserDetailsImpl userDetails) throws java.text.ParseException {
-        User user = userDetails.getUser();
-       return mapService.readMap(latitude,longitude,user);
+                                                     @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        Long userId = userDetails.getUser().getId();
+       return mapService.readMap(latitude,longitude,userId);
     }
 
-
-    @GetMapping("/map/search")
+    //번개 지도 주소 검색 결과 조회
+    @GetMapping("/search")
     public ResponseEntity<MapResponseDto<?>> searchMap(@RequestParam(value = "address") String address,
                           @AuthenticationPrincipal UserDetailsImpl userDetails)
-            throws IOException, ParseException, java.text.ParseException {
+            throws IOException, ParseException {
         System.out.println("controller" + address);
-        User user = userDetails.getUser();
-        return mapService.searchMap(address,user);
+        Long userId = userDetails.getUser().getId();
+        return mapService.searchMap(address,userId);
     }
 
-
-    @GetMapping("/map/details")
+    //번개지도 화면 세부 설정 조회
+    @GetMapping("/details")
     public ResponseEntity<MapResponseDto<?>> detailsMap(@RequestParam(value = "categories",defaultValue = "") List<String> categories,
                            @RequestParam(value = "personnel",defaultValue = "") int personnel,
                            @RequestParam(value = "distance",defaultValue = "") int distance,
                            @RequestParam(value = "latitude") Double latitude,
                            @RequestParam(value = "longitude") Double longitude,
-                           @AuthenticationPrincipal UserDetailsImpl userDetails) throws java.text.ParseException {
-        User user = userDetails.getUser();
-       return mapService.detailsMap(categories,personnel,(double)distance,latitude,longitude,user);
+                           @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        Long userId = userDetails.getUser().getId();
+       return mapService.detailsMap(categories,personnel,(double)distance,latitude,longitude,userId);
     }
 }

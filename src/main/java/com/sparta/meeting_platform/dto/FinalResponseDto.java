@@ -31,13 +31,24 @@ public class FinalResponseDto<T> {
     private MyPageDto myPageDto;
     private ProfileResponseDto profileResponseDto;
     private Long postId;
+    private List<PostResponseDto> postListRealTime;
+    private List<PostResponseDto> postListEndTime;
+    private PostDetailsResponseDto postDetailsResponseDto;
 
-    private PostResponseDto[] postList;
+
     public FinalResponseDto(boolean response, String message, Long postId, List<String> postUrls) {
         this.response = response;
         this.message = message;
         this.postId = postId;
         this.postUrls = postUrls;
+    }
+
+    public FinalResponseDto(boolean response, String message,
+                            List<PostResponseDto> postListRealTime, List<PostResponseDto> postListEndTime){
+        this.response = response;
+        this.message = message;
+        this.postListRealTime = postListRealTime;
+        this.postListEndTime = postListEndTime;
     }
 
     public FinalResponseDto(boolean response, String message, Long postId) {
@@ -46,7 +57,7 @@ public class FinalResponseDto<T> {
         this.postId = postId;
     }
 
-    private PostDetailsResponseDto postDetailsResponseDto;
+
 
     public FinalResponseDto(boolean response, String message, PostDetailsResponseDto postDetailsResponseDto) {
         this.response = response;
