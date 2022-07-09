@@ -41,7 +41,9 @@ public class MapService {
         }
         List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId);
         return new ResponseEntity<>(new MapResponseDto<>(true, "50km 내에 위치한 모임", mapListDtos), HttpStatus.OK);
-    }//거리순
+    }
+    // 순서는 어떻게?
+    // 화면에 몇개? 밑 슬라이스에 몇개?
 
 
     // 주소 검색 결과
@@ -54,7 +56,8 @@ public class MapService {
                 = mapSearchService.searchPointFormat(distance,searchMapDto.getLatitude(),searchMapDto.getLongitude());
 
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
-                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)", Post.class); //거리순으로 정렬
+                + "WHERE MBRContains(ST_DISTANCE_SPHERE(" + pointFormat + ", p.location)"
+                + "AS distance FROM Post ORDER BY distance", Post.class); //거리순으로 정렬
         List<Post> posts = query.getResultList();
 
         if (posts.size() < 1) {

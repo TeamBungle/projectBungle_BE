@@ -73,7 +73,6 @@ public class PostService {
                 + " AND p.id in (select u.post_id from post_categories u"
                 + " WHERE u.category in (" + mergeList + "))", Post.class);
         List<Post> posts = query.getResultList();
-
         if (posts.size() < 1) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른 카테고리로 조회해주세요"), HttpStatus.OK);
         }
