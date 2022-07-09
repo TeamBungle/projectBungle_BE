@@ -83,7 +83,7 @@ public class MapSearchService {
 
         System.out.println(longi);
         System.out.println(lati);
-        return new SearchMapDto(longi, lati);
+        return new SearchMapDto(lati,longi);
     }
 
     //pointFormat 구하기
