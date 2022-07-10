@@ -1,5 +1,6 @@
 package com.sparta.meeting_platform.service;
 
+import com.sparta.meeting_platform.chat.repository.ChatRoomRepository;
 import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.domain.User;
@@ -7,6 +8,7 @@ import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
+import com.sparta.meeting_platform.dto.PostTestDto;
 import com.sparta.meeting_platform.dto.SearchMapDto;
 import com.sparta.meeting_platform.dto.user.MyPageDto;
 import com.sparta.meeting_platform.exception.PostApiException;
@@ -16,7 +18,9 @@ import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.repository.mapping.PostMapping;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.io.WKTReader;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -33,6 +37,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class PostService {
     private final PostRepository postRepository;
@@ -43,6 +48,8 @@ public class PostService {
     private final PostSearchService postSearchService;
     private final MapSearchService mapSearchService;
     private Double distance = 8.0;
+    private final MapService mapService;
+    private final ChatRoomRepository chatRoomRepository;
 
 
     //게시글 전체 조회(4개만)
@@ -167,6 +174,7 @@ public class PostService {
         Point point = mapSearchService.makePoint(searchMapDto.getLongitude(), searchMapDto.getLatitude());
         Post post = new Post(user, requestDto, searchMapDto.getLongitude(), searchMapDto.getLatitude(), point);
         postRepository.save(post);
+        chatRoomRepository.createChatRoom(post);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공", post.getId()), HttpStatus.OK);
     }
 

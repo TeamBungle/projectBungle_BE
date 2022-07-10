@@ -60,10 +60,7 @@ dependencies {
     // json 파싱
     implementation group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
 
-    //JPA Spatial Type 사용
     implementation group: 'org.hibernate', name: 'hibernate-spatial', version: '5.5.7.Final'
-
-//    compileOnly group: 'org.hibernate', name: 'hibernate-spatial', version: '5.4.20.Final'
 
 
     //JPA Spatial Type 사용
@@ -72,6 +69,10 @@ dependencies {
     //	이메일
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-mail', version: '2.2.6.RELEASE'
 
+    //redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+
     implementation group: 'org.javassist', name: 'javassist', version: '3.15.0-GA'
 
 
@@ -79,5 +80,4 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
-    exclude '**/*'
 }
