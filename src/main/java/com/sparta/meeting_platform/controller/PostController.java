@@ -36,6 +36,7 @@ public class PostController {
                                                         @RequestParam(value = "longitude") Double longitude,
                                                         @AuthenticationPrincipal UserDetailsImpl userDetails){
         Long userId = getUserId(userDetails);
+        System.out.println("여기는 오냐");
         return postService.getPosts(userId,latitude,longitude);
     }
 

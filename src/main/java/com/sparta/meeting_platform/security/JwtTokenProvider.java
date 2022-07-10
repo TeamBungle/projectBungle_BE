@@ -35,15 +35,13 @@ public class JwtTokenProvider {
 
     private final UserDetailsService userDetailsService;
 
-    private final ObjectMapper objectMapper;
-
     @PostConstruct
     protected void init() {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
     }
 
     // 토큰 생성
-    public String createToken(String userPk) {
+    public void createToken(String userPk) {
         Claims claims = Jwts.claims().setSubject(userPk);
         Date now = new Date();
         String token= Jwts.builder()
@@ -54,8 +52,7 @@ public class JwtTokenProvider {
                 //signature에 들어갈 secret값 세팅
                 .compact();
 
-        response.addHeader(AUTH_HEADER,token);
-        return token;
+        response.addHeader(AUTH_HEADER,"Bearer " +token);
     }
 
     public String generateJwtToken(UserDetails userDetails) {
@@ -93,7 +90,8 @@ public class JwtTokenProvider {
     // 토큰의 유효성 + 만료일자 확인
     public boolean validateToken(String jwtToken) {
         try {
-            Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(jwtToken);
+            String Token = jwtToken.replace("Bearer ", "");
+            Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(Token);
             return !claims.getBody().getExpiration().before(new Date());
         } catch (Exception e) {
             return false;
