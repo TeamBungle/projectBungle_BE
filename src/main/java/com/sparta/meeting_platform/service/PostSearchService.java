@@ -5,6 +5,7 @@ import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.dto.MapListDto;
 import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
+import com.sparta.meeting_platform.exception.PostApiException;
 import com.sparta.meeting_platform.repository.LikeRepository;
 import com.sparta.meeting_platform.repository.mapping.PostMapping;
 import lombok.RequiredArgsConstructor;
@@ -139,7 +140,7 @@ public class PostSearchService {
         List<PostResponseDto> postList = new ArrayList<>();
         for (PostMapping post : posts) {
             Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getPost().getId()).orElseThrow(
-                    () -> new NullPointerException("찜한 게시글이 없습니다.")
+                    () -> new PostApiException("찜한 게시글이 없습니다.")
             );
 
             if (post.getPost().getPostUrls().size() < 1) {

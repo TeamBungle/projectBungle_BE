@@ -7,6 +7,7 @@ import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.MapListDto;
 import com.sparta.meeting_platform.dto.MapResponseDto;
 import com.sparta.meeting_platform.dto.SearchMapDto;
+import com.sparta.meeting_platform.exception.UserApiException;
 import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.exception.MapApiException;
 import com.sparta.meeting_platform.repository.LikeRepository;
@@ -45,7 +46,7 @@ public class MapService {
         List<Post> posts = query.getResultList();
 
         if (posts.size() < 1) {
-            throw new IllegalArgumentException( distance+"km 내에 모임이 존재하지 않습니다.");
+            throw new MapApiException( distance+"km 내에 모임이 존재하지 않습니다.");
         }
         List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId);
         return new ResponseEntity<>(new MapResponseDto<>(true, "50km 내에 위치한 모임", mapListDtos), HttpStatus.OK);
@@ -69,7 +70,7 @@ public class MapService {
         List<Post> posts = query.getResultList();
 
         if (posts.size() < 1) {
-            throw new IllegalArgumentException(distance+"km 내에 모임이 존재하지 않습니다.");
+            throw new MapApiException(distance+"km 내에 모임이 존재하지 않습니다.");
         }
         List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId);
         return new ResponseEntity<>(new MapResponseDto<>(true, "50km 내에 위치한 모임", mapListDtos), HttpStatus.OK);
@@ -80,6 +81,9 @@ public class MapService {
     @Transactional(readOnly = true)
     public ResponseEntity<MapResponseDto<?>> detailsMap(List<String> categories, int personnel, Double distance,
                                                         Double latitude, Double longitude, Long userId){
+        if(distance == null){
+            distance = 10.0;
+        }
         checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance,latitude,longitude);
         String mergeList = postSearchService.categoryOrTagListMergeString(categories);
@@ -98,7 +102,7 @@ public class MapService {
 
     public User checkUser(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new NullPointerException("해당 유저를 찾을 수 없습니다."));
+                () -> new UserApiException("해당 유저를 찾을 수 없습니다."));
         return user;
     }
 

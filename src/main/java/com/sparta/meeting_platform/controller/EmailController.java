@@ -16,13 +16,13 @@ public class EmailController {
 
     private final UserService userService;
 
-    @GetMapping("/confirmEmail")
+    @GetMapping("/user/confirmEmail")
     public String viewConfirmEmail(@Valid @RequestParam String token){
         userService.confirmEmail(token);
         return "redirect:http://localhost:3000/main";
     }
 
-    @GetMapping("/confirmEmail2")
+    @GetMapping("/user/confirmEmail2")
     public String viewConfirmEmail2(@Valid @RequestParam String token){
         String msg = userService.confirmEmail(token);
         if(msg.equals("기존 인증 코드가 만료되어 이메일 재발송 하였습니다.")){

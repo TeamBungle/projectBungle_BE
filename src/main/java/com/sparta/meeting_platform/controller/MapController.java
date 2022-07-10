@@ -46,7 +46,7 @@ public class MapController {
     @GetMapping("/details")
     public ResponseEntity<MapResponseDto<?>> detailsMap(@RequestParam(value = "categories",defaultValue = "") List<String> categories,
                            @RequestParam(value = "personnel",defaultValue = "") int personnel,
-                           @RequestParam(value = "distance",defaultValue = "") int distance,
+                           @RequestParam(value = "distance",defaultValue = "",required = false) int distance,
                            @RequestParam(value = "latitude") Double latitude,
                            @RequestParam(value = "longitude") Double longitude,
                            @AuthenticationPrincipal UserDetailsImpl userDetails) {
