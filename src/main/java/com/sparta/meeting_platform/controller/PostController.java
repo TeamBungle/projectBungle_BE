@@ -8,6 +8,7 @@ import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.service.LikeService;
 import com.sparta.meeting_platform.service.PostService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +26,7 @@ public class PostController {
     private final LikeService likeService;
 
 
+
     private Long getUserId(UserDetailsImpl userDetails) {
         User user = userDetails.getUser();
         return user.getId();
@@ -35,7 +37,7 @@ public class PostController {
     public ResponseEntity<FinalResponseDto<?>> getPosts(@RequestParam(value = "latitude") Double latitude,
                                                         @RequestParam(value = "longitude") Double longitude,
                                                         @AuthenticationPrincipal UserDetailsImpl userDetails){
-        Long userId = getUserId(userDetails);
+        Long userId = userDetails.getUser().getId();
         return postService.getPosts(userId,latitude,longitude);
     }
 
