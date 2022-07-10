@@ -3,6 +3,7 @@ package com.sparta.meeting_platform.chat.service;
 
 import com.sparta.meeting_platform.chat.dto.ChatMessageDto;
 import com.sparta.meeting_platform.chat.model.ChatMessage;
+import com.sparta.meeting_platform.chat.repository.ChatMessageMysqlRepository;
 import com.sparta.meeting_platform.chat.repository.ChatMessageRepository;
 import com.sparta.meeting_platform.chat.repository.ChatRoomRepository;
 import com.sparta.meeting_platform.domain.User;
@@ -12,7 +13,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -24,6 +27,8 @@ public class ChatService {
     private final ChatMessageRepository chatMessageRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
+
+    private final ChatMessageMysqlRepository chatMessageMysqlRepository;
 
     public void save(ChatMessageDto messageDto, String token) {
         log.info("save Message : {}", messageDto.getMessage());
@@ -39,8 +44,16 @@ public class ChatService {
         chatMessage.setSender(user.getNickName());
         chatMessage.setProfileUrl(user.getProfileUrl());
         chatMessage.setEnterUserCnt(enterUserCnt);
-//        Date date = new Date();
-//        chatMessage.setCreateAt(date); // 시간세팅
+        chatMessage.setUsername(username);
+        DateFormat dateFormat = new SimpleDateFormat("dd,MM,yyyy,HH,mm,ss", Locale.KOREA);
+//        TimeZone time;
+//        time = TimeZone.getTimeZone("Asia/seoul");
+        Calendar calendar = Calendar.getInstance();
+        Date date = new Date(calendar.getTimeInMillis());
+        dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Seoul"));
+        String dateToStr = dateFormat.format(date);
+        chatMessage.setCreatedAt(dateToStr);
+
 
         log.info("type : {}", chatMessage.getType());
 
@@ -59,6 +72,7 @@ public class ChatService {
         log.info("ENTER : {}", chatMessage.getMessage());
 
         chatMessageRepository.save(chatMessage); // 캐시에 저장 했다.
+        chatMessageMysqlRepository.save(chatMessage);
         // Websocket 에 발행된 메시지를 redis 로 발행한다(publish)
         redisPublisher.publish(ChatRoomRepository.getTopic(chatMessage.getRoomId()), chatMessage);
     }

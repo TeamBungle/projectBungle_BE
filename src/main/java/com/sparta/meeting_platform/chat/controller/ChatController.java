@@ -26,8 +26,8 @@ public class ChatController {
      * websocket "/pub/chat/message"로 들어오는 메시징을 처리한다.
      */
     //1번
-    @MessageMapping("/chat/message")
-    public void message(ChatMessageDto message, @Header("token") String token) {
+    @MessageMapping({"/chat/message"})
+    public void message( ChatMessageDto message, @Header("token") String token) {
         log.info("요청 메서드 [message] /chat/message");
         chatService.save(message, token);
     }
