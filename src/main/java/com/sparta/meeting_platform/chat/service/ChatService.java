@@ -27,7 +27,6 @@ public class ChatService {
     private final ChatMessageRepository chatMessageRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
-
     private final ChatMessageMysqlRepository chatMessageMysqlRepository;
 
     public void save(ChatMessageDto messageDto, String token) {
@@ -40,11 +39,11 @@ public class ChatService {
         User user = userRepository.findByUsername(username).orElseThrow(
                 () -> new NullPointerException("존재하지 않는 사용자 입니다!")
         );
-        ChatMessage chatMessage = new ChatMessage(messageDto);
-        chatMessage.setSender(user.getNickName());
-        chatMessage.setProfileUrl(user.getProfileUrl());
-        chatMessage.setEnterUserCnt(enterUserCnt);
-        chatMessage.setUsername(username);
+
+        messageDto.setSender(user.getNickName());
+        messageDto.setProfileUrl(user.getProfileUrl());
+        messageDto.setEnterUserCnt(enterUserCnt);
+        messageDto.setUsername(username);
         DateFormat dateFormat = new SimpleDateFormat("dd,MM,yyyy,HH,mm,ss", Locale.KOREA);
 //        TimeZone time;
 //        time = TimeZone.getTimeZone("Asia/seoul");
@@ -52,34 +51,33 @@ public class ChatService {
         Date date = new Date(calendar.getTimeInMillis());
         dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Seoul"));
         String dateToStr = dateFormat.format(date);
-        chatMessage.setCreatedAt(dateToStr);
+        messageDto.setCreatedAt(dateToStr);
 
 
-        log.info("type : {}", chatMessage.getType());
+        log.info("type : {}", messageDto.getType());
 
-        if (ChatMessage.MessageType.ENTER.equals(chatMessage.getType())) {
-            chatRoomRepository.enterChatRoom(chatMessage.getRoomId());
+        if (ChatMessage.MessageType.ENTER.equals(messageDto.getType())) {
+            chatRoomRepository.enterChatRoom(messageDto.getRoomId());
 
-            chatMessage.setMessage("[알림] " + chatMessage.getSender() + "님이 입장하셨습니다.");
-            chatMessage.setProfileUrl(null);
+            messageDto.setMessage("[알림] " + messageDto.getSender() + "님이 입장하셨습니다.");
+            messageDto.setProfileUrl(null);
 
-        } else if (ChatMessage.MessageType.QUIT.equals(chatMessage.getType())) {
+        } else if (ChatMessage.MessageType.QUIT.equals(messageDto.getType())) {
 
-            chatMessage.setMessage("[알림] " + chatMessage.getSender() + "님이 나가셨습니다.");
-            chatMessage.setProfileUrl(null);
+            messageDto.setMessage("[알림] " + messageDto.getSender() + "님이 나가셨습니다.");
+            messageDto.setProfileUrl(null);
         }
 
-        log.info("ENTER : {}", chatMessage.getMessage());
+        log.info("ENTER : {}", messageDto.getMessage());
 
-        chatMessageRepository.save(chatMessage); // 캐시에 저장 했다.
-        chatMessageMysqlRepository.save(chatMessage);
+        chatMessageRepository.save(messageDto); // 캐시에 저장 했다.
         // Websocket 에 발행된 메시지를 redis 로 발행한다(publish)
-        redisPublisher.publish(ChatRoomRepository.getTopic(chatMessage.getRoomId()), chatMessage);
+        redisPublisher.publish(ChatRoomRepository.getTopic(messageDto.getRoomId()), messageDto);
     }
 
 
     //redis에 저장되어있는 message 들 출력
-    public List<ChatMessage> getMessages(String roomId) {
+    public List<ChatMessageDto> getMessages(String roomId) {
         log.info("getMessages roomId : {}", roomId);
         return chatMessageRepository.findAllMessage(roomId);
     }

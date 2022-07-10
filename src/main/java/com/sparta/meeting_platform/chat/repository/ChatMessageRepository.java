@@ -1,5 +1,8 @@
 package com.sparta.meeting_platform.chat.repository;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sparta.meeting_platform.chat.dto.ChatMessageDto;
 import com.sparta.meeting_platform.chat.model.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +12,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
@@ -24,10 +28,12 @@ public class ChatMessageRepository {        //redis
     public static final String USER_COUNT = "USER_COUNT"; // 채팅룸에 입장한 클라이언트수 저장
     public static final String ENTER_INFO = "ENTER_INFO"; // 채팅룸에 입장한 클라이언트의 sessionId와 채팅룸 id를 맵핑한 정보 저장
 
+    private final ChatMessageMysqlRepository chatMessageMysqlRepository;
+
     private final RedisTemplate<String, Object> redisTemplate;
     private final StringRedisTemplate stringRedisTemplate;
     private HashOperations<String, String, String> hashOpsEnterInfo;
-    private HashOperations<String, String, List<ChatMessage>> opsHashChatMessage;
+    private HashOperations<String, String, List<ChatMessageDto>> opsHashChatMessage;
     private ValueOperations<String, String> valueOps;
 
     @PostConstruct
@@ -42,23 +48,35 @@ public class ChatMessageRepository {        //redis
         return Long.valueOf(Optional.ofNullable(valueOps.get(USER_COUNT + "_" + roomId)).orElse("0"));
     }
 
-    public ChatMessage save(ChatMessage chatMessage) {
-        log.info("chatMessage : {}", chatMessage.getMessage());
-        log.info("type: {}", chatMessage.getType());
+    @Transactional
+    public ChatMessageDto save(ChatMessageDto chatMessageDto) {
+        log.info("chatMessage : {}", chatMessageDto.getMessage());
+        log.info("type: {}", chatMessageDto.getType());
         redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(ChatMessage.class)); // 왜 ?
 
-        String roomId = chatMessage.getRoomId();
-        List<ChatMessage> chatMessageList = opsHashChatMessage.get(CHAT_MESSAGE, roomId);
+        String roomId = chatMessageDto.getRoomId();
+        List<ChatMessageDto> chatMessageList = opsHashChatMessage.get(CHAT_MESSAGE, roomId);
+
         if (chatMessageList == null) chatMessageList = new ArrayList<>();
-        chatMessageList.add(chatMessage);
-
+        chatMessageList.add(chatMessageDto);
         opsHashChatMessage.put(CHAT_MESSAGE, roomId, chatMessageList);
-
-        return chatMessage;
+        log.info("list size : {}", (opsHashChatMessage.get(CHAT_MESSAGE, roomId)).size());
+        if((opsHashChatMessage.get(CHAT_MESSAGE, roomId)).size() % 10 == 0){
+            log.info("Save DB!");
+            List<ChatMessageDto> chatMessageDtos = opsHashChatMessage.get(CHAT_MESSAGE, roomId);
+            ObjectMapper mapper = new ObjectMapper();
+            List<ChatMessageDto> chatMessageDtos1 = mapper.convertValue(chatMessageDtos, new TypeReference<List<ChatMessageDto>>(){});
+            for (ChatMessageDto messageDto : chatMessageDtos1) {
+                ChatMessage chatMessage = new ChatMessage(messageDto);
+                chatMessageMysqlRepository.save(chatMessage);
+            }
+            opsHashChatMessage.delete(CHAT_MESSAGE,roomId);
+        }
+        return chatMessageDto;
     }
 
     //채팅 가져오기 from redis
-    public List<ChatMessage> findAllMessage(String roomId) {
+    public List<ChatMessageDto> findAllMessage(String roomId) {
         log.info("findAllMessage");
         return opsHashChatMessage.get(CHAT_MESSAGE, roomId);
     }

@@ -20,19 +20,32 @@ public class ChatMessage {
     @Id
     @GeneratedValue(strategy =GenerationType.IDENTITY)
     private Long Id;
-
-    private MessageType type; // 메시지 타입
+    @Column
     private String roomId; // 방번호 (postId)
+    @Enumerated(EnumType.STRING)
+    @Column
+    private MessageType type; // 메시지 타입
+    @Column
     private String sender; // nickname
+    @Column
     private String message; // 메시지
+    @Column
     private String profileUrl;
+    @Column
     private Long enterUserCnt;
+    @Column
     private String username;
+    @Column
     private String createdAt;
 
     public ChatMessage(ChatMessageDto chatMessageDto) {
         this.type = chatMessageDto.getType();
         this.roomId = chatMessageDto.getRoomId();
         this.message = chatMessageDto.getMessage();
+        this.sender = chatMessageDto.getSender();
+        this.profileUrl = chatMessageDto.getProfileUrl();
+        this.enterUserCnt = chatMessageDto.getEnterUserCnt();
+        this.username = chatMessageDto.getUsername();
+        this.createdAt = chatMessageDto.getCreatedAt();
     }
 }

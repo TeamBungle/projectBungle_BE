@@ -2,7 +2,6 @@ package com.sparta.meeting_platform.chat.controller;
 
 
 import com.sparta.meeting_platform.chat.dto.ChatMessageDto;
-import com.sparta.meeting_platform.chat.model.ChatMessage;
 import com.sparta.meeting_platform.chat.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +33,7 @@ public class ChatController {
 
     @GetMapping("/chat/message/{roomId}")
     @ResponseBody
-    public List<ChatMessage> getMessage(@PathVariable String roomId){
+    public List<ChatMessageDto> getMessage(@PathVariable String roomId){
         log.info("요청 메서드 [GET] /chat/message/{roomId}");
         return chatService.getMessages(roomId);
     }
