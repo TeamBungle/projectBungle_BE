@@ -83,13 +83,6 @@ public class JwtTokenProvider {
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
-    //Request의 Header에서 token 값을 가져옴
-    //"X-AUTH-TOKEN":"TOKEN 깞"
-    public String resolveToken(HttpServletRequest request) {
-        return request.getHeader("Authorization");
-
-    }
-
     // 토큰의 유효성 + 만료일자 확인
     public boolean validateToken(String jwtToken) {
         try {
