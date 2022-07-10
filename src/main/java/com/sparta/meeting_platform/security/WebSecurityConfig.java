@@ -21,6 +21,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @RequiredArgsConstructor
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
+    private final JwtExceptionFilter jwtExceptionFilter;
+
     private final JwtTokenProvider jwtTokenProvider;
 
     @Bean
@@ -44,9 +46,19 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.cors().configurationSource(corsConfigurationSource());
-        // 토큰 인증이므로 세션 사용x
-        http.csrf().disable().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        http
+                .cors()
+                .configurationSource(corsConfigurationSource())
+                .and()
+                .csrf().disable();
+
+        // 서버에서 인증은 JWT로 인증하기 때문에 Session의 생성을 막습니다.
+        http.sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .formLogin().disable() // 폼로그인을 사용안하겠다.
+                .httpBasic().disable(); //http헤더에 Anthorization에 아이디와 패스워드를 달고 요청하는것을 사용안하겠다.
+
         http.headers().frameOptions().sameOrigin();
 //        http.authorizeRequests().antMatchers("/ws-stomp");
 //        http.authorizeRequests().antMatchers("/pub/**");
@@ -59,17 +71,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/user/**").permitAll()
                 .antMatchers("/ws/chat/**").permitAll() // sockjs
                 .anyRequest().permitAll()
-//                .anyRequest().authenticated()
-                .and()
-                .logout()
-                .logoutUrl("/user/logout")
-                .logoutSuccessHandler(logOutSuccessHandler())
-//                .deleteCookies("token")
-//                .antMatchers("/kakao/callback").permitAll()
-//                .antMatchers("/**").permitAll()
                 // 그 외 어떤 요청이든 '인증'
                 .and()
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtExceptionFilter, JwtAuthenticationFilter.class);
     }
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -87,8 +92,5 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-    @Bean
-    public LogOutSuccessHandler logOutSuccessHandler() {
-        return new LogOutSuccessHandler();
-    }
 }
+
