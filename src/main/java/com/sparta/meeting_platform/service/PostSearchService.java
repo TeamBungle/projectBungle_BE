@@ -36,9 +36,9 @@ public class PostSearchService {
     public List<PostResponseDto> searchPostList(List<Post> posts, Long userId, Double longitude,Double latitude){
         List<PostResponseDto> postList = new ArrayList<>();
         for (Post post : posts) {
-            double theta = longitude - post.getLatitude();
-            double dist = Math.sin(deg2rad(latitude)) * Math.sin(deg2rad(post.getLongitude()))
-                    + Math.cos(deg2rad(latitude)) * Math.cos(deg2rad(post.getLongitude())) * Math.cos(deg2rad(theta));
+            double theta = longitude - post.getLongitude();
+            double dist = Math.sin(deg2rad(latitude)) * Math.sin(deg2rad(post.getLatitude()))
+                    + Math.cos(deg2rad(latitude)) * Math.cos(deg2rad(post.getLatitude())) * Math.cos(deg2rad(theta));
 
             dist = Math.acos(dist);
             dist = rad2deg(dist);

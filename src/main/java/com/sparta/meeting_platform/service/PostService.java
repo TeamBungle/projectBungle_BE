@@ -57,15 +57,15 @@ public class PostService {
         String convertedDate2 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         Query realTimeQuery = em.createNativeQuery("SELECT * FROM post AS p "
                         + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                        + "AND p.time > :convertedDate1"
-                        + " ORDER BY p.time", Post.class)
+                        + "AND p.time < :convertedDate1"
+                        + " ORDER BY p.time desc", Post.class)
                 .setParameter("convertedDate1", convertedDate1)
                 .setMaxResults(4);
         List<Post> realTimePosts = realTimeQuery.getResultList();
         Query endTimeQuery = em.createNativeQuery("SELECT * FROM post AS p "
                         + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                        + "AND p.time < :convertedDate2"
-                        + " ORDER BY p.time desc", Post.class)
+                        + "AND p.time > :convertedDate2"
+                        + " ORDER BY p.time", Post.class)
                 .setParameter("convertedDate2", convertedDate2)
                 .setMaxResults(4);
         List<Post> endTimePosts = endTimeQuery.getResultList();
@@ -85,10 +85,14 @@ public class PostService {
         checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
         String mergeList = postSearchService.categoryOrTagListMergeString(categories);
+        LocalDateTime localDateTime = LocalDateTime.now();
+        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
                 + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                + " AND p.id in (select u.post_id from post_categories u"
-                + " WHERE u.category in (" + mergeList + "))", Post.class);
+                + " AND p.time > :convertedDate1 AND p.id in (select u.post_id from post_categories u"
+                + " WHERE u.category in (" + mergeList + "))"
+                + " ORDER BY p.time ", Post.class)
+                .setParameter("convertedDate1", convertedDate1);
         List<Post> posts = query.getResultList();
         if (posts.size() < 1) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른 카테고리로 조회해주세요"), HttpStatus.OK);
@@ -106,10 +110,14 @@ public class PostService {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 검색 실패"), HttpStatus.BAD_REQUEST);
         }
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
+        LocalDateTime localDateTime = LocalDateTime.now();
+        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
                 + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                + " AND p.id in (select u.post_id from post_categories u"
-                + " WHERE u.category in ('" + keyword + "'))", Post.class);
+                + " AND p.time > :convertedDate1 AND p.id in (select u.post_id from post_categories u"
+                + " WHERE u.category in ('" + keyword + "'))"
+                + "ORDER BY p.time", Post.class)
+                .setParameter("convertedDate1", convertedDate1);
         List<Post> posts = query.getResultList();
 
         if(posts.size() < 1){
