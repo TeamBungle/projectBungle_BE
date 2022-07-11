@@ -26,7 +26,7 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
 
         if (apiPath.equals("/user/login") || apiPath.equals("/user/signup") || apiPath.equals("/user/duplicate/username")
                 || apiPath.equals("/user/signin/kakao") || apiPath.equals("/user/signin/google")
-                || apiPath.equals("/user/signin/naver") || apiPath.equals("/confirmEmail") || apiPath.equals("/confirmEmail2")) {
+                || apiPath.equals("/user/signin/naver") || apiPath.equals("/user/confirmEmail") || apiPath.equals("/user/confirmEmail2")) {
             chain.doFilter(request, response); // 그냥 필터 타고 넘어가라
         } else {
             // 헤더에서 jwt 토큰 받아옴
