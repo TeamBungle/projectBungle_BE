@@ -5,6 +5,7 @@ import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.dto.MapListDto;
 import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
+import com.sparta.meeting_platform.dto.SearchMapDto;
 import com.sparta.meeting_platform.exception.PostApiException;
 import com.sparta.meeting_platform.repository.LikeRepository;
 import com.sparta.meeting_platform.repository.mapping.PostMapping;
@@ -31,8 +32,49 @@ public class PostSearchService {
         return mergeList;
     }
 
-    //postlist 찾기
-    public List<PostResponseDto> searchPostList(List<Post> posts, Long userId){
+    //postlist 찾기 - 거리순
+    public List<PostResponseDto> searchPostList(List<Post> posts, Long userId, Double longitude,Double latitude){
+        List<PostResponseDto> postList = new ArrayList<>();
+        for (Post post : posts) {
+            double theta = longitude - post.getLatitude();
+            double dist = Math.sin(deg2rad(latitude)) * Math.sin(deg2rad(post.getLongitude()))
+                    + Math.cos(deg2rad(latitude)) * Math.cos(deg2rad(post.getLongitude())) * Math.cos(deg2rad(theta));
+
+            dist = Math.acos(dist);
+            dist = rad2deg(dist);
+            dist = dist * 60 * 1.1515 * 1.609344;
+            Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
+            Boolean isLike;
+
+            if (like == null) {
+                isLike = false;
+            } else {
+                isLike = like.getIsLike();
+            }
+            if (post.getPostUrls().size() < 1) {
+                post.getPostUrls().add(null);
+            }
+            PostResponseDto postResponseDto = PostResponseDto.builder()
+                    .id(post.getId())
+                    .title(post.getTitle())
+                    .content(post.getContent())
+                    .personnel(post.getPersonnel())
+                    .joinCount(1)                       //TODO 수정필요
+                    .place(post.getPlace())
+                    .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
+                    .time(timeCheck(post.getTime()))
+                    .avgTemp(50)                      //TODO 수정필요
+                    .isLetter(post.getIsLetter())
+                    .isLike(isLike)
+                    .distance(dist)
+                    .build();
+            postList.add(postResponseDto);
+        }
+        return postList;
+    }
+
+    //postlist 찾기 - realTime,endTime,manner
+    public List<PostResponseDto> searchTimeOrMannerPostList(List<Post> posts, Long userId){
         List<PostResponseDto> postList = new ArrayList<>();
         for (Post post : posts) {
             Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
@@ -65,9 +107,17 @@ public class PostSearchService {
     }
 
     //지도에서 post리스트 찾기
-    public List<MapListDto> searchMapPostList(List<Post> posts, Long userId) {
+    public List<MapListDto> searchMapPostList(List<Post> posts, Long userId, Double longitude , Double latitude) {
         List<MapListDto> mapListDtos = new ArrayList<>();
         for (Post post : posts) {
+            double theta = longitude - post.getLatitude();
+            double dist = Math.sin(deg2rad(latitude)) * Math.sin(deg2rad(post.getLongitude()))
+                    + Math.cos(deg2rad(latitude)) * Math.cos(deg2rad(post.getLongitude())) * Math.cos(deg2rad(theta));
+
+            dist = Math.acos(dist);
+            dist = rad2deg(dist);
+            dist = dist * 60 * 1.1515 * 1.609344;
+
             Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
             Boolean isLike;
 
@@ -93,6 +143,7 @@ public class PostSearchService {
                     .isLike(isLike)
                     .latitude(post.getLatitude())
                     .longitude(post.getLongitude())
+                    .distance(dist)
                     .build();
 
             mapListDtos.add(mapListDto);
@@ -204,5 +255,13 @@ public class PostSearchService {
             return duration.getSeconds() / 60 + "분 경과";
         }
         return localDateTime.getHour() + "시 시작 예정";
+    }
+
+    public double deg2rad(double deg) {
+        return (deg * Math.PI / 180.0);
+    }
+
+    public double rad2deg(double rad) {
+        return (rad * 180 / Math.PI);
     }
 }

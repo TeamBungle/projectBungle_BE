@@ -16,6 +16,8 @@ import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.repository.mapping.PostMapping;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
+import com.sparta.meeting_platform.util.MapListComparator;
+import com.sparta.meeting_platform.util.PostListComparator;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Point;
 import org.springframework.http.HttpStatus;
@@ -30,6 +32,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -68,8 +71,8 @@ public class PostService {
                 .setMaxResults(4);
         List<Post> endTimePosts = endTimeQuery.getResultList();
 
-        List<PostResponseDto> postListRealTime = postSearchService.searchPostList(realTimePosts, userId);
-        List<PostResponseDto> postListEndTime = postSearchService.searchPostList(endTimePosts, userId);
+        List<PostResponseDto> postListRealTime = postSearchService.searchTimeOrMannerPostList(realTimePosts, userId);
+        List<PostResponseDto> postListEndTime = postSearchService.searchTimeOrMannerPostList(endTimePosts, userId);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postListRealTime, postListEndTime), HttpStatus.OK);
     }// manner도 같이 보내줘야함
     // realtime은 지난 시간만 , 아이디 순인지 시간순인지 확인
@@ -91,7 +94,8 @@ public class PostService {
         if (posts.size() < 1) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른 카테고리로 조회해주세요"), HttpStatus.OK);
         }
-        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId);
+        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId,longitude,latitude);
+        Collections.sort(postList, new PostListComparator());
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
     }
 
@@ -111,7 +115,8 @@ public class PostService {
         if (posts.size() < 1) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른 태그로 조회해주세요"), HttpStatus.OK);
         }
-        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId);
+        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId,longitude,latitude);
+        Collections.sort(postList, new PostListComparator());
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
     }
 
@@ -142,7 +147,7 @@ public class PostService {
                 posts = query1.getResultList();
                 break;
         }
-        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId);
+        List<PostResponseDto> postList = postSearchService.searchTimeOrMannerPostList(posts, userId);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
     }
 
