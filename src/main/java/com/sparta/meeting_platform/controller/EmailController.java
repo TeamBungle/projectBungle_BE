@@ -19,11 +19,12 @@ public class EmailController {
     @GetMapping("/user/confirmEmail")
     public String viewConfirmEmail(@Valid @RequestParam String token){
         userService.confirmEmail(token);
-        return "redirect:http://localhost:3000/main";
+        return "redirect:http://localhost:3000/";
     }
 
     @GetMapping("/user/confirmEmail2")
     public String viewConfirmEmail2(@Valid @RequestParam String token){
+        System.out.println("컨트롤 왔냐");
         String msg = userService.confirmEmail(token);
         if(msg.equals("기존 인증 코드가 만료되어 이메일 재발송 하였습니다.")){
             throw new EmailApiException(msg);
