@@ -26,7 +26,6 @@ public class PostController {
     private final LikeService likeService;
 
 
-
     private Long getUserId(UserDetailsImpl userDetails) {
         User user = userDetails.getUser();
         return user.getId();
