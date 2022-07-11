@@ -16,11 +16,13 @@ public class SignupRequestDto {
     private String username;
 
     @NotNull(message = "비밀번호는 공백이 될 수 없습니다.")
-    @Pattern(regexp ="^(?=.*[a-zA-Z])(?=.*[!@#$%^*+=-])(?=.*[0-9]).{8,25}$", message = "비밀번호는 영문,숫자 8~20자리여야 합니다")
+    @Pattern(regexp ="^(?=.*[a-zA-Z])(?=.*[!@#$%^*+=-])(?=.*[0-9]).{8,25}$",
+            message = "비밀번호는 영문,숫자,특수문자 포함 8~20자리여야 합니다")
     private String password;
 
     @NotNull(message = "비밀번호체크는 공백이 될 수 없습니다.")
-    @Pattern(regexp ="^(?=.*[a-zA-Z])(?=.*[!@#$%^*+=-])(?=.*[0-9]).{8,25}$", message = "비밀번호체크는 영문,숫자 8~20자리여야 합니다")
+    @Pattern(regexp ="^(?=.*[a-zA-Z])(?=.*[!@#$%^*+=-])(?=.*[0-9]).{8,25}$",
+            message = "비밀번호체크는 영문,숫자,특수문자 포함 8~20자리여야 합니다")
     private String passwordCheck;
 
 
