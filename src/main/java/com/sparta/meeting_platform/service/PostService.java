@@ -12,11 +12,13 @@ import com.sparta.meeting_platform.dto.PostTestDto;
 import com.sparta.meeting_platform.dto.SearchMapDto;
 import com.sparta.meeting_platform.dto.user.MyPageDto;
 import com.sparta.meeting_platform.exception.PostApiException;
+import com.sparta.meeting_platform.exception.UserApiException;
 import com.sparta.meeting_platform.repository.LikeRepository;
 import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.repository.mapping.PostMapping;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
+import com.sparta.meeting_platform.util.PostListComparator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Point;
@@ -29,10 +31,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,21 +59,31 @@ public class PostService {
     public ResponseEntity<FinalResponseDto<?>> getPosts(Long userId, Double latitude, Double longitude) {
         checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
-        Query query = em.createNativeQuery("SELECT * FROM post AS p "
+        LocalDateTime localDateTime = LocalDateTime.now();
+        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String convertedDate2 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        Query realTimeQuery = em.createNativeQuery("SELECT * FROM post AS p "
                         + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                        + "ORDER BY p.time desc", Post.class)
+                        + "AND p.time < :convertedDate1"
+                        + " ORDER BY p.time desc", Post.class)
+                .setParameter("convertedDate1", convertedDate1)
                 .setMaxResults(4);
-        List<Post> posts = query.getResultList();
-        Query query1 = em.createNativeQuery("SELECT * FROM post AS p "
+        List<Post> realTimePosts = realTimeQuery.getResultList();
+        Query endTimeQuery = em.createNativeQuery("SELECT * FROM post AS p "
                         + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                        + "ORDER BY p.time", Post.class)
+                        + "AND p.time > :convertedDate2"
+                        + " ORDER BY p.time", Post.class)
+                .setParameter("convertedDate2", convertedDate2)
                 .setMaxResults(4);
-        List<Post> posts2 = query1.getResultList();
+        List<Post> endTimePosts = endTimeQuery.getResultList();
 
-        List<PostResponseDto> postListRealTime = postSearchService.searchPostList(posts, userId);
-        List<PostResponseDto> postListEndTime = postSearchService.searchPostList(posts2, userId);
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postListRealTime, postListEndTime), HttpStatus.OK);
-    }// endtime, manner도 같이 보내줘야함
+        List<PostResponseDto> postListRealTime = postSearchService.searchTimeOrMannerPostList(realTimePosts, userId);
+        List<PostResponseDto> postListEndTime = postSearchService.searchTimeOrMannerPostList(endTimePosts, userId);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공",postListRealTime, postListEndTime), HttpStatus.OK);
+    }// manner도 같이 보내줘야함
+    // realtime은 지난 시간만 , 아이디 순인지 시간순인지 확인
+    // endtime은 지나지 않는 시간만
+
 
 
     //카테고리별 게시글 조회
@@ -80,15 +92,45 @@ public class PostService {
         checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
         String mergeList = postSearchService.categoryOrTagListMergeString(categories);
+        LocalDateTime localDateTime = LocalDateTime.now();
+        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
                 + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                + " AND p.id in (select u.post_id from post_categories u"
-                + " WHERE u.category in (" + mergeList + "))", Post.class);
+                + " AND p.time > :convertedDate1 AND p.id in (select u.post_id from post_categories u"
+                + " WHERE u.category in (" + mergeList + "))"
+                + " ORDER BY p.time ", Post.class)
+                .setParameter("convertedDate1", convertedDate1);
         List<Post> posts = query.getResultList();
         if (posts.size() < 1) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른 카테고리로 조회해주세요"), HttpStatus.OK);
         }
-        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId);
+        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId,longitude,latitude);
+        Collections.sort(postList, new PostListComparator());
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
+    }
+
+    //게시글 조회 (제목에 포함된 단어로)
+    public ResponseEntity<FinalResponseDto<?>> getSearch(String keyword, Long userId, Double longitude, Double latitude) {
+        Optional<User> user = userRepository.findById(userId);
+
+        if (!user.isPresent()) {
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 검색 실패"), HttpStatus.BAD_REQUEST);
+        }
+        String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
+        LocalDateTime localDateTime = LocalDateTime.now();
+        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        Query query = em.createNativeQuery("SELECT * FROM post AS p "
+                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+                + " AND p.time > :convertedDate1 AND p.id in (select u.post_id from post_categories u"
+                + " WHERE u.category in ('" + keyword + "'))"
+                + "ORDER BY p.time", Post.class)
+                .setParameter("convertedDate1", convertedDate1);
+        List<Post> posts = query.getResultList();
+
+        if(posts.size() < 1){
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 검색해주세요"), HttpStatus.BAD_REQUEST);
+        }
+        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId,longitude,latitude);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
     }
 
@@ -108,7 +150,8 @@ public class PostService {
         if (posts.size() < 1) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른 태그로 조회해주세요"), HttpStatus.OK);
         }
-        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId);
+        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId,longitude,latitude);
+        Collections.sort(postList, new PostListComparator());
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
     }
 
@@ -119,21 +162,30 @@ public class PostService {
         checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
         List<Post> posts = new ArrayList<>();
+        LocalDateTime localDateTime = LocalDateTime.now();
+        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         switch (status) {
             case "realTime":
                 Query query = em.createNativeQuery("SELECT * FROM post AS p "
                         + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                        + "ORDER BY p.time desc", Post.class);
+                        + "AND p.time > :convertedDate1"
+                        + " ORDER BY p.time ", Post.class)
+                        .setParameter("convertedDate1", convertedDate1);
                 posts = query.getResultList();
                 break;
             case "endTime":
                 Query query1 = em.createNativeQuery("SELECT * FROM post AS p "
                         + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                        + "ORDER BY p.time", Post.class);
+                        + "AND p.time < :convertedDate1"
+                        + " ORDER BY p.time desc", Post.class)
+                        .setParameter("convertedDate1", convertedDate1);
                 posts = query1.getResultList();
                 break;
         }
-        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId);
+        if (posts.size() < 1) {
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다"), HttpStatus.OK);
+        }
+        List<PostResponseDto> postList = postSearchService.searchTimeOrMannerPostList(posts, userId);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
     }
 
@@ -221,7 +273,7 @@ public class PostService {
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getLikedPosts(Long userId) {
         checkUser(userId);
-        List<PostMapping> posts = likeRepository.findAllByUserIdAndIsLikeTrue(userId);
+        List<PostMapping> posts = likeRepository.findAllByUserIdAndIsLikeTrueOrderByPost_Id(userId);
         List<PostResponseDto> postList = postSearchService.searchLikePostList(posts, userId);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "좋아요한 게시글 조회 성공", postList), HttpStatus.OK);
     }
@@ -249,14 +301,14 @@ public class PostService {
     // 유저 존재 여부
     public User checkUser(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new NullPointerException("해당 유저를 찾을 수 없습니다."));
+                () -> new UserApiException("해당 유저를 찾을 수 없습니다."));
         return user;
     }
 
     // 게시글 존재 여부
     public Post checkPost(Long postId) {
         Post post = postRepository.findById(postId).orElseThrow(
-                () -> new NullPointerException("존재하지 않는 게시물 입니다."));
+                () -> new PostApiException("존재하지 않는 게시물 입니다."));
         return post;
     }
 
@@ -269,34 +321,7 @@ public class PostService {
 //    }
 
 
-    //    //게시글 조회 (제목에 포함된 단어로)
-//    public ResponseEntity<FinalResponseDto<?>> getSearch(String keyword, Long userId) throws ParseException {
-//        Optional<User> user = userRepository.findById(userId);
-//
-//        if (!user.isPresent()) {
-//            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 검색 실패"), HttpStatus.BAD_REQUEST);
-//        }
-//        List<PostResponseDto> postList = new ArrayList<>();
-//        List<Post> posts = postRepository.findAllByTitleContainsOrderByCreatedAtDesc(keyword);
-//
-//        if(posts.size() < 1){
-//            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 검색해주세요"), HttpStatus.BAD_REQUEST);
-//        }
-//
-//        for (Post post : posts) {
-//            Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
-//            Boolean isLike;
-//
-//            if (like == null) {
-//                isLike = false;
-//            } else {
-//                isLike = like.getIsLike();
-//            }
-//            PostResponseDto postResponseDto = new PostResponseDto(post, isLike, timeCheck(post.getTime()));
-//            postList.add(postResponseDto);
-//        }
-//        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
-//    }
+
 
     // Time 변환
 //    public String timeCheck(String time) {

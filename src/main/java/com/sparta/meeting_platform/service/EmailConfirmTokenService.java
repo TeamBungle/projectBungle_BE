@@ -38,8 +38,8 @@ public class EmailConfirmTokenService {
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
             helper.setTo(receiverEmail); //받는사람
             helper.setSubject("벙글! 회원가입 이메일 인증"); //메일제목
-            helper.setText("인증 링크 배포서버 : " + "<a href=" + "'http://3.37.61.25/confirmEmail?token=" + emailToken.getId() + "'>" + "인증 하기" + "</a><br>" +
-                    "인증 링크 로컬8080 : " + "<a href=" + "'http://localhost:8080/confirmEmail2?token=" + emailToken.getId() + "'>" + "인증 하기" + "</a>", true); //ture넣을경우 html
+            helper.setText("인증 링크 배포서버 : " + "<a href=" + "'http://3.37.61.25/user/confirmEmail?token=" + emailToken.getId() + "'>" + "인증 하기" + "</a><br>" +
+                    "인증 링크 로컬8080 : " + "<a href=" + "'http://localhost:8080/user/confirmEmail2?token=" + emailToken.getId() + "'>" + "인증 하기" + "</a>", true); //ture넣을경우 html
 
             javaMailSender.send(mimeMessage);
 
