@@ -142,13 +142,14 @@ public class PostController {
     }
 
 
-
-//    //게시글 검색(제목에포함된단어로)
-//    @GetMapping("/search")
-//    public ResponseEntity<FinalResponseDto<?>> getSearch(@RequestParam(value = "keyword") String keyword,
-//                                                         @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
-//        Long userId = getUserId(userDetails);
-//        return postService.getSearch(keyword,userId);
-//    }
+    //게시글 검색(제목에포함된단어로)
+    @GetMapping("/search")
+    public ResponseEntity<FinalResponseDto<?>> getSearch(@RequestParam(value = "keyword") String keyword,
+                                                         @RequestParam(value = "latitude") Double latitude,
+                                                         @RequestParam(value = "longitude") Double longitude,
+                                                         @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
+        Long userId = getUserId(userDetails);
+        return postService.getSearch(keyword,userId,longitude,latitude);
+    }
 
 }

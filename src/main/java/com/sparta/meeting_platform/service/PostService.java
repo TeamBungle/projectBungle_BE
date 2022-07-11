@@ -16,7 +16,6 @@ import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.repository.mapping.PostMapping;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
-import com.sparta.meeting_platform.util.MapListComparator;
 import com.sparta.meeting_platform.util.PostListComparator;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Point;
@@ -28,7 +27,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -56,24 +54,25 @@ public class PostService {
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
         LocalDateTime localDateTime = LocalDateTime.now();
         String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String convertedDate2 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         Query realTimeQuery = em.createNativeQuery("SELECT * FROM post AS p "
                         + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
                         + "AND p.time > :convertedDate1"
-                        + " ORDER BY p.time desc", Post.class)
+                        + " ORDER BY p.time", Post.class)
                 .setParameter("convertedDate1", convertedDate1)
                 .setMaxResults(4);
         List<Post> realTimePosts = realTimeQuery.getResultList();
         Query endTimeQuery = em.createNativeQuery("SELECT * FROM post AS p "
                         + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                        + "AND p.time > :convertedDate1"
-                        + "ORDER BY p.time desc", Post.class)
-                .setParameter("convertedDate1", convertedDate1)
+                        + "AND p.time < :convertedDate2"
+                        + " ORDER BY p.time desc", Post.class)
+                .setParameter("convertedDate2", convertedDate2)
                 .setMaxResults(4);
         List<Post> endTimePosts = endTimeQuery.getResultList();
 
         List<PostResponseDto> postListRealTime = postSearchService.searchTimeOrMannerPostList(realTimePosts, userId);
         List<PostResponseDto> postListEndTime = postSearchService.searchTimeOrMannerPostList(endTimePosts, userId);
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postListRealTime, postListEndTime), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공",postListRealTime, postListEndTime), HttpStatus.OK);
     }// manner도 같이 보내줘야함
     // realtime은 지난 시간만 , 아이디 순인지 시간순인지 확인
     // endtime은 지나지 않는 시간만
@@ -96,6 +95,27 @@ public class PostService {
         }
         List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId,longitude,latitude);
         Collections.sort(postList, new PostListComparator());
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
+    }
+
+    //게시글 조회 (제목에 포함된 단어로)
+    public ResponseEntity<FinalResponseDto<?>> getSearch(String keyword, Long userId, Double longitude, Double latitude) {
+        Optional<User> user = userRepository.findById(userId);
+
+        if (!user.isPresent()) {
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 검색 실패"), HttpStatus.BAD_REQUEST);
+        }
+        String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
+        Query query = em.createNativeQuery("SELECT * FROM post AS p "
+                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+                + " AND p.id in (select u.post_id from post_categories u"
+                + " WHERE u.category in ('" + keyword + "'))", Post.class);
+        List<Post> posts = query.getResultList();
+
+        if(posts.size() < 1){
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 검색해주세요"), HttpStatus.BAD_REQUEST);
+        }
+        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId,longitude,latitude);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
     }
 
@@ -146,6 +166,9 @@ public class PostService {
                         .setParameter("convertedDate1", convertedDate1);
                 posts = query1.getResultList();
                 break;
+        }
+        if (posts.size() < 1) {
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다"), HttpStatus.OK);
         }
         List<PostResponseDto> postList = postSearchService.searchTimeOrMannerPostList(posts, userId);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
@@ -282,34 +305,7 @@ public class PostService {
 //    }
 
 
-    //    //게시글 조회 (제목에 포함된 단어로)
-//    public ResponseEntity<FinalResponseDto<?>> getSearch(String keyword, Long userId) throws ParseException {
-//        Optional<User> user = userRepository.findById(userId);
-//
-//        if (!user.isPresent()) {
-//            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 검색 실패"), HttpStatus.BAD_REQUEST);
-//        }
-//        List<PostResponseDto> postList = new ArrayList<>();
-//        List<Post> posts = postRepository.findAllByTitleContainsOrderByCreatedAtDesc(keyword);
-//
-//        if(posts.size() < 1){
-//            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 검색해주세요"), HttpStatus.BAD_REQUEST);
-//        }
-//
-//        for (Post post : posts) {
-//            Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
-//            Boolean isLike;
-//
-//            if (like == null) {
-//                isLike = false;
-//            } else {
-//                isLike = like.getIsLike();
-//            }
-//            PostResponseDto postResponseDto = new PostResponseDto(post, isLike, timeCheck(post.getTime()));
-//            postList.add(postResponseDto);
-//        }
-//        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
-//    }
+
 
     // Time 변환
 //    public String timeCheck(String time) {

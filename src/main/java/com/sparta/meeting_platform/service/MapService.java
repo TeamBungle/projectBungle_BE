@@ -87,9 +87,9 @@ public class MapService {
     @Transactional(readOnly = true)
     public ResponseEntity<MapResponseDto<?>> detailsMap(List<String> categories, int personnel, Double distance,
                                                         Double latitude, Double longitude, Long userId) {
-        if (distance == null) {
-            distance = 10.0;
-        }
+//        if (distance == null) {
+//            distance = 10.0;
+//        }
         checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
         String mergeList = postSearchService.categoryOrTagListMergeString(categories);
