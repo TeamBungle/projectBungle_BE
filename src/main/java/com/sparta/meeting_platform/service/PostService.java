@@ -165,7 +165,7 @@ public class PostService {
         LocalDateTime localDateTime = LocalDateTime.now();
         String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         switch (status) {
-            case "realTime":
+            case "endTime":
                 Query query = em.createNativeQuery("SELECT * FROM post AS p "
                         + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
                         + "AND p.time > :convertedDate1"
@@ -173,7 +173,7 @@ public class PostService {
                         .setParameter("convertedDate1", convertedDate1);
                 posts = query.getResultList();
                 break;
-            case "endTime":
+            case "realTime":
                 Query query1 = em.createNativeQuery("SELECT * FROM post AS p "
                         + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
                         + "AND p.time < :convertedDate1"
