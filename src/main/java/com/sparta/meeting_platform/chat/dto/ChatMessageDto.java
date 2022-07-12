@@ -21,4 +21,6 @@ public class ChatMessageDto {
     private Long enterUserCnt;
     private String username;
     private String createdAt;
+    private String fileUrl;
+
 }

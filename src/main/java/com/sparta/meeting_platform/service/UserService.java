@@ -4,8 +4,8 @@ package com.sparta.meeting_platform.service;
 import com.sparta.meeting_platform.domain.EmailToken;
 import com.sparta.meeting_platform.domain.ResignUser;
 import com.sparta.meeting_platform.domain.User;
-import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.domain.UserRoleEnum;
+import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.user.*;
 import com.sparta.meeting_platform.exception.EmailApiException;
 import com.sparta.meeting_platform.exception.UserApiException;
@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.mail.MessagingException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -61,7 +60,6 @@ public class UserService {
 
         // 재가입 방지
         int mannerTemp = userRoleCheckService.userResignCheck(requestDto.getUsername());
-
         requestDto.setPassword(passwordEncoder.encode(requestDto.getPassword()));
         userRepository.save(new User(requestDto, mannerTemp));
 
@@ -86,7 +84,7 @@ public class UserService {
         jwtTokenProvider.createToken(requestDto.getUsername());
 
         return new ResponseEntity<>(new FinalResponseDto<>
-                        (true, "로그인 성공!!", user.getNickName(),user.getMannerTemp()), HttpStatus.OK);
+                        (true, "로그인 성공!!", user.getNickName(),user.getMannerTemp(),user.getUsername()),HttpStatus.OK);
     }
 
     // 이메일 인증 토큰 확인

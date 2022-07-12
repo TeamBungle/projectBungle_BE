@@ -1,8 +1,13 @@
 package com.sparta.meeting_platform.chat.repository;
 
+import com.sparta.meeting_platform.chat.dto.ChatRoomResponseDto;
+import com.sparta.meeting_platform.chat.dto.FindMessageInfo;
+import com.sparta.meeting_platform.chat.dto.UserDto;
 import com.sparta.meeting_platform.chat.model.ChatRoom;
 import com.sparta.meeting_platform.chat.service.RedisSubscriber;
 import com.sparta.meeting_platform.domain.Post;
+import com.sparta.meeting_platform.repository.PostRepository;
+import com.sparta.meeting_platform.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -11,6 +16,7 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +28,15 @@ public class ChatRoomRepository {
     private final RedisMessageListenerContainer redisMessageListener;
     // 구독 처리 서비스
     private final RedisSubscriber redisSubscriber;
+
+    private final ChatRoomJpaRepository chatRoomJpaRepository;
+    private final ChatMessageRepository messageRepository;
+
+    private final PostRepository postRepository;
+
+    private final InvitedUsersRepository invitedUsersRepository;
+    private final UserRepository userRepository;
+    private final ChatMessageJpaRepository chatMessageJpaRepository;
     // Redis
     private static final String CHAT_ROOMS = "CHAT_ROOM";
     private final RedisTemplate<String, Object> redisTemplate;
@@ -35,13 +50,58 @@ public class ChatRoomRepository {
         topics = new HashMap<>();
     }
 
-    public List<ChatRoom> findAllRoom() {
-        return opsHashChatRoom.values(CHAT_ROOMS);
+    public List<ChatRoomResponseDto> findAllRoom(Long userId) {
+        String username = userRepository.findById(userId).get().getUsername();
+        List<ChatRoom> chatRoomList = chatRoomJpaRepository.findAllByUsername(username);
+        List<String> chatMessage = new ArrayList<>();
+        List<String> chatMessageCreatedAt = new ArrayList<>();
+        List<ChatRoomResponseDto> chatRoomResponseDtoList = new ArrayList<>();
+        List<Post> postList = postRepository.findAllByUserId(userId);
+        for (ChatRoom chatRoom : chatRoomList) {
+            List<FindMessageInfo> findMessageInfos = chatMessageJpaRepository.findAllByChatRoom(chatRoom);
+            for (FindMessageInfo findMessageInfo : findMessageInfos) {
+                chatMessage.add(findMessageInfo.getMessage());
+                chatMessageCreatedAt.add(findMessageInfo.getCreatedAt());
+            }
+        }
+        for (Post post : postList) {
+            ChatRoomResponseDto chatRoomResponseDto = new ChatRoomResponseDto();
+            chatRoomResponseDto.setPostUrl(post.getPostUrls().get(0));
+            chatRoomResponseDto.setLetter(post.getIsLetter());
+            chatRoomResponseDto.setPostTitle(post.getTitle());
+            chatRoomResponseDto.setLastMessage(chatMessage.get(chatMessage.size() - 1));
+            chatRoomResponseDto.setLastMessageTime(chatMessageCreatedAt.get(chatMessageCreatedAt.size() - 1));
+            chatRoomResponseDto.setPostCreatedAt(post.getCreatedAt());
+            chatRoomResponseDtoList.add(chatRoomResponseDto);
+        }
+        return chatRoomResponseDtoList;
     }
 
-    public ChatRoom findRoomById(String id) {
-        return opsHashChatRoom.get(CHAT_ROOMS, id);
-    }
+
+//
+//        if (opsHashChatRoom.size(CHAT_ROOMS) > 0) {
+//            for (ChatRoom chatRoom : chatRoomList1) {
+//                ChatRoom chatRoom1 = new ChatRoom(chatRoom,)
+//            }
+//            chatRoomList1.add(opsHashChatRoom.get(CHAT_ROOMS, userId));
+//            return chatRoomList;
+//        } else {
+//            List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByUserId(userId);
+//            for (InvitedUsers invitedUser : invitedUsers) {
+//                ChatRoomDto chatRooms = chatRoomJpaRepository.findByRoomId(invitedUser.getRoomId());
+//                ChatRoom chatroom = new ChatRoom(chatRooms);
+//                opsHashChatRoom.put(CHAT_ROOMS, userId, chatroom);
+//                chatRoomList.add(chatroom);
+//            }
+
+
+
+
+
+
+//    public ChatRoom findRoomById(String id) {
+//        return opsHashChatRoom.get(CHAT_ROOMS, id);
+//    }
 
     /**
      * 채팅방 입장 : redis에 topic을 만들고 pub/sub 통신을 하기 위해 리스너를 설정한다.
@@ -54,9 +114,11 @@ public class ChatRoomRepository {
             topics.put(roomId, topic);
         }
     }
-    public ChatRoom createChatRoom(Post post) {
-        ChatRoom chatRoom = ChatRoom.create(post);
-        opsHashChatRoom.put(CHAT_ROOMS, chatRoom.getRoomId(), chatRoom);
+
+    public ChatRoom createChatRoom(Post post, UserDto userDto) {
+        ChatRoom chatRoom = ChatRoom.create(post,userDto);
+        opsHashChatRoom.put(CHAT_ROOMS, chatRoom.getRoomId(), chatRoom); // redis 저장
+        chatRoomJpaRepository.save(chatRoom); // DB 저장
         return chatRoom;
     }
 

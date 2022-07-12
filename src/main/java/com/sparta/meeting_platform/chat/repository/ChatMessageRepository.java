@@ -1,8 +1,7 @@
 package com.sparta.meeting_platform.chat.repository;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.meeting_platform.chat.dto.ChatMessageDto;
+import com.sparta.meeting_platform.chat.dto.FindChatMessageDto;
 import com.sparta.meeting_platform.chat.model.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +27,7 @@ public class ChatMessageRepository {        //redis
     public static final String USER_COUNT = "USER_COUNT"; // 채팅룸에 입장한 클라이언트수 저장
     public static final String ENTER_INFO = "ENTER_INFO"; // 채팅룸에 입장한 클라이언트의 sessionId와 채팅룸 id를 맵핑한 정보 저장
 
-    private final ChatMessageMysqlRepository chatMessageMysqlRepository;
+    private final ChatMessageJpaRepository chatMessageJpaRepository;
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final StringRedisTemplate stringRedisTemplate;
@@ -36,49 +35,62 @@ public class ChatMessageRepository {        //redis
     private HashOperations<String, String, List<ChatMessageDto>> opsHashChatMessage;
     private ValueOperations<String, String> valueOps;
 
+    //초기화
     @PostConstruct
     private void init() {
         opsHashChatMessage = redisTemplate.opsForHash();
         hashOpsEnterInfo = redisTemplate.opsForHash();
         valueOps = stringRedisTemplate.opsForValue();
     }
-
+    //유저 카운트 받아오기
     public Long getUserCnt(String roomId){
         log.info("getUserCnt : {}", Long.valueOf(Optional.ofNullable(valueOps.get(USER_COUNT + "_" + roomId)).orElse("0")));
         return Long.valueOf(Optional.ofNullable(valueOps.get(USER_COUNT + "_" + roomId)).orElse("0"));
     }
 
+    //redis 에 메세지 저장하기
     @Transactional
     public ChatMessageDto save(ChatMessageDto chatMessageDto) {
         log.info("chatMessage : {}", chatMessageDto.getMessage());
         log.info("type: {}", chatMessageDto.getType());
         redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(ChatMessage.class)); // 왜 ?
-
         String roomId = chatMessageDto.getRoomId();
         List<ChatMessageDto> chatMessageList = opsHashChatMessage.get(CHAT_MESSAGE, roomId);
 
         if (chatMessageList == null) chatMessageList = new ArrayList<>();
         chatMessageList.add(chatMessageDto);
         opsHashChatMessage.put(CHAT_MESSAGE, roomId, chatMessageList);
-        log.info("list size : {}", (opsHashChatMessage.get(CHAT_MESSAGE, roomId)).size());
-        if((opsHashChatMessage.get(CHAT_MESSAGE, roomId)).size() % 10 == 0){
-            log.info("Save DB!");
-            List<ChatMessageDto> chatMessageDtos = opsHashChatMessage.get(CHAT_MESSAGE, roomId);
-            ObjectMapper mapper = new ObjectMapper();
-            List<ChatMessageDto> chatMessageDtos1 = mapper.convertValue(chatMessageDtos, new TypeReference<List<ChatMessageDto>>(){});
-            for (ChatMessageDto messageDto : chatMessageDtos1) {
-                ChatMessage chatMessage = new ChatMessage(messageDto);
-                chatMessageMysqlRepository.save(chatMessage);
-            }
-            opsHashChatMessage.delete(CHAT_MESSAGE,roomId);
-        }
+
+//        log.info("list size : {}", (opsHashChatMessage.get(CHAT_MESSAGE, roomId)).size());
+//
+//        if((opsHashChatMessage.get(CHAT_MESSAGE, roomId)).size() % 10 == 0){
+//            log.info("Save DB!");
+//
+//            List<ChatMessageDto> chatMessageDtos = opsHashChatMessage.get(CHAT_MESSAGE, roomId);
+//            ObjectMapper mapper = new ObjectMapper();
+//            List<ChatMessageDto> chatMessageDtos1 = mapper.convertValue(chatMessageDtos, new TypeReference<List<ChatMessageDto>>(){});
+//            for (ChatMessageDto messageDto : chatMessageDtos1) {
+//                ChatMessage chatMessage = new ChatMessage(messageDto);
+//                chatMessageMysqlRepository.save(chatMessage);
+//            }
+//            opsHashChatMessage.delete(CHAT_MESSAGE,roomId);
+//        }
         return chatMessageDto;
     }
 
     //채팅 가져오기 from redis
     public List<ChatMessageDto> findAllMessage(String roomId) {
         log.info("findAllMessage");
-        return opsHashChatMessage.get(CHAT_MESSAGE, roomId);
+        List <ChatMessageDto> chatMessageDtoList = new ArrayList<>();
+        List <FindChatMessageDto> chatMessages = chatMessageJpaRepository.findAllByRoomId(roomId);
+        if (opsHashChatMessage.size(CHAT_MESSAGE) > 0) {
+            return (opsHashChatMessage.get(CHAT_MESSAGE, roomId));
+        } else {
+            for (FindChatMessageDto chatMessage : chatMessages) {
+                chatMessageDtoList.add((ChatMessageDto) chatMessage);
+            }
+            return chatMessageDtoList;
+        }
     }
 
     public void setUserEnterInfo(String roomId, String sessionId) {
@@ -91,10 +103,6 @@ public class ChatMessageRepository {        //redis
     }
 
     public void minusUserCnt(String sessionId, String roomId) {
-//        String redisRoomId = getRoomId(sessionId);
-//        if(!roomId.equals(redisRoomId)) { // 유저 카운터 감소
-//            return;
-//        }
         Optional.ofNullable(valueOps.decrement(USER_COUNT + "_" + roomId)).filter(count -> count > 0);
     }
 

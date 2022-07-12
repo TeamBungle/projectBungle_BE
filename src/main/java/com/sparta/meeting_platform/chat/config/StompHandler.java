@@ -1,7 +1,9 @@
 package com.sparta.meeting_platform.chat.config;
 
 import com.sparta.meeting_platform.chat.repository.ChatMessageRepository;
+import com.sparta.meeting_platform.chat.repository.InvitedUsersRepository;
 import com.sparta.meeting_platform.chat.service.ChatRoomService;
+import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,29 +26,36 @@ public class StompHandler implements ChannelInterceptor {
     private final ChatRoomService chatRoomService;
     private final ChatMessageRepository chatMessageRepository;
 
+    private final UserRepository userRepository;
+
+    private final InvitedUsersRepository invitedUsersRepository;
+
     // websocket을 통해 들어온 요청이 처리 되기전 실행된다.
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+
         log.info("30, simpDestination : {}", message.getHeaders().get("simpDestination"));
         log.info("31, sessionId : {}", message.getHeaders().get("simpSessionId"));
+
         String sessionId = (String) message.getHeaders().get("simpSessionId");
         // websocket 연결시 헤더의 jwt token 검증
         if (StompCommand.CONNECT == accessor.getCommand()) {
-//            sessionId = (String) message.getHeaders().get("simpSessionId");
+
             log.info("CONNECT : {}", sessionId);
             jwtTokenProvider.validateToken(accessor.getFirstNativeHeader("token"));
+
         }else if(StompCommand.SUBSCRIBE == accessor.getCommand()){
             log.info("SUBSCRIBE : {}", sessionId);
-//            sessionId = (String) message.getHeaders().get("simpSessionId");
+
             String roomId = chatRoomService.getRoomId((String) Optional.ofNullable(message.getHeaders().get("simpDestination")).orElse("InvalidRoomId"));
             log.info("roomId : {}", roomId);
             chatMessageRepository.setUserEnterInfo(roomId, sessionId);
             chatMessageRepository.plusUserCnt(roomId);
 
+
         }else if (StompCommand.DISCONNECT == accessor.getCommand()) {
 
-//            sessionId = (String) message.getHeaders().get("simpSessionId");
             log.info("DISCONNECT : {}", sessionId);
             String roomId = chatMessageRepository.getRoomId(sessionId);
             log.info("roomId: {}", roomId);

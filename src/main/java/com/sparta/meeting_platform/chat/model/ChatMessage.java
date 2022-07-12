@@ -37,8 +37,15 @@ public class ChatMessage {
     private String username;
     @Column
     private String createdAt;
+    @Column
+    private String fileUrl;
 
-    public ChatMessage(ChatMessageDto chatMessageDto) {
+    @JoinColumn(name = "CHAT_ROOM_ID")
+    @ManyToOne
+    private ChatRoom chatRoom;
+
+
+    public ChatMessage(ChatMessageDto chatMessageDto,ChatRoom chatRoom) {
         this.type = chatMessageDto.getType();
         this.roomId = chatMessageDto.getRoomId();
         this.message = chatMessageDto.getMessage();
@@ -47,5 +54,7 @@ public class ChatMessage {
         this.enterUserCnt = chatMessageDto.getEnterUserCnt();
         this.username = chatMessageDto.getUsername();
         this.createdAt = chatMessageDto.getCreatedAt();
+        this.fileUrl = chatMessageDto.getFileUrl();
+        this.chatRoom = chatRoom;
     }
 }
