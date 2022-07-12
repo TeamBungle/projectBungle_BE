@@ -81,6 +81,7 @@ public class UserService {
         if (!passwordEncoder.matches(requestDto.getPassword(), user.getPassword())) {
             throw new UserApiException("비밀번호를 확인해 주세요");
         }
+
         jwtTokenProvider.createToken(requestDto.getUsername());
 
         return new ResponseEntity<>(new FinalResponseDto<>

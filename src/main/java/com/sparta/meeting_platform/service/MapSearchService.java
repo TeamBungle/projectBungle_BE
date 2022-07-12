@@ -30,7 +30,7 @@ public class MapSearchService {
     @Value("${geocoding}")
     private String geocoding;
     public Point makePoint(Double longitude, Double latitude) throws org.locationtech.jts.io.ParseException {
-        String pointWKT = String.format("POINT(%s %s)", longitude, latitude);
+        String pointWKT = String.format("POINT(%s %s)",latitude,longitude);
         // WKTReader를 통해 WKT를 실제 타입으로 변환합니다.
         Point point = (Point) new WKTReader().read(pointWKT);
         return point;
@@ -83,7 +83,7 @@ public class MapSearchService {
 
         System.out.println(longi);
         System.out.println(lati);
-        return new SearchMapDto(lati,longi);
+        return new SearchMapDto(longi,lati);
     }
 
     //pointFormat 구하기

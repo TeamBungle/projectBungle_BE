@@ -26,10 +26,14 @@ public class Report {
     @CreatedDate
     private LocalDateTime createdAt;
 
+    @Column(nullable = false)
+    private String history;
 
-    public Report(Long reporterId, Long badMannerId) {
+
+    public Report(Long reporterId, Long badMannerId,String history) {
         this.reporterId = reporterId;
         this.badMannerId = badMannerId;
         this.createdAt = LocalDateTime.now();
+        this.history = history;
     }
 }

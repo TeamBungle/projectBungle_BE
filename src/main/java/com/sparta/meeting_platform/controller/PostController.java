@@ -7,6 +7,7 @@ import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.service.LikeService;
 import com.sparta.meeting_platform.service.PostService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +33,7 @@ public class PostController {
     public ResponseEntity<FinalResponseDto<?>> getPosts(@RequestParam(value = "latitude") Double latitude,
                                                         @RequestParam(value = "longitude") Double longitude,
                                                         @AuthenticationPrincipal UserDetailsImpl userDetails){
-        Long userId = getUserId(userDetails);
+        Long userId = userDetails.getUser().getId();
         return postService.getPosts(userId,latitude,longitude);
     }
 
@@ -136,13 +137,14 @@ public class PostController {
     }
 
 
-
-//    //게시글 검색(제목에포함된단어로)
-//    @GetMapping("/search")
-//    public ResponseEntity<FinalResponseDto<?>> getSearch(@RequestParam(value = "keyword") String keyword,
-//                                                         @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
-//        Long userId = getUserId(userDetails);
-//        return postService.getSearch(keyword,userId);
-//    }
+    //게시글 검색(제목에포함된단어로)
+    @GetMapping("/search")
+    public ResponseEntity<FinalResponseDto<?>> getSearch(@RequestParam(value = "keyword") String keyword,
+                                                         @RequestParam(value = "latitude") Double latitude,
+                                                         @RequestParam(value = "longitude") Double longitude,
+                                                         @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
+        Long userId = getUserId(userDetails);
+        return postService.getSearch(keyword,userId,longitude,latitude);
+    }
 
 }
