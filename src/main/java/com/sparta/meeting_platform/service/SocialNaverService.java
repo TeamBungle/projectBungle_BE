@@ -18,7 +18,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -70,7 +69,7 @@ public class SocialNaverService {
             String token = jwtTokenProvider.generateJwtToken(userDetailsImpl);
             response.addHeader("Authorization", "BEARER" + " " + token);
             return new ResponseEntity<>(new FinalResponseDto<>
-                    (true, "로그인 성공!!", user.getNickName(), user.getMannerTemp()), HttpStatus.OK);
+                    (true, "로그인 성공!!", user.getNickName(), user.getMannerTemp(),user.getUsername() ), HttpStatus.OK);
         } catch (IOException e) {
             return new ResponseEntity<>(new FinalResponseDto<>
                     (false, "로그인 실패"), HttpStatus.OK);

@@ -1,7 +1,7 @@
 package com.sparta.meeting_platform.chat.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sparta.meeting_platform.chat.model.ChatMessage;
+import com.sparta.meeting_platform.chat.dto.ChatMessageDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;
@@ -16,11 +16,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Service
 public class RedisSubscriber implements MessageListener {
-
     private final ObjectMapper objectMapper;
     private final RedisTemplate redisTemplate;
     private final SimpMessageSendingOperations messagingTemplate;
-
     /**
      * Redis에서 메시지가 발행(publish)되면 대기하고 있던 onMessage가 해당 메시지를 받아 처리한다.
      */
@@ -32,7 +30,7 @@ public class RedisSubscriber implements MessageListener {
             String publishMessage = (String) redisTemplate.getStringSerializer().deserialize(message.getBody());
             log.info("publishMessage : {}", publishMessage);
             // ChatMessage 객채로 맵핑
-            ChatMessage roomMessage = objectMapper.readValue(publishMessage, ChatMessage.class);
+            ChatMessageDto roomMessage = objectMapper.readValue(publishMessage, ChatMessageDto.class);
             // Websocket 구독자에게 채팅 메시지 Send
             log.info("roomMessage.getMessage : {}", roomMessage.getMessage());
             log.info("roomMessage.getRoomId : {}", roomMessage.getRoomId());
