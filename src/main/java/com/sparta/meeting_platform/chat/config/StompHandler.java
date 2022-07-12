@@ -1,7 +1,13 @@
 package com.sparta.meeting_platform.chat.config;
 
+import com.sparta.meeting_platform.chat.model.InvitedUsers;
 import com.sparta.meeting_platform.chat.repository.ChatMessageRepository;
+import com.sparta.meeting_platform.chat.repository.InvitedUsersRepository;
 import com.sparta.meeting_platform.chat.service.ChatRoomService;
+import com.sparta.meeting_platform.domain.Post;
+import com.sparta.meeting_platform.exception.ChatApiException;
+import com.sparta.meeting_platform.exception.PostApiException;
+import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +18,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 
@@ -19,40 +26,46 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Component
 public class StompHandler implements ChannelInterceptor {
-
     private final JwtTokenProvider jwtTokenProvider;
     private final ChatRoomService chatRoomService;
     private final ChatMessageRepository chatMessageRepository;
-
+    private final PostRepository postRepository;
+    private final InvitedUsersRepository invitedUsersRepository;
     // websocket을 통해 들어온 요청이 처리 되기전 실행된다.
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
-        log.info("30, simpDestination : {}", message.getHeaders().get("simpDestination"));
-        log.info("31, sessionId : {}", message.getHeaders().get("simpSessionId"));
+        log.info("simpDestination : {}", message.getHeaders().get("simpDestination"));
+        log.info("sessionId : {}", message.getHeaders().get("simpSessionId"));
         String sessionId = (String) message.getHeaders().get("simpSessionId");
         // websocket 연결시 헤더의 jwt token 검증
         if (StompCommand.CONNECT == accessor.getCommand()) {
-//            sessionId = (String) message.getHeaders().get("simpSessionId");
             log.info("CONNECT : {}", sessionId);
             jwtTokenProvider.validateToken(accessor.getFirstNativeHeader("token"));
-        }else if(StompCommand.SUBSCRIBE == accessor.getCommand()){
+
+        } else if (StompCommand.SUBSCRIBE == accessor.getCommand()) {
             log.info("SUBSCRIBE : {}", sessionId);
-//            sessionId = (String) message.getHeaders().get("simpSessionId");
             String roomId = chatRoomService.getRoomId((String) Optional.ofNullable(message.getHeaders().get("simpDestination")).orElse("InvalidRoomId"));
             log.info("roomId : {}", roomId);
             chatMessageRepository.setUserEnterInfo(roomId, sessionId);
             chatMessageRepository.plusUserCnt(roomId);
+            Long postId = Long.valueOf(roomId);
+            Post post = postRepository.findById(postId).orElseThrow(
+                    () -> new PostApiException("존재하지 않는 게시물 입니다!")
+            );
+            List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByRoomId(roomId);
+            int nowPeople = invitedUsers.size();
+            int maxPeople = post.getPersonnel();
 
-        }else if (StompCommand.DISCONNECT == accessor.getCommand()) {
+            if (nowPeople >= maxPeople) {
+                throw new ChatApiException("채팅방 정원 초과!");
+            }
 
-//            sessionId = (String) message.getHeaders().get("simpSessionId");
+        } else if (StompCommand.DISCONNECT == accessor.getCommand()) {
             log.info("DISCONNECT : {}", sessionId);
             String roomId = chatMessageRepository.getRoomId(sessionId);
             log.info("roomId: {}", roomId);
-
             chatMessageRepository.minusUserCnt(sessionId, roomId);
-
             // 퇴장한 클라이언트의 roomId 맵핑 정보를 삭제한다.
             chatMessageRepository.removeUserEnterInfo(sessionId);
         }

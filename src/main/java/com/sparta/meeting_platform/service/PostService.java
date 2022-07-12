@@ -1,5 +1,6 @@
 package com.sparta.meeting_platform.service;
 
+import com.sparta.meeting_platform.chat.dto.UserDto;
 import com.sparta.meeting_platform.chat.repository.ChatRoomRepository;
 import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
@@ -104,33 +105,7 @@ public class PostService {
         if (posts.size() < 1) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른 카테고리로 조회해주세요"), HttpStatus.OK);
         }
-        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId,longitude,latitude);
-        Collections.sort(postList, new PostListComparator());
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
-    }
-
-    //게시글 조회 (제목에 포함된 단어로)
-    public ResponseEntity<FinalResponseDto<?>> getSearch(String keyword, Long userId, Double longitude, Double latitude) {
-        Optional<User> user = userRepository.findById(userId);
-
-        if (!user.isPresent()) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 검색 실패"), HttpStatus.BAD_REQUEST);
-        }
-        String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
-        LocalDateTime localDateTime = LocalDateTime.now();
-        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        Query query = em.createNativeQuery("SELECT * FROM post AS p "
-                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                + " AND p.time > :convertedDate1 AND p.id in (select u.post_id from post_categories u"
-                + " WHERE u.category in ('" + keyword + "'))"
-                + "ORDER BY p.time", Post.class)
-                .setParameter("convertedDate1", convertedDate1);
-        List<Post> posts = query.getResultList();
-
-        if(posts.size() < 1){
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 검색해주세요"), HttpStatus.BAD_REQUEST);
-        }
-        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId,longitude,latitude);
+        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
     }
 
@@ -226,7 +201,8 @@ public class PostService {
         Point point = mapSearchService.makePoint(searchMapDto.getLongitude(), searchMapDto.getLatitude());
         Post post = new Post(user, requestDto, searchMapDto.getLongitude(), searchMapDto.getLatitude(), point);
         postRepository.save(post);
-        chatRoomRepository.createChatRoom(post);
+        UserDto userDto = new UserDto(user);
+        chatRoomRepository.createChatRoom(post,userDto);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공", post.getId()), HttpStatus.OK);
     }
 

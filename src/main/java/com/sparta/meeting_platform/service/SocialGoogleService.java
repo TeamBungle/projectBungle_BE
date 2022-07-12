@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -133,7 +132,7 @@ public class SocialGoogleService {
         httpServletResponse.addHeader("Authorization", "Bearer" + " " + jwt_token);
 
         return new ResponseEntity<>(new FinalResponseDto<>
-                (true, "로그인 성공!!", user.getNickName(), user.getMannerTemp()), HttpStatus.OK);
+                (true, "로그인 성공!!", user.getNickName(), user.getMannerTemp(),user.getUsername() ), HttpStatus.OK);
     }
 
 }

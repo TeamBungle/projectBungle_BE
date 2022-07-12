@@ -1,10 +1,13 @@
 package com.sparta.meeting_platform.service;
 
+import com.sparta.meeting_platform.chat.model.InvitedUsers;
+import com.sparta.meeting_platform.chat.repository.InvitedUsersRepository;
 import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.dto.MapListDto;
 import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
+import com.sparta.meeting_platform.dto.TempAndJoinCountSearchDto;
 import com.sparta.meeting_platform.dto.SearchMapDto;
 import com.sparta.meeting_platform.exception.PostApiException;
 import com.sparta.meeting_platform.repository.LikeRepository;
@@ -21,6 +24,36 @@ import java.util.List;
 @Service
 public class PostSearchService {
     private final LikeRepository likeRepository;
+    private final InvitedUsersRepository invitedUsersRepository;
+
+    public TempAndJoinCountSearchDto getAvgTemp(Long postId){
+        String roomId = String.valueOf(postId);
+        List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByRoomId(roomId);
+        int temp = 0;
+        int joinCount = 0;
+        for (InvitedUsers invitedUser : invitedUsers) {
+            temp += invitedUser.getUser().getMannerTemp();
+           joinCount += 1;
+        }
+        int avgTemp = temp/joinCount;
+        return new TempAndJoinCountSearchDto(joinCount,avgTemp);
+    }
+    public TempAndJoinCountSearchDto getJoinPeopleInfo(Long postId){
+        String roomId = String.valueOf(postId);
+        List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByRoomId(roomId);
+        List<String> joinPeopleUrl = new ArrayList<>();
+        List<String>  joinPeopleNickName =  new ArrayList<>();
+        int temp = 0;
+        int joinCount = 0;
+        for (InvitedUsers invitedUser : invitedUsers) {
+            temp += invitedUser.getUser().getMannerTemp();
+            joinCount += 1;
+           joinPeopleUrl.add(invitedUser.getUser().getProfileUrl());
+           joinPeopleNickName.add(invitedUser.getUser().getNickName());
+        }
+        int avgTemp = temp/joinCount;
+        return new TempAndJoinCountSearchDto(joinPeopleUrl,joinPeopleNickName,avgTemp,joinCount);
+    }
 
     //카페고리및태그 리스트->스트링 변환
     public String categoryOrTagListMergeString (List<String> categoryOrTagList){
@@ -88,16 +121,17 @@ public class PostSearchService {
             if (post.getPostUrls().size() < 1) {
                 post.getPostUrls().add(null);
             }
+            TempAndJoinCountSearchDto tempAndJoinCountSearchDto = getAvgTemp(post.getId());
             PostResponseDto postResponseDto = PostResponseDto.builder()
                     .id(post.getId())
                     .title(post.getTitle())
                     .content(post.getContent())
                     .personnel(post.getPersonnel())
-                    .joinCount(1)                       //TODO 수정필요
+                    .joinCount(tempAndJoinCountSearchDto.getJoinCount())
                     .place(post.getPlace())
-                    .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
+                    .postUrl(post.getPostUrls().get(0))
                     .time(timeCheck(post.getTime()))
-                    .avgTemp(50)                      //TODO 수정필요
+                    .avgTemp(tempAndJoinCountSearchDto.getAveTemp())
                     .isLetter(post.getIsLetter())
                     .isLike(isLike)
                     .build();
@@ -129,16 +163,17 @@ public class PostSearchService {
             if (post.getPostUrls().size() < 1) {
                 post.getPostUrls().add(null);
             }
+            TempAndJoinCountSearchDto tempAndJoinCountSearchDto = getAvgTemp(post.getId());
             MapListDto mapListDto = MapListDto.builder()
                     .id(post.getId())
                     .title(post.getTitle())
                     .content(post.getContent())
                     .personnel(post.getPersonnel())
-                    .joinCount(1)                       //TODO 수정필요
+                    .joinCount(tempAndJoinCountSearchDto.getJoinCount())
                     .place(post.getPlace())
-                    .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
+                    .postUrl(post.getPostUrls().get(0))
                     .time(post.getTime())
-                    .avgTemp(50)                      //TODO 수정필요
+                    .avgTemp(tempAndJoinCountSearchDto.getAveTemp())
                     .isLetter(post.getIsLetter())
                     .isLike(isLike)
                     .latitude(post.getLatitude())
@@ -161,12 +196,7 @@ public class PostSearchService {
         if (post.getPostUrls().size() < 1) {
             post.getPostUrls().add(null);
         }
-        List<String> joinPeopleurls = new ArrayList<>(); //TODO 수정필요
-        joinPeopleurls.add("test1");
-        joinPeopleurls.add("test2");
-        List<String> joinPeopleNicknames = new ArrayList<>(); //TODO 수정필요
-        joinPeopleNicknames.add("test1");
-        joinPeopleNicknames.add("test2");
+        TempAndJoinCountSearchDto tempAndJoinCountSearchDto = getJoinPeopleInfo(post.getId());
         PostDetailsResponseDto postDetailsResponseDto = PostDetailsResponseDto.builder()
                 .title(post.getTitle())
                 .content(post.getContent())
@@ -178,9 +208,9 @@ public class PostSearchService {
                 .categories(post.getCategories())
                 .bungCount(post.getUser().getBungCount())
                 .mannerTemp(post.getUser().getMannerTemp())
-                .joinPeopleUrl(joinPeopleurls)                //TODO 수정필요
-                .joinPeopleNickname(joinPeopleNicknames)           //TODO 수정필요
-                .joinCount(1)                       //TODO 수정필요
+                .joinPeopleUrl(tempAndJoinCountSearchDto.getJoinPeopleUrl())
+                .joinPeopleNickname(tempAndJoinCountSearchDto.getJoinPeopleNickName())
+                .joinCount(tempAndJoinCountSearchDto.getJoinCount())
                 .isLetter(post.getIsLetter())
                 .isLike(isLike)
                 .build();
@@ -198,16 +228,18 @@ public class PostSearchService {
                 post.getPost().getPostUrls().add(null);
             }
 
+
+            TempAndJoinCountSearchDto tempAndJoinCountSearchDto1 = getAvgTemp(post.getPost().getId());
             PostResponseDto postResponseDto = PostResponseDto.builder()
                     .id(post.getPost().getId())
                     .title(post.getPost().getTitle())
                     .content(post.getPost().getContent())
                     .personnel(post.getPost().getPersonnel())
-                    .joinCount(1)                                     //TODO 수정필요
+                    .joinCount(tempAndJoinCountSearchDto1.getJoinCount())
                     .place(post.getPost().getPlace())
-                    .postUrl(post.getPost().getPostUrls().get(0))    //TODO 수정필요
+                    .postUrl(post.getPost().getPostUrls().get(0))
                     .time(timeCheck(post.getPost().getTime()))
-                    .avgTemp(50)                                  //TODO 수정필요
+                    .avgTemp(tempAndJoinCountSearchDto1.getAveTemp())
                     .isLetter(post.getPost().getIsLetter())
                     .isLike(like.getIsLike())
                     .build();
@@ -228,16 +260,18 @@ public class PostSearchService {
         if (post.getPostUrls().size() < 1) {
             post.getPostUrls().add(null);
         }
+
+        TempAndJoinCountSearchDto tempAndJoinCountSearchDto1 = getAvgTemp(post.getId());
         PostResponseDto postResponseDto = PostResponseDto.builder()
                 .id(post.getId())
                 .title(post.getTitle())
                 .content(post.getContent())
                 .personnel(post.getPersonnel())
-                .joinCount(1)                       //TODO 수정필요
+                .joinCount(tempAndJoinCountSearchDto1.getJoinCount())
                 .place(post.getPlace())
-                .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
+                .postUrl(post.getPostUrls().get(0))
                 .time(timeCheck(post.getTime()))
-                .avgTemp(50)                      //TODO 수정필요
+                .avgTemp(tempAndJoinCountSearchDto1.getAveTemp())
                 .isLetter(post.getIsLetter())
                 .isLike(isLike)
                 .build();
