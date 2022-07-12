@@ -12,7 +12,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChatMessageDto {
-
     private ChatMessage.MessageType type; // 메시지 타입
     private String roomId; // 방번호
     private String message; // 메시지
@@ -23,4 +22,16 @@ public class ChatMessageDto {
     private String createdAt;
     private String fileUrl;
 
+    public ChatMessageDto(FindChatMessageDto chatMessage) {
+        this.type = chatMessage.getType();
+        this.roomId = chatMessage.getRoomId();
+        this.message =chatMessage.getMessage();
+        this.sender = chatMessage.getSender();
+        this.profileUrl = chatMessage.getProfileUrl();
+        this.enterUserCnt = chatMessage.getEnterUserCnt();
+        this.username = chatMessage.getUsername();
+        this.createdAt = chatMessage.getCreatedAt();
+        this.fileUrl = chatMessage.getFileUrl();
+
+    }
 }

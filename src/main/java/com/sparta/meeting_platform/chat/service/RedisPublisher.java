@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 public class RedisPublisher {
     private final RedisTemplate<String,Object> redisTemplate;
 
-
     public void publish (ChannelTopic topic , ChatMessageDto messageDto) {
         log.info("ChannelTopic : {}", topic.getTopic());
         log.info("ChatMessage : {}", messageDto.getType());

@@ -59,4 +59,4 @@ public class RedisConfig {
         redisMessageListenerContainer.setConnectionFactory(redisConnectionFactory);
         return redisMessageListenerContainer;
     }
-    }
+}

@@ -9,7 +9,6 @@ import lombok.Setter;
 @NoArgsConstructor
 public class FilesDto {
      private String fileUrl;
-
      public FilesDto(String fileUrl) {
           this.fileUrl =fileUrl;
      }

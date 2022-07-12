@@ -12,29 +12,16 @@ import lombok.Setter;
 public class UserDto {
 
     private String username;
-
-
     private String password;
-
     private String nickName;
-
-
     private String profileUrl;
-
     private Long kakaoId;
-
     private String googleId;
-
     private String naverId;
-
     private int mannerTemp;
-
     private Boolean isOwner = false;
-
     private String intro;
-
     private int bungCount;
-
     public UserDto(User user) {
         this.username = user.getUsername();
         this.password = user.getPassword();

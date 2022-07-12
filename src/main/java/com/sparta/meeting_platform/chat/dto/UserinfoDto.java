@@ -11,7 +11,6 @@ public class UserinfoDto {
     private String nickname;
     private String profileUrl;
     private Long userId;
-
     public UserinfoDto(String nickname, String profileUrl, Long userId) {
         this.nickname = nickname;
         this.profileUrl = profileUrl;

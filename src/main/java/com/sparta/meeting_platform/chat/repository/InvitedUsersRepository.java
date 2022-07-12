@@ -6,9 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface InvitedUsersRepository extends JpaRepository<InvitedUsers, Long> {
-List<InvitedUsers> findAllByUserId(Long userId);
-
     List<InvitedUsers> findAllByRoomId(String roomId);
-
-    boolean existsByUserId(Long id);
+    void deleteByUserIdAndRoomId(Long userId, String roomId);
+    boolean existsByUserIdAndRoomId(Long user_id, String roomId);
 }

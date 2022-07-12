@@ -1,7 +1,7 @@
 package com.sparta.meeting_platform.chat.repository;
 
 import com.sparta.meeting_platform.chat.dto.ChatRoomResponseDto;
-import com.sparta.meeting_platform.chat.dto.FindMessageInfo;
+import com.sparta.meeting_platform.chat.dto.FindChatMessageDto;
 import com.sparta.meeting_platform.chat.dto.UserDto;
 import com.sparta.meeting_platform.chat.model.ChatRoom;
 import com.sparta.meeting_platform.chat.service.RedisSubscriber;
@@ -28,13 +28,8 @@ public class ChatRoomRepository {
     private final RedisMessageListenerContainer redisMessageListener;
     // 구독 처리 서비스
     private final RedisSubscriber redisSubscriber;
-
     private final ChatRoomJpaRepository chatRoomJpaRepository;
-    private final ChatMessageRepository messageRepository;
-
     private final PostRepository postRepository;
-
-    private final InvitedUsersRepository invitedUsersRepository;
     private final UserRepository userRepository;
     private final ChatMessageJpaRepository chatMessageJpaRepository;
     // Redis
@@ -57,13 +52,17 @@ public class ChatRoomRepository {
         List<String> chatMessageCreatedAt = new ArrayList<>();
         List<ChatRoomResponseDto> chatRoomResponseDtoList = new ArrayList<>();
         List<Post> postList = postRepository.findAllByUserId(userId);
+
         for (ChatRoom chatRoom : chatRoomList) {
-            List<FindMessageInfo> findMessageInfos = chatMessageJpaRepository.findAllByChatRoom(chatRoom);
-            for (FindMessageInfo findMessageInfo : findMessageInfos) {
+            String roomId = chatRoom.getRoomId();
+            List<FindChatMessageDto> findMessageInfos = chatMessageJpaRepository.findAllByRoomId(roomId);
+
+            for (FindChatMessageDto findMessageInfo : findMessageInfos) {
                 chatMessage.add(findMessageInfo.getMessage());
                 chatMessageCreatedAt.add(findMessageInfo.getCreatedAt());
             }
         }
+
         for (Post post : postList) {
             ChatRoomResponseDto chatRoomResponseDto = new ChatRoomResponseDto();
             chatRoomResponseDto.setPostUrl(post.getPostUrls().get(0));
@@ -76,32 +75,6 @@ public class ChatRoomRepository {
         }
         return chatRoomResponseDtoList;
     }
-
-
-//
-//        if (opsHashChatRoom.size(CHAT_ROOMS) > 0) {
-//            for (ChatRoom chatRoom : chatRoomList1) {
-//                ChatRoom chatRoom1 = new ChatRoom(chatRoom,)
-//            }
-//            chatRoomList1.add(opsHashChatRoom.get(CHAT_ROOMS, userId));
-//            return chatRoomList;
-//        } else {
-//            List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByUserId(userId);
-//            for (InvitedUsers invitedUser : invitedUsers) {
-//                ChatRoomDto chatRooms = chatRoomJpaRepository.findByRoomId(invitedUser.getRoomId());
-//                ChatRoom chatroom = new ChatRoom(chatRooms);
-//                opsHashChatRoom.put(CHAT_ROOMS, userId, chatroom);
-//                chatRoomList.add(chatroom);
-//            }
-
-
-
-
-
-
-//    public ChatRoom findRoomById(String id) {
-//        return opsHashChatRoom.get(CHAT_ROOMS, id);
-//    }
 
     /**
      * 채팅방 입장 : redis에 topic을 만들고 pub/sub 통신을 하기 위해 리스너를 설정한다.

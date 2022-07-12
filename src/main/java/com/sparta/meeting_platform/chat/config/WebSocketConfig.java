@@ -12,15 +12,14 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
-
     private final StompHandler stompHandler;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry
                 .addEndpoint("/ws/chat")
-                .setAllowedOriginPatterns("http://zerovo-dka.shop.s3-website.ap-northeast-2.amazonaws.com/")
-//                .setAllowedOriginPatterns("http://localhost:3000/")
+//                .setAllowedOriginPatterns("http://zerovo-dka.shop.s3-website.ap-northeast-2.amazonaws.com/")
+                .setAllowedOriginPatterns("http://localhost:3000/")
                 .withSockJS();
     }
 
@@ -36,6 +35,4 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registration
                 .interceptors(stompHandler);
     }
-
-
 }

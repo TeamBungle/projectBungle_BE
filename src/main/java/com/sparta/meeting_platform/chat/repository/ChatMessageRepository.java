@@ -22,13 +22,10 @@ import java.util.Optional;
 @Slf4j
 @Repository
 public class ChatMessageRepository {        //redis
-
     private static final String CHAT_MESSAGE = "CHAT_MESSAGE";
     public static final String USER_COUNT = "USER_COUNT"; // 채팅룸에 입장한 클라이언트수 저장
     public static final String ENTER_INFO = "ENTER_INFO"; // 채팅룸에 입장한 클라이언트의 sessionId와 채팅룸 id를 맵핑한 정보 저장
-
     private final ChatMessageJpaRepository chatMessageJpaRepository;
-
     private final RedisTemplate<String, Object> redisTemplate;
     private final StringRedisTemplate stringRedisTemplate;
     private HashOperations<String, String, String> hashOpsEnterInfo;
@@ -42,8 +39,9 @@ public class ChatMessageRepository {        //redis
         hashOpsEnterInfo = redisTemplate.opsForHash();
         valueOps = stringRedisTemplate.opsForValue();
     }
+
     //유저 카운트 받아오기
-    public Long getUserCnt(String roomId){
+    public Long getUserCnt(String roomId) {
         log.info("getUserCnt : {}", Long.valueOf(Optional.ofNullable(valueOps.get(USER_COUNT + "_" + roomId)).orElse("0")));
         return Long.valueOf(Optional.ofNullable(valueOps.get(USER_COUNT + "_" + roomId)).orElse("0"));
     }
@@ -57,45 +55,35 @@ public class ChatMessageRepository {        //redis
         String roomId = chatMessageDto.getRoomId();
         List<ChatMessageDto> chatMessageList = opsHashChatMessage.get(CHAT_MESSAGE, roomId);
 
-        if (chatMessageList == null) chatMessageList = new ArrayList<>();
+        if (chatMessageList == null) {
+            chatMessageList = new ArrayList<>();
+        }
         chatMessageList.add(chatMessageDto);
         opsHashChatMessage.put(CHAT_MESSAGE, roomId, chatMessageList);
-
-//        log.info("list size : {}", (opsHashChatMessage.get(CHAT_MESSAGE, roomId)).size());
-//
-//        if((opsHashChatMessage.get(CHAT_MESSAGE, roomId)).size() % 10 == 0){
-//            log.info("Save DB!");
-//
-//            List<ChatMessageDto> chatMessageDtos = opsHashChatMessage.get(CHAT_MESSAGE, roomId);
-//            ObjectMapper mapper = new ObjectMapper();
-//            List<ChatMessageDto> chatMessageDtos1 = mapper.convertValue(chatMessageDtos, new TypeReference<List<ChatMessageDto>>(){});
-//            for (ChatMessageDto messageDto : chatMessageDtos1) {
-//                ChatMessage chatMessage = new ChatMessage(messageDto);
-//                chatMessageMysqlRepository.save(chatMessage);
-//            }
-//            opsHashChatMessage.delete(CHAT_MESSAGE,roomId);
-//        }
         return chatMessageDto;
     }
 
     //채팅 가져오기 from redis
     public List<ChatMessageDto> findAllMessage(String roomId) {
         log.info("findAllMessage");
-        List <ChatMessageDto> chatMessageDtoList = new ArrayList<>();
-        List <FindChatMessageDto> chatMessages = chatMessageJpaRepository.findAllByRoomId(roomId);
+        List<ChatMessageDto> chatMessageDtoList = new ArrayList<>();
+        List<FindChatMessageDto> chatMessages = chatMessageJpaRepository.findAllByRoomId(roomId);
+
         if (opsHashChatMessage.size(CHAT_MESSAGE) > 0) {
             return (opsHashChatMessage.get(CHAT_MESSAGE, roomId));
         } else {
+
             for (FindChatMessageDto chatMessage : chatMessages) {
-                chatMessageDtoList.add((ChatMessageDto) chatMessage);
+                ChatMessageDto chatMessageDto = new ChatMessageDto(chatMessage);
+                chatMessageDtoList.add(chatMessageDto);
             }
             return chatMessageDtoList;
         }
     }
 
     public void setUserEnterInfo(String roomId, String sessionId) {
-        hashOpsEnterInfo.put(ENTER_INFO,sessionId,roomId);
-        log.info("hashPosEnterInfo.put : {}",hashOpsEnterInfo.get(ENTER_INFO, sessionId) );
+        hashOpsEnterInfo.put(ENTER_INFO, sessionId, roomId);
+        log.info("hashPosEnterInfo.put : {}", hashOpsEnterInfo.get(ENTER_INFO, sessionId));
     }
 
     public void plusUserCnt(String roomId) {
@@ -105,17 +93,15 @@ public class ChatMessageRepository {        //redis
     public void minusUserCnt(String sessionId, String roomId) {
         Optional.ofNullable(valueOps.decrement(USER_COUNT + "_" + roomId)).filter(count -> count > 0);
     }
-
     public String getRoomId(String sessionId) {
         return hashOpsEnterInfo.get(ENTER_INFO, sessionId);
     }
-
     // 유저 세션정보와 맵핑된 채팅방ID 삭제
     public void removeUserEnterInfo(String sessionId) {
         hashOpsEnterInfo.delete(ENTER_INFO, sessionId);
-        if(hashOpsEnterInfo.get(ENTER_INFO, sessionId) == null) {
+
+        if (hashOpsEnterInfo.get(ENTER_INFO, sessionId) == null) {
             log.info("세션 삭제 완료 : {}", sessionId);
         }
     }
-
 }

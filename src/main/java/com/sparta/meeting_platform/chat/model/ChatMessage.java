@@ -2,17 +2,13 @@ package com.sparta.meeting_platform.chat.model;
 
 import com.sparta.meeting_platform.chat.dto.ChatMessageDto;
 import lombok.*;
-
 import javax.persistence.*;
 
 @Setter
-@Builder
-@AllArgsConstructor
 @Getter
 @Entity
 @NoArgsConstructor
 public class ChatMessage {
-
     // 메시지 타입 : 입장, 채팅
     public enum MessageType {
         ENTER, TALK, QUIT
@@ -43,7 +39,6 @@ public class ChatMessage {
     @JoinColumn(name = "CHAT_ROOM_ID")
     @ManyToOne
     private ChatRoom chatRoom;
-
 
     public ChatMessage(ChatMessageDto chatMessageDto,ChatRoom chatRoom) {
         this.type = chatMessageDto.getType();
