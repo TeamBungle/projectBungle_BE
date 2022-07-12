@@ -294,7 +294,31 @@ public class PostService {
 //    public double rad2deg(double rad) {
 //        return (rad * 180 / Math.PI);
 //    }
-
+//
+//    //게시글 조회 (제목에 포함된 단어로)
+//    public ResponseEntity<FinalResponseDto<?>> getSearch(String keyword, Long userId, Double longitude, Double latitude) {
+//        Optional<User> user = userRepository.findById(userId);
+//
+//        if (!user.isPresent()) {
+//            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 검색 실패"), HttpStatus.BAD_REQUEST);
+//        }
+//        String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
+//        LocalDateTime localDateTime = LocalDateTime.now();
+//        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+//        Query query = em.createNativeQuery("SELECT * FROM post AS p "
+//                        + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+//                        + " AND p.time > :convertedDate1 AND p.id in (select u.post_id from post_categories u"
+//                        + " WHERE u.category in ('" + keyword + "'))"
+//                        + "ORDER BY p.time", Post.class)
+//                .setParameter("convertedDate1", convertedDate1);
+//        List<Post> posts = query.getResultList();
+//
+//        if(posts.size() < 1){
+//            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 검색해주세요"), HttpStatus.BAD_REQUEST);
+//        }
+//        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId,longitude,latitude);
+//        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
+//    }
 
 
 
