@@ -213,6 +213,8 @@ public class PostSearchService {
                 .joinCount(tempAndJoinCountSearchDto.getJoinCount())
                 .isLetter(post.getIsLetter())
                 .isLike(isLike)
+                .latitude(post.getLatitude())
+                .longitude(post.getLongitude())
                 .build();
         return postDetailsResponseDto;
     }

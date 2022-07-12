@@ -179,13 +179,13 @@ public class PostService {
     @Transactional
     public ResponseEntity<FinalResponseDto<?>> createPost(Long userId, PostRequestDto requestDto, List<MultipartFile> files) throws Exception {
         User user = checkUser(userId);
-        //        Boolean isOwner = user.getIsOwner();
-//
-//        if(isOwner){
-//            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
-//        }else{
-//            user.setIsOwner(true);
-//        }
+                Boolean isOwner = user.getIsOwner();
+
+        if(isOwner){
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
+        }else{
+            user.setIsOwner(true);
+        }
         if (files == null) {
             requestDto.setPostUrls(null);
             // 기본 이미지로 변경 필요
