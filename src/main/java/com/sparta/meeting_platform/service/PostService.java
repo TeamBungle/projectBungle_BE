@@ -165,7 +165,7 @@ public class PostService {
         LocalDateTime localDateTime = LocalDateTime.now();
         String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         switch (status) {
-            case "realTime":
+            case "endTime":
                 Query query = em.createNativeQuery("SELECT * FROM post AS p "
                         + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
                         + "AND p.time > :convertedDate1"
@@ -173,7 +173,7 @@ public class PostService {
                         .setParameter("convertedDate1", convertedDate1);
                 posts = query.getResultList();
                 break;
-            case "endTime":
+            case "realTime":
                 Query query1 = em.createNativeQuery("SELECT * FROM post AS p "
                         + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
                         + "AND p.time < :convertedDate1"
@@ -205,13 +205,13 @@ public class PostService {
     @Transactional
     public ResponseEntity<FinalResponseDto<?>> createPost(Long userId, PostRequestDto requestDto, List<MultipartFile> files) throws Exception {
         User user = checkUser(userId);
-        //        Boolean isOwner = user.getIsOwner();
-//
-//        if(isOwner){
-//            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
-//        }else{
-//            user.setIsOwner(true);
-//        }
+                Boolean isOwner = user.getIsOwner();
+
+        if(isOwner){
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
+        }else{
+            user.setIsOwner(true);
+        }
         if (files == null) {
             requestDto.setPostUrls(null);
             // 기본 이미지로 변경 필요
