@@ -3,7 +3,6 @@ package com.sparta.meeting_platform.controller;
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
-import com.sparta.meeting_platform.dto.PostTestDto;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.service.LikeService;
 import com.sparta.meeting_platform.service.PostService;
@@ -13,8 +12,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.List;
 
 @RequiredArgsConstructor

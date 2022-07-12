@@ -15,6 +15,7 @@ import com.sparta.meeting_platform.dto.GoogleDto.GoogleLoginResponseDto;
 import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.security.JwtTokenProvider;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
+import com.sparta.meeting_platform.security.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,11 +23,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletResponse;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -39,7 +42,9 @@ public class SocialGoogleService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final  UserRoleCheckService userRoleCheckService;
+    private final RedisService redisService;
 
+    @Transactional
     public ResponseEntity<FinalResponseDto<?>> googleLogin
             (String authCode, HttpServletResponse httpServletResponse) throws JsonProcessingException {
         RestTemplate restTemplate = new RestTemplate();
@@ -131,7 +136,10 @@ public class SocialGoogleService {
         String jwt_token = jwtTokenProvider.generateJwtToken(userDetails);
         headers.set("Authorization", "BEARER" + " " + jwt_token);
         httpServletResponse.addHeader("Authorization", "Bearer" + " " + jwt_token);
-
+        // refresh token 발행
+//        user.setRefreshToken(jwtTokenProvider.createRefreshToken());
+        // refresh token 발행 후 Redis에 저장
+        redisService.setValues(jwtTokenProvider.createRefreshToken(), user.getUsername(), Duration.ofMillis(1000*60*60*24*7));
         return new ResponseEntity<>(new FinalResponseDto<>
                 (true, "로그인 성공!!", user.getNickName(), user.getMannerTemp()), HttpStatus.OK);
     }
