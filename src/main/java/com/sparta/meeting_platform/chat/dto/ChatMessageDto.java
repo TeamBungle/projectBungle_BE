@@ -1,5 +1,6 @@
 package com.sparta.meeting_platform.chat.dto;
 
+
 import com.sparta.meeting_platform.chat.model.ChatMessage;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,18 +12,26 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChatMessageDto {
-
-    // 메시지 타입
-    private ChatMessage.MessageType type;
-    // 채팅방 ID
-    private String roomId;
-    // 내용
-    private String message;
-    // 보내는 사람
-    private String nickName;
-    // 프로필 사진
+    private ChatMessage.MessageType type; // 메시지 타입
+    private String roomId; // 방번호
+    private String message; // 메시지
+    private String sender; // nickname
     private String profileUrl;
-    // 채팅방 인원수, 채팅방 내에서 메세지가 전달될때 인원수 갱신시 사용
-    private long userCount;
+    private Long enterUserCnt;
+    private String username;
+    private String createdAt;
+    private String fileUrl;
 
+    public ChatMessageDto(FindChatMessageDto chatMessage) {
+        this.type = chatMessage.getType();
+        this.roomId = chatMessage.getRoomId();
+        this.message =chatMessage.getMessage();
+        this.sender = chatMessage.getSender();
+        this.profileUrl = chatMessage.getProfileUrl();
+        this.enterUserCnt = chatMessage.getEnterUserCnt();
+        this.username = chatMessage.getUsername();
+        this.createdAt = chatMessage.getCreatedAt();
+        this.fileUrl = chatMessage.getFileUrl();
+
+    }
 }

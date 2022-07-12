@@ -33,11 +33,16 @@ public class LikeService {
             Post post = postRepository.findById(postId).orElse(null);
             User user = userRepository.findById(userId).orElse(null);
             if(post == null || user == null){
-                return new ResponseEntity<>(new FinalResponseDto<>(false, "찜하기 실패"), HttpStatus.OK);
+                return new ResponseEntity<>(new FinalResponseDto<>(false, "찜 할수 없습니다."), HttpStatus.OK);
             }
             Like likes = new Like(post, user);
             likeRepository.save(likes);
+            return  new ResponseEntity<>(new FinalResponseDto<>(true, "찜하기 성공"), HttpStatus.OK);
         }
-        return  new ResponseEntity<>(new FinalResponseDto<>(true, "찜하기 성공"), HttpStatus.OK);
+        if(like.get().getIsLike() == true){
+            return  new ResponseEntity<>(new FinalResponseDto<>(true, "찜하기 성공"), HttpStatus.OK);
+        }else {
+            return  new ResponseEntity<>(new FinalResponseDto<>(true, "찜하기 취소"), HttpStatus.OK);
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.sparta.meeting_platform.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Getter;
@@ -42,10 +43,13 @@ public class MapListDto {
 
     private Double longitude;
 
+//    @JsonIgnore
+    private Double distance;
+
     @Builder
     public MapListDto(Long id, String title, String content, String time, int personnel, String place, List<String> postUrls,
                       int joinCount, Boolean isLetter, Boolean isLike,int avgTemp,
-                      String postUrl, Double latitude, Double longitude) {
+                      String postUrl, Double latitude, Double longitude,Double distance) {
         this.id = id;
         this.title = title;
         this.content =content;
@@ -60,5 +64,6 @@ public class MapListDto {
         this.postUrl = postUrl;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.distance = distance;
     }
 }

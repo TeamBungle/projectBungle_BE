@@ -10,9 +10,10 @@ import java.util.Optional;
 public interface LikeRepository extends JpaRepository<Like, Long> {
     Optional<Like> findByUser_IdAndPost_Id(Long postId, Long userId);
 
-    List<PostMapping> findAllByUserIdAndIsLikeTrue(Long userId);
+    List<PostMapping> findAllByUserIdAndIsLikeTrueOrderByPost_Id(Long userId);
 
 //    List<Like> findAllByUserIdAndPostId(Long userId, Long postId);
 
     void deleteByUserId(Long userId);
+
 }

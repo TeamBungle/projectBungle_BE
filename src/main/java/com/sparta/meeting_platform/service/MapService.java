@@ -7,23 +7,27 @@ import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.MapListDto;
 import com.sparta.meeting_platform.dto.MapResponseDto;
 import com.sparta.meeting_platform.dto.SearchMapDto;
+import com.sparta.meeting_platform.exception.UserApiException;
 import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.exception.MapApiException;
 import com.sparta.meeting_platform.repository.LikeRepository;
 import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.util.Direction;
 import com.sparta.meeting_platform.util.GeometryUtil;
+import com.sparta.meeting_platform.util.MapListComparator;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.mapping.Array;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
@@ -38,16 +42,17 @@ public class MapService {
     public ResponseEntity<MapResponseDto<?>> readMap(Double latitude, Double longitude, Long userId) {
         checkUser(userId);
         Double distance = 6.0;
-        String pointFormat = mapSearchService.searchPointFormat(distance,latitude,longitude);
+        String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
 
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
                 + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)", Post.class); //거리순으로 정렬
         List<Post> posts = query.getResultList();
 
         if (posts.size() < 1) {
-            throw new IllegalArgumentException( distance+"km 내에 모임이 존재하지 않습니다.");
+            throw new MapApiException(distance + "km 내에 모임이 존재하지 않습니다.");
         }
-        List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId);
+        List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId,longitude,latitude);
+        Collections.sort(mapListDtos, new MapListComparator());
         return new ResponseEntity<>(new MapResponseDto<>(true, "50km 내에 위치한 모임", mapListDtos), HttpStatus.OK);
     }
     // 순서는 어떻게?
@@ -56,22 +61,24 @@ public class MapService {
 
     // 주소 검색 결과
     @Transactional(readOnly = true)
-    public ResponseEntity<MapResponseDto<?>> searchMap(String address, Long userId) throws IOException, ParseException{
+    public ResponseEntity<MapResponseDto<?>> searchMap(String address, Long userId) throws IOException, ParseException {
         checkUser(userId);
         SearchMapDto searchMapDto = mapSearchService.findLatAndLong(address);
         Double distance = 6.0;
         String pointFormat
-                = mapSearchService.searchPointFormat(distance,searchMapDto.getLatitude(),searchMapDto.getLongitude());
+                = mapSearchService.searchPointFormat(distance, searchMapDto.getLatitude(), searchMapDto.getLongitude());
 
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
-                + "WHERE MBRContains(ST_DISTANCE_SPHERE(" + pointFormat + ", p.location)"
-                + "AS distance FROM Post ORDER BY distance", Post.class); //거리순으로 정렬
+                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)", Post.class); //거리순으로 정렬
         List<Post> posts = query.getResultList();
 
         if (posts.size() < 1) {
-            throw new IllegalArgumentException(distance+"km 내에 모임이 존재하지 않습니다.");
+            throw new MapApiException(distance + "km 내에 모임이 존재하지 않습니다.");
         }
-        List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId);
+        List<MapListDto> mapListDtos
+                = postSearchService.searchMapPostList(posts, userId,searchMapDto.getLongitude(),searchMapDto.getLatitude());
+        Collections.sort(mapListDtos, new MapListComparator());
+
         return new ResponseEntity<>(new MapResponseDto<>(true, "50km 내에 위치한 모임", mapListDtos), HttpStatus.OK);
     }//거리순
 
@@ -79,24 +86,30 @@ public class MapService {
     //지도 세부 설정 검색
     @Transactional(readOnly = true)
     public ResponseEntity<MapResponseDto<?>> detailsMap(List<String> categories, int personnel, Double distance,
-                                                        Double latitude, Double longitude, Long userId){
+                                                        Double latitude, Double longitude, Long userId) {
+//        if (distance == null) {
+//            distance = 10.0;
+//        }
         checkUser(userId);
-        String pointFormat = mapSearchService.searchPointFormat(distance,latitude,longitude);
+        String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
         String mergeList = postSearchService.categoryOrTagListMergeString(categories);
 
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
-                        + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                        + "AND personnel <= " + personnel + " AND p.id in (select u.post_id from post_categories u"
-                        + " WHERE u.category in (" + mergeList + "))", Post.class);
+                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+                + "AND personnel <= " + personnel + " AND p.id in (select u.post_id from post_categories u"
+                + " WHERE u.category in (" + mergeList + "))", Post.class);
         List<Post> posts = query.getResultList();
 
-        List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId);
+        List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId,longitude,latitude);
+        Collections.sort(mapListDtos, new MapListComparator());
         return new ResponseEntity<>(new MapResponseDto<>(true, "세부 조회 성공!!", mapListDtos), HttpStatus.OK);
     }//거리순
+    //디폴트 10km
+    //
 
     public User checkUser(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new NullPointerException("해당 유저를 찾을 수 없습니다."));
+                () -> new UserApiException("해당 유저를 찾을 수 없습니다."));
         return user;
     }
 

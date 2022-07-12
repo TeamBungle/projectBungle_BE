@@ -18,10 +18,10 @@ public class ReportController {
     private final ReportService reportService;
 
     @PostMapping("/user/report/{userId}")
-    public ResponseEntity<FinalResponseDto<?>> setUserReport (@AuthenticationPrincipal UserDetailsImpl userDetails, @PathVariable Long userId) {
-        // 신고 내용 추가
-        // 날짜 , 시간, 신고 당한 유저 프사
-        return reportService.setUserReport(userDetails.getUser().getId(), userId);
+    public ResponseEntity<FinalResponseDto<?>> setUserReport (@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                                              @PathVariable Long userId,
+                                                              @RequestBody ReportRequestDto reportRequestDto) {
+        return reportService.setUserReport(userDetails.getUser().getId(), userId,reportRequestDto.getHistory());
     }
 
     @GetMapping("/user/reports")

@@ -26,7 +26,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -76,7 +75,7 @@ public class SocialKakaoService {
         int mannerTemp = kakaoUser.getMannerTemp();
 
         return new ResponseEntity<>(new FinalResponseDto<>
-                (true, "로그인 성공", nickname, mannerTemp), HttpStatus.OK);
+                (true, "로그인 성공", nickname, mannerTemp,kakaoUser.getUsername() ), HttpStatus.OK);
     }
     //header 에 Content-type 지정
     //1번

@@ -51,11 +51,14 @@ public class PostResponseDto {
 
     private String postUrl;
 
+    private Double distance;
+
+
     @Builder
     public PostResponseDto(Long id, String title, String content,String time, int personnel, String place, List<String> postUrls,
                            List<String> tags, List<String> categories, int bungCount, int mannerTemp, List<String> joinPeopleUrl,
                            List<String> joinPeopleNickname, int joinCount, Boolean isLetter, Boolean isLike,
-                           int avgTemp, String postUrl) {
+                           int avgTemp, String postUrl,Double distance) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -74,6 +77,7 @@ public class PostResponseDto {
         this.isLike = isLike;
         this.avgTemp = avgTemp;
         this.postUrl = postUrl;
+        this.distance =distance;
     }
 
 //    public PostResponseDto(Post post, String time) {

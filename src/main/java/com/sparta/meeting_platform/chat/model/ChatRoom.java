@@ -1,25 +1,32 @@
 package com.sparta.meeting_platform.chat.model;
 
-import lombok.*;
+import com.sparta.meeting_platform.chat.dto.UserDto;
+import com.sparta.meeting_platform.domain.Post;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.*;
+import java.io.Serializable;
 
-@Entity
 @Getter
-@Builder
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
-public class ChatRoom {
+@Entity
+public class ChatRoom implements Serializable {
+    private static final long serialVersionUID = 6494678977089006639L;
 
-    // 채팅방 아이디
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long Id;
+    @Column
     private String roomId;
-    // 채팅방 제목
-    private String title;
-    // 채팅방 정원수
-    private int personnel;
+    private String username;
 
-
-
+    public static ChatRoom create(Post post, UserDto userDto) {
+        ChatRoom chatRoom = new ChatRoom();
+        chatRoom.roomId = String.valueOf(post.getId());
+        chatRoom.username=userDto.getUsername();
+        return chatRoom;
+    }
 }
