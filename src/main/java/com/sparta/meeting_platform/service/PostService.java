@@ -57,7 +57,7 @@ public class PostService {
     //게시글 전체 조회(4개만)
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getPosts(Long userId, Double latitude, Double longitude) {
-        checkUser(userId);
+        User user = checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
         LocalDateTime localDateTime = LocalDateTime.now();
         String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -79,7 +79,7 @@ public class PostService {
 
         List<PostResponseDto> postListRealTime = postSearchService.searchTimeOrMannerPostList(realTimePosts, userId);
         List<PostResponseDto> postListEndTime = postSearchService.searchTimeOrMannerPostList(endTimePosts, userId);
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공",postListRealTime, postListEndTime), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공",user.getIsOwner(),postListRealTime, postListEndTime), HttpStatus.OK);
     }// manner도 같이 보내줘야함
     // realtime은 지난 시간만 , 아이디 순인지 시간순인지 확인
     // endtime은 지나지 않는 시간만
