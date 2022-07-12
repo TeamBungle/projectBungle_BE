@@ -51,7 +51,6 @@ public class PostService {
     private final PostSearchService postSearchService;
     private final MapSearchService mapSearchService;
     private Double distance = 8.0;
-    private final MapService mapService;
     private final ChatRoomRepository chatRoomRepository;
 
 
@@ -105,7 +104,7 @@ public class PostService {
         if (posts.size() < 1) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른 카테고리로 조회해주세요"), HttpStatus.OK);
         }
-        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId);
+        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId,longitude,latitude);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
     }
 
