@@ -232,7 +232,7 @@ public class PostService {
                 return new ResponseEntity<>(new FinalResponseDto<>(false, "잘못된 카테고리 입니다."), HttpStatus.OK);
             }
         }
-        if(requestDto.getPersonnel() > 50 && requestDto.getPersonnel() < 2 ){
+        if(requestDto.getPersonnel() > 50 || requestDto.getPersonnel() < 2 ){
             return new ResponseEntity<>(new FinalResponseDto<>(false, "참여인원은 50명 이하 입니다"), HttpStatus.OK);
         }
 
@@ -253,9 +253,9 @@ public class PostService {
         SearchMapDto searchMapDto = mapSearchService.findLatAndLong(requestDto.getPlace());
         Point point = mapSearchService.makePoint(searchMapDto.getLongitude(), searchMapDto.getLatitude());
         Post post = new Post(user, requestDto, searchMapDto.getLongitude(), searchMapDto.getLatitude(), point);
-        postRepository.save(post);
-        UserDto userDto = new UserDto(user);
-        chatRoomRepository.createChatRoom(post, userDto);
+//        postRepository.save(post);
+//        UserDto userDto = new UserDto(user);
+//        chatRoomRepository.createChatRoom(post, userDto);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공", post.getId()), HttpStatus.OK);
     }
 
