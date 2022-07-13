@@ -268,7 +268,7 @@ public class PostService {
         checkUser(userId);
         Post post = checkPost(postId);
         if (files == null) {
-            requestDto.setPostUrls(null);
+            requestDto.setPostUrls(post.getPostUrls());
             // 기본 이미지로 변경 필요
         } else {
             List<String> postUrls = new ArrayList<>();
