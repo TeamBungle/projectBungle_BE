@@ -6,7 +6,7 @@ import com.google.gson.JsonParser;
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.domain.UserRoleEnum;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
-import com.sparta.meeting_platform.dto.Naver.NaverUserDto;
+import com.sparta.meeting_platform.dto.NaverDto.NaverUserDto;
 import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.security.JwtTokenProvider;
 import com.sparta.meeting_platform.security.UserDetailsImpl;

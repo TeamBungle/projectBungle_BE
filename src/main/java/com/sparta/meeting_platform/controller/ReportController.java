@@ -1,7 +1,7 @@
 package com.sparta.meeting_platform.controller;
 
 import com.sparta.meeting_platform.dto.FinalResponseDto;
-import com.sparta.meeting_platform.dto.ReportRequestDto;
+import com.sparta.meeting_platform.dto.ReportDto.ReportRequestDto;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.service.ReportService;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ public class ReportController {
     public ResponseEntity<FinalResponseDto<?>> setUserReport (@AuthenticationPrincipal UserDetailsImpl userDetails,
                                                               @PathVariable Long userId,
                                                               @RequestBody ReportRequestDto reportRequestDto) {
-        return reportService.setUserReport(userDetails.getUser().getId(), userId,reportRequestDto.getHistory());
+        return reportService.setUserReport(userDetails.getUser().getId(), userId, reportRequestDto.getHistory());
     }
 
     @GetMapping("/user/reports")

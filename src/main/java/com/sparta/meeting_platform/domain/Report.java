@@ -20,8 +20,15 @@ public class Report {
 
     private Long reporterId;
 
-    @Column(nullable = false, name = "BAD_MANNER_ID")
+    @Column(nullable = false)
     private Long badMannerId;
+
+    @Column
+    private String badMannerNickName;
+
+    @Column
+    private String badMannerUrl;
+
 
     @CreatedDate
     private LocalDateTime createdAt;
@@ -30,9 +37,11 @@ public class Report {
     private String history;
 
 
-    public Report(Long reporterId, Long badMannerId,String history) {
+    public Report(Long reporterId, Long badMannerId, String badMannerNickName, String badMannerUrl, String history) {
         this.reporterId = reporterId;
         this.badMannerId = badMannerId;
+        this.badMannerNickName = badMannerNickName;
+        this.badMannerUrl = badMannerUrl;
         this.createdAt = LocalDateTime.now();
         this.history = history;
     }
