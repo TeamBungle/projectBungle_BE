@@ -40,9 +40,9 @@ public class ChatService {
     private final ChatRoomJpaRepository chatRoomJpaRepository;
 
     @Transactional
-    public void save(ChatMessageDto messageDto, String token) {
+    public void save(ChatMessageDto messageDto, String BearerToken) {
         log.info("save Message : {}", messageDto.getMessage());
-        String username = jwtTokenProvider.getUserPk(token); // 토큰에서 유저 아이디 가져오기
+        String username = jwtTokenProvider.getUserPk(BearerToken); // 토큰에서 유저 아이디 가져오기
         User user = userRepository.findByUsername(username).orElseThrow(
                 () -> new NullPointerException("존재하지 않는 사용자 입니다!")
         );
@@ -60,21 +60,26 @@ public class ChatService {
         messageDto.setUsername(username);
         log.info("type : {}", messageDto.getType());
 
+        //받아온 메세지의 타입이 ENTER 일때
         if (ChatMessage.MessageType.ENTER.equals(messageDto.getType())) {
             chatRoomRepository.enterChatRoom(messageDto.getRoomId());
             messageDto.setMessage("[알림] " + messageDto.getSender() + "님이 입장하셨습니다.");
             String roomId = messageDto.getRoomId();
+            //초대된 유저에 채팅방 아이디와 유저를 함께 저장한다
             InvitedUsers invitedUsers = new InvitedUsers(roomId, user);
-
+            // 이미 그방에 초대되어 있다면 중복으로 저장을 하지 않게 한다.
             if (!invitedUsersRepository.existsByUserIdAndRoomId(user.getId(), messageDto.getRoomId())) {
                 invitedUsersRepository.save(invitedUsers);
             }
+            //받아온 메세지 타입이 QUIT 일때
         }else if (ChatMessage.MessageType.QUIT.equals(messageDto.getType())) {
             messageDto.setMessage("[알림] " + messageDto.getSender() + "님이 나가셨습니다.");
+            // 들어갈때 저장했던 유저정보를 삭제해준다.
             invitedUsersRepository.deleteByUserIdAndRoomId(user.getId(),messageDto.getRoomId());
         }
 
         log.info("ENTER : {}", messageDto.getMessage());
+
         ChatRoom chatRoom = chatRoomJpaRepository.findByUsername(username);
         chatMessageRepository.save(messageDto); // 캐시에 저장 했다.
         ChatMessage chatMessage = new ChatMessage(messageDto,chatRoom);
