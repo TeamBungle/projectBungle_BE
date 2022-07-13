@@ -226,20 +226,18 @@ public class PostService {
 
 //        String[] categoryList = new String[]{"맛집","카페","노래방","운동","친목","전시","여행","쇼핑","스터디","게임"};
 
-//        List<String> categoryList
-//                = new ArrayList<>(Arrays.asList("맛집","카페","노래방","운동","친목","전시","여행","쇼핑","스터디","게임"));
-//        for(String categroy : requestDto.getCategories()){
-//
-//            if(!categoryList.contains(categroy)){
-//                return new ResponseEntity<>(new FinalResponseDto<>(false, "잘못된 카테고리 입니다."), HttpStatus.OK);
-//            }
-//        }
+        List<String> categoryList
+                = new ArrayList<>(Arrays.asList("맛집","카페","노래방","운동","친목","전시","여행","쇼핑","스터디","게임"));
+        for(String categroy : requestDto.getCategories()){
+
+            if(!categoryList.contains(categroy)){
+                return new ResponseEntity<>(new FinalResponseDto<>(false, "잘못된 카테고리 입니다."), HttpStatus.OK);
+            }
+        }
         if(requestDto.getPersonnel() > 50 && requestDto.getPersonnel() < 2 ){
             return new ResponseEntity<>(new FinalResponseDto<>(false, "참여인원은 50명 이하 입니다"), HttpStatus.OK);
         }
-        if(requestDto.getPostUrls().size() > 3){
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 사진은 3개 이하 입니다."), HttpStatus.OK);
-        }
+
         if (files == null) {
             requestDto.setPostUrls(null);
             // 기본 이미지로 변경 필요
@@ -250,10 +248,14 @@ public class PostService {
             }
             requestDto.setPostUrls(postUrls);
         }
+
+//        if(requestDto.getPostUrls().size() > 3){
+//            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 사진은 3개 이하 입니다."), HttpStatus.OK);
+//        }
         SearchMapDto searchMapDto = mapSearchService.findLatAndLong(requestDto.getPlace());
         Point point = mapSearchService.makePoint(searchMapDto.getLongitude(), searchMapDto.getLatitude());
         Post post = new Post(user, requestDto, searchMapDto.getLongitude(), searchMapDto.getLatitude(), point);
-//        postRepository.save(post);
+        postRepository.save(post);
         chatRoomRepository.createChatRoom(post);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공", post.getId()), HttpStatus.OK);
     }
