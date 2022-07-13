@@ -253,9 +253,9 @@ public class PostService {
         SearchMapDto searchMapDto = mapSearchService.findLatAndLong(requestDto.getPlace());
         Point point = mapSearchService.makePoint(searchMapDto.getLongitude(), searchMapDto.getLatitude());
         Post post = new Post(user, requestDto, searchMapDto.getLongitude(), searchMapDto.getLatitude(), point);
-//        postRepository.save(post);
-//        UserDto userDto = new UserDto(user);
-//        chatRoomRepository.createChatRoom(post, userDto);
+        postRepository.save(post);
+        UserDto userDto = new UserDto(user);
+        chatRoomRepository.createChatRoom(post, userDto);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공", post.getId()), HttpStatus.OK);
     }
 
