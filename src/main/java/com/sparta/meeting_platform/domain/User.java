@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Getter
 @NoArgsConstructor()
@@ -65,6 +66,8 @@ public class User {
         this.password = requestDto.getPassword();
         this.checkTime = LocalDateTime.now();
         this.mannerTemp = mannerTemp;
+        this.nickName = "벙글" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("hhmmss"));
+        this.profileUrl = "https://user-images.githubusercontent.com/87007109/178628349-839deab9-5c31-49e5-beb5-3d6b868df343.jpg";
         this.role = UserRoleEnum.NEW_USER;
     }
 
