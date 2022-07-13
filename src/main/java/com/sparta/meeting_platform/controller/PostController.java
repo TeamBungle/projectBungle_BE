@@ -100,6 +100,14 @@ public class PostController {
         return postService.updatePost(postId, getUserId(userDetails), requestDto, files);
     }
 
+    // 게시글 수정페이지 입장
+    @GetMapping("/posts/mypost")
+    public ResponseEntity<FinalResponseDto<?>> getMyPost(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        Long userId = getUserId(userDetails);
+        return postService.getMyPost(userId);
+    }
+
     //게시글 삭제
     @DeleteMapping("/{postid}")
     public ResponseEntity<FinalResponseDto<?>> deletePost(

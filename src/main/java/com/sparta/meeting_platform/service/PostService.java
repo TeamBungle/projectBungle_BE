@@ -228,6 +228,33 @@ public class PostService {
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 수정 성공"), HttpStatus.OK);
     }
 
+    // 게시글 수정페이지 입장
+    public ResponseEntity<FinalResponseDto<?>> getMyPost(Long userId) {
+        User user = checkUser(userId);
+        Post post = postRepository.findByUserId(userId);
+
+        if (post.getPostUrls().size() < 1) {
+            post.getPostUrls().add(null);
+        }
+        if (!user.getIsOwner()){
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글을 먼저 생성해 주세요"), HttpStatus.OK);
+        }
+        PostResponseDto postResponseDto = PostResponseDto.builder()
+                .id(post.getId())
+                .title(post.getTitle())
+                .content(post.getContent())
+                .postUrls(post.getPostUrls())
+                .categories(post.getCategories())
+                .tags(post.getTags())
+                .time(post.getTime())
+                .place(post.getPlace())
+                .personnel(post.getPersonnel())
+                .isLetter(post.getIsLetter())
+                .build();
+
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 수정 페이지 이동 성공",postResponseDto), HttpStatus.OK);
+    }
+
 
     //게시글 삭제
     @Transactional
@@ -239,7 +266,7 @@ public class PostService {
         } else {
             postRepository.deleteById(postId);
             user.setIsOwner(false);
-            return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공"), HttpStatus.OK);
+            return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공",user.getIsOwner()), HttpStatus.OK);
         }
     }
 

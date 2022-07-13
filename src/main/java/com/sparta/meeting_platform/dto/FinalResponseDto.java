@@ -36,6 +36,8 @@ public class FinalResponseDto<T> {
     private List<PostResponseDto> postListEndTime;
     private PostDetailsResponseDto postDetailsResponseDto;
 
+    private Boolean isOwner;
+
 
     public FinalResponseDto(boolean response, String message, Long postId, List<String> postUrls) {
         this.response = response;
@@ -101,5 +103,18 @@ public class FinalResponseDto<T> {
         this.response = response;
         this.message = message;
         this.profileResponseDto = profileResponseDto;
+    }
+
+    public FinalResponseDto(boolean response, String message, Boolean isOwner) {
+        this.response = response;
+        this.message = message;
+        this.isOwner = isOwner;
+    }
+
+    public FinalResponseDto(boolean response, String message, PostDetailsResponseDto postDetailsResponseDto,Long postId) {
+        this.response = response;
+        this.message = message;
+        this.postDetailsResponseDto = postDetailsResponseDto;
+        this.postId =postId;
     }
 }

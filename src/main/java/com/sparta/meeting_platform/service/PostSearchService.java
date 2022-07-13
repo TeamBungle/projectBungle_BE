@@ -198,6 +198,7 @@ public class PostSearchService {
         }
         TempAndJoinCountSearchDto tempAndJoinCountSearchDto = getJoinPeopleInfo(post.getId());
         PostDetailsResponseDto postDetailsResponseDto = PostDetailsResponseDto.builder()
+                .postId(post.getId())
                 .title(post.getTitle())
                 .content(post.getContent())
                 .time(timeCheck(post.getTime()))
