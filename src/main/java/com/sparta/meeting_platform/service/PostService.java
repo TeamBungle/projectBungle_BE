@@ -2,6 +2,7 @@ package com.sparta.meeting_platform.service;
 
 import com.sparta.meeting_platform.chat.dto.UserDto;
 import com.sparta.meeting_platform.chat.repository.ChatRoomRepository;
+import com.sparta.meeting_platform.chat.repository.InvitedUsersRepository;
 import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.domain.User;
@@ -53,6 +54,7 @@ public class PostService {
     private final MapSearchService mapSearchService;
     private Double distance = 400.0;
     private final ChatRoomRepository chatRoomRepository;
+    private final InvitedUsersRepository invitedUsersRepository;
 
 
     //게시글 전체 조회(4개만)
@@ -317,6 +319,7 @@ public class PostService {
         if (!post.getUser().getId().equals(userId)) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "본인 게시글이 아닙니다."), HttpStatus.OK);
         } else {
+            invitedUsersRepository.deleteByUserIdAndRoomId(user.getId(),postId.toString());
             likeRepository.deleteByPostId(postId);
             postRepository.deleteById(postId);
             user.setIsOwner(false);
