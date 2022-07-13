@@ -5,9 +5,9 @@ import com.sparta.meeting_platform.chat.model.ChatMessage;
 public interface FindChatMessageDto {
 
     ChatMessage.MessageType getType();
-    String getRoomId(); // 방번호 (postId)
-    String getSender(); // nickname
-    String getMessage(); // 메시지
+    String getRoomId();
+    String getSender();
+    String getMessage();
     String getProfileUrl();
     Long getEnterUserCnt();
     String getUsername();

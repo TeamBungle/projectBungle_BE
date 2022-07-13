@@ -12,12 +12,13 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @RequiredArgsConstructor
 public class RedisPublisher {
-    private final RedisTemplate<String,Object> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
 
-    public void publish (ChannelTopic topic , ChatMessageDto messageDto) {
-        log.info("ChannelTopic : {}", topic.getTopic());
-        log.info("ChatMessage : {}", messageDto.getType());
-        redisTemplate.convertAndSend(topic.getTopic(),messageDto);
+    /*
+     * websocket 에서 받아온 메세지를 convertAndsend를 통하여 Redis의 메세지 리스너로 발행
+     */
+    public void publish(ChannelTopic topic, ChatMessageDto messageDto) {
+        redisTemplate.convertAndSend(topic.getTopic(), messageDto);
         log.info("발행 완료!");
     }
 

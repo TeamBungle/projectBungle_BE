@@ -17,7 +17,7 @@ public class ChatRoomController {
     private final ChatRoomRepository chatRoomRepository;
 
     // 내 채팅방 목록 반환
-    @GetMapping("/rooms") // 내가보낸 마지막 메세지가 나옴 ;
+    @GetMapping("/rooms")
     @ResponseBody
     public List<ChatRoomResponseDto> room(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         Long userid = userDetails.getUser().getId();
