@@ -249,9 +249,9 @@ public class PostService {
             requestDto.setPostUrls(postUrls);
         }
 
-//        if(requestDto.getPostUrls().size() > 3){
-//            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 사진은 3개 이하 입니다."), HttpStatus.OK);
-//        }
+        if(requestDto.getPostUrls().size() > 3){
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 사진은 3개 이하 입니다."), HttpStatus.OK);
+        }
         SearchMapDto searchMapDto = mapSearchService.findLatAndLong(requestDto.getPlace());
         Point point = mapSearchService.makePoint(searchMapDto.getLongitude(), searchMapDto.getLatitude());
         Post post = new Post(user, requestDto, searchMapDto.getLongitude(), searchMapDto.getLatitude(), point);
