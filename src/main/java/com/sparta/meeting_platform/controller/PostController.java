@@ -14,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.Valid;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
@@ -86,7 +87,7 @@ public class PostController {
     // 게시글 작성
     @PostMapping("")
     public ResponseEntity<FinalResponseDto<?>> createPost(
-            @RequestPart(value = "postDto") PostRequestDto requestDto,
+            @Valid @RequestPart(value = "postDto") PostRequestDto requestDto,
             @RequestPart(value = "postImg",required = false) List<MultipartFile> files,
             @AuthenticationPrincipal UserDetailsImpl userDetails) throws Exception {
 
@@ -102,6 +103,14 @@ public class PostController {
             @AuthenticationPrincipal UserDetailsImpl userDetails) throws Exception {
 
         return postService.updatePost(postId, getUserId(userDetails), requestDto, files);
+    }
+
+    //게시글 수정 페이지 이동
+    @GetMapping("/posts/mypost")
+    public ResponseEntity<FinalResponseDto<?>> getMyPost(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        Long userId = getUserId(userDetails);
+        return postService.getMyPost(userId);
     }
 
     //게시글 삭제

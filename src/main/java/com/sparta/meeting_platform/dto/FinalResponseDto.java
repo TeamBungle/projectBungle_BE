@@ -103,4 +103,10 @@ public class FinalResponseDto<T> {
         this.message = message;
         this.profileResponseDto = profileResponseDto;
     }
+
+    public FinalResponseDto(boolean response, String message, Boolean isOwner) {
+        this.response =response;
+        this.message =message;
+        this.isOwner =isOwner;
+    }
 }

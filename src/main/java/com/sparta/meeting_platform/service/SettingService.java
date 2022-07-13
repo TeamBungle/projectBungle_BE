@@ -37,7 +37,7 @@ public class SettingService {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "공지사항 조회 실패"), HttpStatus.OK);
         }
 
-        List<Notice> foundNotice = noticeRepository.findAll();
+        List<Notice> foundNotice = noticeRepository.findAllByOrderByIdDesc();
 
         List<NoticeResponseDto> noticeResponseDtoList = new ArrayList<>();
 
@@ -56,6 +56,9 @@ public class SettingService {
 
         if (!user.isPresent()) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "의견 보내기 실패"), HttpStatus.OK);
+        }
+        if(requestDto.getMessage() == null){
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "의견이 없습니다."), HttpStatus.OK);
         }
         Opinion opinion = new Opinion(user.get(),requestDto);
         opinionRepository.save(opinion);
