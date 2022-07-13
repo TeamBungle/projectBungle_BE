@@ -11,9 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import javax.validation.Valid;
-import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
 
@@ -146,15 +144,15 @@ public class PostController {
         return postService.getMyPagePost(userDetails);
     }
 
-//
-//    //게시글 검색(제목에포함된단어로)
-//    @GetMapping("/search")
-//    public ResponseEntity<FinalResponseDto<?>> getSearch(@RequestParam(value = "keyword") String keyword,
-//                                                         @RequestParam(value = "latitude") Double latitude,
-//                                                         @RequestParam(value = "longitude") Double longitude,
-//                                                         @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
-//        Long userId = getUserId(userDetails);
-//        return postService.getSearch(keyword,userId,longitude,latitude);
-//    }
+
+    //게시글 검색(제목에포함된단어로)
+    @GetMapping("/search")
+    public ResponseEntity<FinalResponseDto<?>> getSearch(@RequestParam(value = "keyword") String keyword,
+                                                         @RequestParam(value = "latitude") Double latitude,
+                                                         @RequestParam(value = "longitude") Double longitude,
+                                                         @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
+        Long userId = getUserId(userDetails);
+        return postService.getSearch(keyword,userId,longitude,latitude);
+    }
 
 }

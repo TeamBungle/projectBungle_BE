@@ -38,7 +38,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.*;
 
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 
 @Service
@@ -339,7 +338,7 @@ public class PostService {
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getMyPage(UserDetailsImpl userDetails) {
         User user = checkUser(userDetails.getUser().getId());
-        MyPageDto myPageDto = new MyPageDto(user.getNickName(), user.getMannerTemp(), user.getProfileUrl(), user.getBungCount());
+        MyPageDto myPageDto = new MyPageDto(user);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "나의 번개 페이지 조회 성공", myPageDto), HttpStatus.OK);
     }
 
