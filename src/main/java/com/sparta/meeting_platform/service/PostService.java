@@ -206,11 +206,11 @@ public class PostService {
         User user = checkUser(userId);
                 Boolean isOwner = user.getIsOwner();
 
-        if(isOwner){
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
-        }else{
-            user.setIsOwner(true);
-        }
+//        if(isOwner){
+//            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
+//        }else{
+//            user.setIsOwner(true);
+//        }
 //        Date date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(requestDto.getTime());
 //        LocalDateTime localDateTime = LocalDateTime.now();
 //        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -253,9 +253,9 @@ public class PostService {
         SearchMapDto searchMapDto = mapSearchService.findLatAndLong(requestDto.getPlace());
         Point point = mapSearchService.makePoint(searchMapDto.getLongitude(), searchMapDto.getLatitude());
         Post post = new Post(user, requestDto, searchMapDto.getLongitude(), searchMapDto.getLatitude(), point);
-        postRepository.save(post);
-        UserDto userDto = new UserDto(user);
-        chatRoomRepository.createChatRoom(post, userDto);
+//        postRepository.save(post);
+//        UserDto userDto = new UserDto(user);
+//        chatRoomRepository.createChatRoom(post, userDto);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공", post.getId()), HttpStatus.OK);
     }
 
@@ -317,6 +317,7 @@ public class PostService {
         if (!post.getUser().getId().equals(userId)) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "본인 게시글이 아닙니다."), HttpStatus.OK);
         } else {
+            likeRepository.deleteByPostId();
             postRepository.deleteById(postId);
             user.setIsOwner(false);
             return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공",user.getIsOwner()), HttpStatus.OK);
