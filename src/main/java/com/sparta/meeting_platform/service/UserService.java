@@ -11,14 +11,23 @@ import com.sparta.meeting_platform.exception.EmailApiException;
 import com.sparta.meeting_platform.exception.UserApiException;
 import com.sparta.meeting_platform.repository.*;
 import com.sparta.meeting_platform.security.JwtTokenProvider;
+import com.sparta.meeting_platform.security.UserDetailsImpl;
+import com.sparta.meeting_platform.security.redis.RedisService;
+import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -36,6 +45,7 @@ public class UserService {
     private final PostRepository postRepository;
     private final UserRoleCheckService userRoleCheckService;
     private final EmailConfirmTokenRepository emailConfirmTokenRepository;
+    private final RedisService redisService;
 
     // 아이디(이메일) 중복 확인
     @Transactional(readOnly = true)
@@ -60,6 +70,7 @@ public class UserService {
 
         // 재가입 방지
         int mannerTemp = userRoleCheckService.userResignCheck(requestDto.getUsername());
+
         requestDto.setPassword(passwordEncoder.encode(requestDto.getPassword()));
         userRepository.save(new User(requestDto, mannerTemp));
 
@@ -82,6 +93,10 @@ public class UserService {
             throw new UserApiException("비밀번호를 확인해 주세요");
         }
 
+        // refresh token 발행 후 저장
+//        user.setRefreshToken(jwtTokenProvider.createRefreshToken());
+        // refresh token 발행 후 Redis에 저장
+//        redisService.setValues(jwtTokenProvider.createRefreshToken(), user.getUsername(), Duration.ofMillis(1000*60*60*24*7));
         jwtTokenProvider.createToken(requestDto.getUsername());
 
         return new ResponseEntity<>(new FinalResponseDto<>
@@ -162,4 +177,39 @@ public class UserService {
         return new ResponseEntity<>(new FinalResponseDto<>(true, "프로필 조회 성공",new ProfileResponseDto(user)), HttpStatus.OK);
 
     }
+
+    // 만료된 access token 재 발급
+    @Transactional
+    public ResponseEntity<FinalResponseDto<?>> refreshToken(String accessToken, String refreshToken) {
+        // accessToken 만료 기간 확인
+        if(jwtTokenProvider.validateToken(accessToken)){
+            throw new UserApiException("토큰 기간이 만료되지 않아서 갱신되지 않습니다");
+        }
+
+        // RefreshToken 유효성 검사
+        String token = refreshToken.replace("Bearer ", "");
+        if(!jwtTokenProvider.validateToken(token)){
+            throw new UserApiException("refresh token 기간이 만료 되었습니다.");
+        }
+
+        // refreshToken 유저 정보 꺼내기
+//        User user = userRepository.findByRefreshToken(token).orElse(null);
+        // Redis에서 refreshToken 유저 정보 꺼내기
+        String user = redisService.getValues(token);
+        if(user == null){
+            throw new UserApiException("토큰 정보가 없습니다.");
+        }
+
+        // refreshToken 재발행
+//        user.setRefreshToken(jwtTokenProvider.createRefreshToken());
+        // refresh token 발행 후 Redis에 저장
+//        redisService.setValues(jwtTokenProvider.createRefreshToken(), user, Duration.ofMillis(1000*60*60*24*7));
+        // 재발행 후 기존 데이터 삭제
+        redisService.deleteValues(token);
+        // accessToken 재발행
+        jwtTokenProvider.createToken(user);
+        return new ResponseEntity<>(new FinalResponseDto<>
+                (true, "access token 갱신 완료"), HttpStatus.OK);
+    }
+
 }
