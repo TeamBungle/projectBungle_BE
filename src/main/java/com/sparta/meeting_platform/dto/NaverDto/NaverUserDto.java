@@ -1,4 +1,4 @@
-package com.sparta.meeting_platform.dto.Naver;
+package com.sparta.meeting_platform.dto.NaverDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

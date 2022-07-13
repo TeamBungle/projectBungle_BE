@@ -1,5 +1,6 @@
 package com.sparta.meeting_platform.service;
 
+import com.sparta.meeting_platform.chat.dto.UserDto;
 import com.sparta.meeting_platform.chat.repository.ChatRoomRepository;
 import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
@@ -8,7 +9,6 @@ import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
-import com.sparta.meeting_platform.dto.PostTestDto;
 import com.sparta.meeting_platform.dto.SearchMapDto;
 import com.sparta.meeting_platform.dto.user.MyPageDto;
 import com.sparta.meeting_platform.exception.PostApiException;
@@ -22,7 +22,6 @@ import com.sparta.meeting_platform.util.PostListComparator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Point;
-import org.locationtech.jts.io.WKTReader;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -34,6 +33,9 @@ import javax.persistence.Query;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.*;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -51,7 +53,6 @@ public class PostService {
     private final PostSearchService postSearchService;
     private final MapSearchService mapSearchService;
     private Double distance = 8.0;
-    private final MapService mapService;
     private final ChatRoomRepository chatRoomRepository;
 
 
@@ -86,7 +87,6 @@ public class PostService {
     // endtime은 지나지 않는 시간만
 
 
-
     //카테고리별 게시글 조회
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getPostsByCategories(Long userId, List<String> categories, Double latitude, Double longitude) {
@@ -96,10 +96,10 @@ public class PostService {
         LocalDateTime localDateTime = LocalDateTime.now();
         String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
-                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                + " AND p.time > :convertedDate1 AND p.id in (select u.post_id from post_categories u"
-                + " WHERE u.category in (" + mergeList + "))"
-                + " ORDER BY p.time ", Post.class)
+                        + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+                        + " AND p.time > :convertedDate1 AND p.id in (select u.post_id from post_categories u"
+                        + " WHERE u.category in (" + mergeList + "))"
+                        + " ORDER BY p.time ", Post.class)
                 .setParameter("convertedDate1", convertedDate1);
         List<Post> posts = query.getResultList();
         if (posts.size() < 1) {
@@ -151,7 +151,7 @@ public class PostService {
         if (posts.size() < 1) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른 태그로 조회해주세요"), HttpStatus.OK);
         }
-        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId,longitude,latitude);
+        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId, longitude, latitude);
         Collections.sort(postList, new PostListComparator());
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
     }
@@ -168,17 +168,17 @@ public class PostService {
         switch (status) {
             case "endTime":
                 Query query = em.createNativeQuery("SELECT * FROM post AS p "
-                        + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                        + "AND p.time > :convertedDate1"
-                        + " ORDER BY p.time ", Post.class)
+                                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+                                + "AND p.time > :convertedDate1"
+                                + " ORDER BY p.time ", Post.class)
                         .setParameter("convertedDate1", convertedDate1);
                 posts = query.getResultList();
                 break;
             case "realTime":
                 Query query1 = em.createNativeQuery("SELECT * FROM post AS p "
-                        + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                        + "AND p.time < :convertedDate1"
-                        + " ORDER BY p.time desc", Post.class)
+                                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+                                + "AND p.time < :convertedDate1"
+                                + " ORDER BY p.time desc", Post.class)
                         .setParameter("convertedDate1", convertedDate1);
                 posts = query1.getResultList();
                 break;
@@ -202,17 +202,16 @@ public class PostService {
     }
 
 
-    // 게시글 등록
     @Transactional
     public ResponseEntity<FinalResponseDto<?>> createPost(Long userId, PostRequestDto requestDto, List<MultipartFile> files) throws Exception {
         User user = checkUser(userId);
-//                Boolean isOwner = user.getIsOwner();
-//
-//        if(isOwner){
-//            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
-//        }else{
-//            user.setIsOwner(true);
-//        }
+                Boolean isOwner = user.getIsOwner();
+
+        if(isOwner){
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
+        }else{
+            user.setIsOwner(true);
+        }
 //        Date date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(requestDto.getTime());
 //        LocalDateTime localDateTime = LocalDateTime.now();
 //        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -256,7 +255,8 @@ public class PostService {
         Point point = mapSearchService.makePoint(searchMapDto.getLongitude(), searchMapDto.getLatitude());
         Post post = new Post(user, requestDto, searchMapDto.getLongitude(), searchMapDto.getLatitude(), point);
         postRepository.save(post);
-        chatRoomRepository.createChatRoom(post);
+        UserDto userDto = new UserDto(user);
+        chatRoomRepository.createChatRoom(post, userDto);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공", post.getId()), HttpStatus.OK);
     }
 
@@ -377,8 +377,31 @@ public class PostService {
 //    public double rad2deg(double rad) {
 //        return (rad * 180 / Math.PI);
 //    }
-
-
+//
+//    //게시글 조회 (제목에 포함된 단어로)
+//    public ResponseEntity<FinalResponseDto<?>> getSearch(String keyword, Long userId, Double longitude, Double latitude) {
+//        Optional<User> user = userRepository.findById(userId);
+//
+//        if (!user.isPresent()) {
+//            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 검색 실패"), HttpStatus.BAD_REQUEST);
+//        }
+//        String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
+//        LocalDateTime localDateTime = LocalDateTime.now();
+//        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+//        Query query = em.createNativeQuery("SELECT * FROM post AS p "
+//                        + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+//                        + " AND p.time > :convertedDate1 AND p.id in (select u.post_id from post_categories u"
+//                        + " WHERE u.category in ('" + keyword + "'))"
+//                        + "ORDER BY p.time", Post.class)
+//                .setParameter("convertedDate1", convertedDate1);
+//        List<Post> posts = query.getResultList();
+//
+//        if(posts.size() < 1){
+//            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 검색해주세요"), HttpStatus.BAD_REQUEST);
+//        }
+//        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId,longitude,latitude);
+//        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
+//    }
 
 
     // Time 변환

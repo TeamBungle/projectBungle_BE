@@ -6,7 +6,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface ReportRepository extends JpaRepository<Report, Long> {
-    Boolean existsByReporterIdAndBadMannerId(Long reporterId, Long badMannserId);
 
-    List<Report> findAllByReporterId(Long id);
+    List<Report> findAllByReporterIdOrderByIdDesc(Long id);
+
+    Boolean existsByReporterIdAndBadMannerId(Long reporterId, Long badMannerId);
+
 }

@@ -8,7 +8,6 @@ import com.sparta.meeting_platform.dto.user.ProfileResponseDto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 
 import java.util.List;
 
@@ -26,6 +25,8 @@ public class FinalResponseDto<T> {
     private String message;
     private Boolean isOwner;
     private PostResponseDto postResponseDto;
+
+    private String username;
     private String nickName;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private int mannerTemp;
@@ -91,11 +92,12 @@ public class FinalResponseDto<T> {
         this.postResponseDto = postResponseDto;
     }
 
-    public FinalResponseDto(boolean response, String message, String nickname, int mannerTemp) {
+    public FinalResponseDto(boolean response, String message, String nickname, int mannerTemp, String username) {
         this.response = response;
         this.message = message;
         this.nickName = nickname;
         this.mannerTemp = mannerTemp;
+        this.username = username;
     }
 
     public FinalResponseDto(boolean response, String message, ProfileResponseDto profileResponseDto) {

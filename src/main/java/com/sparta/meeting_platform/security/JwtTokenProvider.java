@@ -1,7 +1,6 @@
 package com.sparta.meeting_platform.security;
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -70,7 +69,8 @@ public class JwtTokenProvider {
     }
 
     // 토큰에서 회원 정보 추출
-    public String getUserPk(String token) {
+    public String getUserPk(String BearerToken) {
+        String token = BearerToken.replace("Bearer ", "");
         return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().getSubject();
     }
 

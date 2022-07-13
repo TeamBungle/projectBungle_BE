@@ -6,7 +6,7 @@ import com.google.gson.JsonParser;
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.domain.UserRoleEnum;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
-import com.sparta.meeting_platform.dto.Naver.NaverUserDto;
+import com.sparta.meeting_platform.dto.NaverDto.NaverUserDto;
 import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.security.JwtTokenProvider;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
@@ -18,7 +18,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -70,7 +69,7 @@ public class SocialNaverService {
             String token = jwtTokenProvider.generateJwtToken(userDetailsImpl);
             response.addHeader("Authorization", "BEARER" + " " + token);
             return new ResponseEntity<>(new FinalResponseDto<>
-                    (true, "로그인 성공!!", user.getNickName(), user.getMannerTemp()), HttpStatus.OK);
+                    (true, "로그인 성공!!", user.getNickName(), user.getMannerTemp(),user.getUsername() ), HttpStatus.OK);
         } catch (IOException e) {
             return new ResponseEntity<>(new FinalResponseDto<>
                     (false, "로그인 실패"), HttpStatus.OK);

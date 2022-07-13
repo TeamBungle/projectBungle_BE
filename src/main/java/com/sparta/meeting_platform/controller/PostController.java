@@ -3,12 +3,10 @@ package com.sparta.meeting_platform.controller;
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
-import com.sparta.meeting_platform.dto.PostTestDto;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.service.LikeService;
 import com.sparta.meeting_platform.service.PostService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -83,7 +81,6 @@ public class PostController {
     }
 
 
-
     // 게시글 작성
     @PostMapping("")
     public ResponseEntity<FinalResponseDto<?>> createPost(
@@ -149,15 +146,15 @@ public class PostController {
         return postService.getMyPagePost(userDetails);
     }
 
-
-    //게시글 검색(제목에포함된단어로)
-    @GetMapping("/search")
-    public ResponseEntity<FinalResponseDto<?>> getSearch(@RequestParam(value = "keyword") String keyword,
-                                                         @RequestParam(value = "latitude") Double latitude,
-                                                         @RequestParam(value = "longitude") Double longitude,
-                                                         @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
-        Long userId = getUserId(userDetails);
-        return postService.getSearch(keyword,userId,longitude,latitude);
-    }
+//
+//    //게시글 검색(제목에포함된단어로)
+//    @GetMapping("/search")
+//    public ResponseEntity<FinalResponseDto<?>> getSearch(@RequestParam(value = "keyword") String keyword,
+//                                                         @RequestParam(value = "latitude") Double latitude,
+//                                                         @RequestParam(value = "longitude") Double longitude,
+//                                                         @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
+//        Long userId = getUserId(userDetails);
+//        return postService.getSearch(keyword,userId,longitude,latitude);
+//    }
 
 }
