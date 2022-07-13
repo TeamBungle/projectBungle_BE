@@ -317,6 +317,7 @@ public class PostService {
         if (!post.getUser().getId().equals(userId)) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "본인 게시글이 아닙니다."), HttpStatus.OK);
         } else {
+            likeRepository.deleteByPostId(postId);
             postRepository.deleteById(postId);
             user.setIsOwner(false);
             return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공",user.getIsOwner()), HttpStatus.OK);
