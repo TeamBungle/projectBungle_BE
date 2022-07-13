@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 public class Notice {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id;
+    private Long id;
 
     @CreatedDate
     @DateTimeFormat(pattern = "yyyy-mm-dd")

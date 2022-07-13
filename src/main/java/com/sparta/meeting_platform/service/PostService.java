@@ -30,11 +30,15 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.*;
+
+
 
 @Service
 @Slf4j
@@ -54,7 +58,7 @@ public class PostService {
     //게시글 전체 조회(4개만)
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getPosts(Long userId, Double latitude, Double longitude) {
-        checkUser(userId);
+        User user = checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
         LocalDateTime localDateTime = LocalDateTime.now();
         String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -76,7 +80,7 @@ public class PostService {
 
         List<PostResponseDto> postListRealTime = postSearchService.searchTimeOrMannerPostList(realTimePosts, userId);
         List<PostResponseDto> postListEndTime = postSearchService.searchTimeOrMannerPostList(endTimePosts, userId);
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postListRealTime, postListEndTime), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공",user.getIsOwner(),postListRealTime, postListEndTime), HttpStatus.OK);
     }// manner도 같이 보내줘야함
     // realtime은 지난 시간만 , 아이디 순인지 시간순인지 확인
     // endtime은 지나지 않는 시간만
@@ -100,7 +104,33 @@ public class PostService {
         if (posts.size() < 1) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른 카테고리로 조회해주세요"), HttpStatus.OK);
         }
-        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId, longitude, latitude);
+        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId,longitude,latitude);
+        Collections.sort(postList, new PostListComparator());
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
+    }
+
+    //게시글 조회 (제목에 포함된 단어로)
+    public ResponseEntity<FinalResponseDto<?>> getSearch(String keyword, Long userId, Double longitude, Double latitude) {
+        Optional<User> user = userRepository.findById(userId);
+
+        if (!user.isPresent()) {
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 검색 실패"), HttpStatus.BAD_REQUEST);
+        }
+        String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
+        LocalDateTime localDateTime = LocalDateTime.now();
+        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        Query query = em.createNativeQuery("SELECT * FROM post AS p "
+                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+                + " AND p.time > :convertedDate1 AND p.id in (select u.post_id from post_categories u"
+                + " WHERE u.category in ('" + keyword + "'))"
+                + "ORDER BY p.time", Post.class)
+                .setParameter("convertedDate1", convertedDate1);
+        List<Post> posts = query.getResultList();
+
+        if(posts.size() < 1){
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 검색해주세요"), HttpStatus.BAD_REQUEST);
+        }
+        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId,longitude,latitude);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
     }
 
@@ -174,13 +204,38 @@ public class PostService {
     @Transactional
     public ResponseEntity<FinalResponseDto<?>> createPost(Long userId, PostRequestDto requestDto, List<MultipartFile> files) throws Exception {
         User user = checkUser(userId);
-        Boolean isOwner = user.getIsOwner();
+                Boolean isOwner = user.getIsOwner();
 
-        if (isOwner) {
+        if(isOwner){
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
-        } else {
+        }else{
             user.setIsOwner(true);
         }
+//        Date date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(requestDto.getTime());
+//        LocalDateTime localDateTime = LocalDateTime.now();
+//        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+        DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime localDateTime = LocalDateTime.parse(requestDto.getTime(), inputFormat);
+        if(!localDateTime.isAfter(localDateTime.now())){
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "약속시간은 현재시간 이후 부터 가능합니다."), HttpStatus.OK);
+        }
+
+
+//        String[] categoryList = new String[]{"맛집","카페","노래방","운동","친목","전시","여행","쇼핑","스터디","게임"};
+
+        List<String> categoryList
+                = new ArrayList<>(Arrays.asList("맛집","카페","노래방","운동","친목","전시","여행","쇼핑","스터디","게임"));
+        for(String categroy : requestDto.getCategories()){
+
+            if(!categoryList.contains(categroy)){
+                return new ResponseEntity<>(new FinalResponseDto<>(false, "잘못된 카테고리 입니다."), HttpStatus.OK);
+            }
+        }
+        if(requestDto.getPersonnel() > 50 && requestDto.getPersonnel() < 2 ){
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "참여인원은 50명 이하 입니다"), HttpStatus.OK);
+        }
+
         if (files == null) {
             requestDto.setPostUrls(null);
             // 기본 이미지로 변경 필요
@@ -190,6 +245,10 @@ public class PostService {
                 postUrls.add(s3Service.upload(file));
             }
             requestDto.setPostUrls(postUrls);
+        }
+
+        if(requestDto.getPostUrls().size() > 3){
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 사진은 3개 이하 입니다."), HttpStatus.OK);
         }
         SearchMapDto searchMapDto = mapSearchService.findLatAndLong(requestDto.getPlace());
         Point point = mapSearchService.makePoint(searchMapDto.getLongitude(), searchMapDto.getLatitude());
@@ -223,6 +282,32 @@ public class PostService {
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 수정 성공"), HttpStatus.OK);
     }
 
+    public ResponseEntity<FinalResponseDto<?>> getMyPost(Long userId) {
+        User user = checkUser(userId);
+        Post post = postRepository.findByUserId(userId);
+
+        if (post.getPostUrls().size() < 1) {
+            post.getPostUrls().add(null);
+        }
+        if (!user.getIsOwner()){
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글을 먼저 생성해 주세요"), HttpStatus.OK);
+        }
+        PostResponseDto postResponseDto = PostResponseDto.builder()
+                .id(post.getId())
+                .title(post.getTitle())
+                .content(post.getContent())
+                .postUrls(post.getPostUrls())
+                .categories(post.getCategories())
+                .tags(post.getTags())
+                .time(post.getTime())
+                .place(post.getPlace())
+                .personnel(post.getPersonnel())
+                .isLetter(post.getIsLetter())
+                .build();
+
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 수정 페이지 이동 성공",postResponseDto), HttpStatus.OK);
+    }
+
 
     //게시글 삭제
     @Transactional
@@ -234,7 +319,7 @@ public class PostService {
         } else {
             postRepository.deleteById(postId);
             user.setIsOwner(false);
-            return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공"), HttpStatus.OK);
+            return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공",user.getIsOwner()), HttpStatus.OK);
         }
     }
 
@@ -281,6 +366,8 @@ public class PostService {
                 () -> new PostApiException("존재하지 않는 게시물 입니다."));
         return post;
     }
+
+
 
 //    public double deg2rad(double deg) {
 //        return (deg * Math.PI / 180.0);

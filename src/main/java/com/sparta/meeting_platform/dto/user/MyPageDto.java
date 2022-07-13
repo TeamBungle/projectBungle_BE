@@ -19,4 +19,6 @@ public class MyPageDto {
         this.profileUrl = user.getProfileUrl();
         this.bungCount = user.getBungCount();
     }
+
+
 }
