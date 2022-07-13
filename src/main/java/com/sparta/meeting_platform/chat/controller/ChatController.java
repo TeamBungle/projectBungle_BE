@@ -28,9 +28,9 @@ public class ChatController {
      * websocket "/pub/chat/message"로 들어오는 메시징을 처리한다.
      */
     @MessageMapping({"/chat/message"})
-    public void message(ChatMessageDto message, @Header("token") String token) {
+    public void message(ChatMessageDto message, @Header("token") String BearerToken) {
         log.info("요청 메서드 [message] /chat/message");
-        chatService.save(message, token);
+        chatService.save(message, BearerToken);
     }
 
     //이전 채팅 기록 조회
@@ -59,7 +59,7 @@ public class ChatController {
         log.info("요청 메서드 [GET] /chat/message/userinfo");
         return chatService.getUserinfo(userDetails, roomId);
     }
-
+    //햄버거 버튼 눌렀을때, fileUrl들을 보낸다
     @GetMapping("/chat/message/files/{roomId}")
     @ResponseBody
     public List<FilesDto> getFiles(

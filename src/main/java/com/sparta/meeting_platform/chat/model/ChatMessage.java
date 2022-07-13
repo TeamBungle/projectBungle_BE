@@ -9,13 +9,13 @@ import javax.persistence.*;
 @Entity
 @NoArgsConstructor
 public class ChatMessage {
-    // 메시지 타입 : 입장, 채팅
+    // 메시지 타입 : 입장, 채팅, 나가기
     public enum MessageType {
         ENTER, TALK, QUIT
     }
     @Id
     @GeneratedValue(strategy =GenerationType.IDENTITY)
-    private Long Id;
+    private Long id;
     @Column
     private String roomId; // 방번호 (postId)
     @Enumerated(EnumType.STRING)
