@@ -232,7 +232,7 @@ public class PostService {
                 return new ResponseEntity<>(new FinalResponseDto<>(false, "잘못된 카테고리 입니다."), HttpStatus.OK);
             }
         }
-        if(requestDto.getPersonnel() > 50 && requestDto.getPersonnel() < 2 ){
+        if(requestDto.getPersonnel() > 50 || requestDto.getPersonnel() < 2 ){
             return new ResponseEntity<>(new FinalResponseDto<>(false, "참여인원은 50명 이하 입니다"), HttpStatus.OK);
         }
 
