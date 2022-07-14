@@ -18,10 +18,12 @@ import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.repository.mapping.PostMapping;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
+import com.sparta.meeting_platform.util.FileExtFilter;
 import com.sparta.meeting_platform.util.PostListComparator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Point;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -52,6 +55,8 @@ public class PostService {
     private final MapSearchService mapSearchService;
     private Double distance = 400.0;
     private final ChatRoomRepository chatRoomRepository;
+
+    private final FileExtFilter fileExtFilter;
 
 
     //게시글 전체 조회(4개만)
@@ -204,6 +209,12 @@ public class PostService {
     public ResponseEntity<FinalResponseDto<?>> createPost(Long userId, PostRequestDto requestDto, List<MultipartFile> files) throws Exception {
         User user = checkUser(userId);
         Boolean isOwner = user.getIsOwner();
+
+//        for (MultipartFile file : files){
+//            if(!fileExtFilter.badFileExt(file)){
+//                throw new PostApiException("이미지가 아닙니다.");
+//            }
+//        }
 
         if (requestDto.getTags().size() > 3) {
             throw new PostApiException("최대 태그 갯수는 3개 입니다.");
