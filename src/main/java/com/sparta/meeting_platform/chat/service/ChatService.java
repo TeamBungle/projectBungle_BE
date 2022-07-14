@@ -75,7 +75,7 @@ public class ChatService {
         }else if (ChatMessage.MessageType.QUIT.equals(messageDto.getType())) {
             messageDto.setMessage("[알림] " + messageDto.getSender() + "님이 나가셨습니다.");
             // 들어갈때 저장했던 유저정보를 삭제해준다.
-//            invitedUsersRepository.deleteByUserIdAndRoomId(user.getId(),messageDto.getRoomId());
+            invitedUsersRepository.deleteByUserIdAndRoomId(user.getId(),messageDto.getRoomId());
         }
 
         log.info("ENTER : {}", messageDto.getMessage());

@@ -101,7 +101,7 @@ public class PostController {
     }
 
     //게시글 수정 페이지 이동
-    @GetMapping("/posts/mypost")
+    @GetMapping("/mypost")
     public ResponseEntity<FinalResponseDto<?>> getMyPost(
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
         Long userId = getUserId(userDetails);
