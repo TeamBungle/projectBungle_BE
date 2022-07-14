@@ -18,10 +18,12 @@ import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.repository.mapping.PostMapping;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
+import com.sparta.meeting_platform.util.FileExtFilter;
 import com.sparta.meeting_platform.util.PostListComparator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Point;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -30,10 +32,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.io.File;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-
 
 
 @Service
@@ -49,6 +52,8 @@ public class PostService {
     private final MapSearchService mapSearchService;
     private Double distance = 400.0;
     private final ChatRoomRepository chatRoomRepository;
+
+    private final FileExtFilter fileExtFilter;
 
 
     //게시글 전체 조회(4개만)
@@ -76,7 +81,7 @@ public class PostService {
 
         List<PostResponseDto> postListRealTime = postSearchService.searchTimeOrMannerPostList(realTimePosts, userId);
         List<PostResponseDto> postListEndTime = postSearchService.searchTimeOrMannerPostList(endTimePosts, userId);
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공",user.getIsOwner(),postListRealTime, postListEndTime), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", user.getIsOwner(), postListRealTime, postListEndTime), HttpStatus.OK);
     }// manner도 같이 보내줘야함
     // realtime은 지난 시간만 , 아이디 순인지 시간순인지 확인
     // endtime은 지나지 않는 시간만
@@ -100,7 +105,7 @@ public class PostService {
         if (posts.size() < 1) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른 카테고리로 조회해주세요"), HttpStatus.OK);
         }
-        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId,longitude,latitude);
+        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId, longitude, latitude);
         Collections.sort(postList, new PostListComparator());
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
     }
@@ -116,17 +121,17 @@ public class PostService {
         LocalDateTime localDateTime = LocalDateTime.now();
         String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
-                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                + " AND p.time > :convertedDate1 AND p.id in (select u.post_id from post_categories u"
-                + " WHERE u.category in ('" + keyword + "'))"
-                + "ORDER BY p.time", Post.class)
+                        + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+                        + " AND p.time > :convertedDate1 AND p.id in (select u.post_id from post_categories u"
+                        + " WHERE u.category in ('" + keyword + "'))"
+                        + "ORDER BY p.time", Post.class)
                 .setParameter("convertedDate1", convertedDate1);
         List<Post> posts = query.getResultList();
 
-        if(posts.size() < 1){
+        if (posts.size() < 1) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 검색해주세요"), HttpStatus.BAD_REQUEST);
         }
-        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId,longitude,latitude);
+        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId, longitude, latitude);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
     }
 
@@ -200,38 +205,54 @@ public class PostService {
     @Transactional
     public ResponseEntity<FinalResponseDto<?>> createPost(Long userId, PostRequestDto requestDto, List<MultipartFile> files) throws Exception {
         User user = checkUser(userId);
-                Boolean isOwner = user.getIsOwner();
+        Boolean isOwner = user.getIsOwner();
 
-        if(isOwner){
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
-        }else{
-            user.setIsOwner(true);
+//        for (MultipartFile file : files){
+//            if(!fileExtFilter.badFileExt(file)){
+//                throw new PostApiException("이미지가 아닙니다.");
+//            }
+//        }
+
+        if (requestDto.getTags().size() > 3) {
+            throw new PostApiException("최대 태그 갯수는 3개 입니다.");
+//                return new ResponseEntity<>(new FinalResponseDto<>(false, "최대 태그 갯수는 3개 입니다."), HttpStatus.OK);
         }
+        for (String tag : requestDto.getTags()) {
+            if (tag.length() > 10) {
+                throw new PostApiException("10자 이하로 태그를 입력해주세요");
+//                    return new ResponseEntity<>(new FinalResponseDto<>(false, "10자 이하로 태그를 입력해주세요"), HttpStatus.OK);
+            }
+        }
+
+//        if(isOwner){
+//            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
+//        }else{
+//            user.setIsOwner(true);
+//        }
 //        Date date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(requestDto.getTime());
 //        LocalDateTime localDateTime = LocalDateTime.now();
 //        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
-//        DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-//        LocalDateTime localDateTime = LocalDateTime.parse(requestDto.getTime(), inputFormat);
-//        if(!localDateTime.isAfter(localDateTime.now())){
-//            return new ResponseEntity<>(new FinalResponseDto<>(false, "약속시간은 현재시간 이후 부터 가능합니다."), HttpStatus.OK);
-//        }
 
+        DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime  PromiseDateTime = LocalDateTime.parse(requestDto.getTime(), inputFormat);
+        LocalDateTime now = LocalDateTime.now();
+        if(!PromiseDateTime.isAfter(now) || PromiseDateTime.isAfter(now.plusDays(1))){
+            throw new PostApiException("약속시간은 현재시간 이후 부터 24시간 이내에 가능합니다.");
+        }
 
 //        String[] categoryList = new String[]{"맛집","카페","노래방","운동","친목","전시","여행","쇼핑","스터디","게임"};
 
         List<String> categoryList
-                = new ArrayList<>(Arrays.asList("맛집","카페","노래방","운동","친목","전시","여행","쇼핑","스터디","게임"));
-        for(String categroy : requestDto.getCategories()){
-
-            if(!categoryList.contains(categroy)){
-                return new ResponseEntity<>(new FinalResponseDto<>(false, "잘못된 카테고리 입니다."), HttpStatus.OK);
+                = new ArrayList<>(Arrays.asList("맛집", "카페", "노래방", "운동", "친목", "전시", "여행", "쇼핑", "스터디", "게임"));
+        for (String categroy : requestDto.getCategories()) {
+            if (!categoryList.contains(categroy)) {
+                throw new PostApiException("잘못된 카테고리 입니다.");
             }
         }
-        if(requestDto.getPersonnel() > 50 && requestDto.getPersonnel() < 2 ){
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "참여인원은 50명 이하 입니다"), HttpStatus.OK);
+        if (requestDto.getPersonnel() > 50 || requestDto.getPersonnel() < 2) {
+            throw new PostApiException("참여인원은 50명 이하 입니다");
         }
-
         if (files == null) {
             requestDto.setPostUrls(null);
             // 기본 이미지로 변경 필요
@@ -242,16 +263,15 @@ public class PostService {
             }
             requestDto.setPostUrls(postUrls);
         }
-
-        if(requestDto.getPostUrls().size() > 3){
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 사진은 3개 이하 입니다."), HttpStatus.OK);
+        if (requestDto.getPostUrls().size() > 3) {
+            throw new PostApiException("게시글 사진은 3개 이하 입니다.");
         }
         SearchMapDto searchMapDto = mapSearchService.findLatAndLong(requestDto.getPlace());
         Point point = mapSearchService.makePoint(searchMapDto.getLongitude(), searchMapDto.getLatitude());
         Post post = new Post(user, requestDto, searchMapDto.getLongitude(), searchMapDto.getLatitude(), point);
-        postRepository.save(post);
-        UserDto userDto = new UserDto(user);
-        chatRoomRepository.createChatRoom(post, userDto);
+//        postRepository.save(post);
+//        UserDto userDto = new UserDto(user);
+//        chatRoomRepository.createChatRoom(post, userDto);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공", post.getId()), HttpStatus.OK);
     }
 
@@ -262,7 +282,7 @@ public class PostService {
         checkUser(userId);
         Post post = checkPost(postId);
         if (files == null) {
-            requestDto.setPostUrls(null);
+            requestDto.setPostUrls(post.getPostUrls());
             // 기본 이미지로 변경 필요
         } else {
             List<String> postUrls = new ArrayList<>();
@@ -285,7 +305,7 @@ public class PostService {
         if (post.getPostUrls().size() < 1) {
             post.getPostUrls().add(null);
         }
-        if (!user.getIsOwner()){
+        if (!user.getIsOwner()) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글을 먼저 생성해 주세요"), HttpStatus.OK);
         }
         PostResponseDto postResponseDto = PostResponseDto.builder()
@@ -301,7 +321,7 @@ public class PostService {
                 .isLetter(post.getIsLetter())
                 .build();
 
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 수정 페이지 이동 성공",postResponseDto), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 수정 페이지 이동 성공", postResponseDto), HttpStatus.OK);
     }
 
 
@@ -315,7 +335,7 @@ public class PostService {
         } else {
             postRepository.deleteById(postId);
             user.setIsOwner(false);
-            return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공",user.getIsOwner()), HttpStatus.OK);
+            return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공", user.getIsOwner()), HttpStatus.OK);
         }
     }
 
@@ -362,7 +382,6 @@ public class PostService {
                 () -> new PostApiException("존재하지 않는 게시물 입니다."));
         return post;
     }
-
 
 
 //    public double deg2rad(double deg) {

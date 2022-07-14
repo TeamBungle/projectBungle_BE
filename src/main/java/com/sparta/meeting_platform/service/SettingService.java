@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -72,7 +73,8 @@ public class SettingService {
         if (!user.isPresent()) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "공지 작성 실패"), HttpStatus.OK);
         }
-        Notice notice = new Notice(requestDto);
+        LocalDateTime localDateTime = LocalDateTime.now();
+        Notice notice = new Notice(requestDto,localDateTime);
         noticeRepository.save(notice);
         return new ResponseEntity<>(new FinalResponseDto<>(true,"공지 작성 성공"),HttpStatus.OK);
     }
