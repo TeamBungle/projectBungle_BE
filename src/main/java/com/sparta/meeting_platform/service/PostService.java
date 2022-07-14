@@ -36,9 +36,6 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.*;
 
 
@@ -236,13 +233,13 @@ public class PostService {
 //        LocalDateTime localDateTime = LocalDateTime.now();
 //        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
+
         DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime  PromiseDateTime = LocalDateTime.parse(requestDto.getTime(), inputFormat);
         LocalDateTime now = LocalDateTime.now();
         if(!PromiseDateTime.isAfter(now) || PromiseDateTime.isAfter(now.plusDays(1))){
             throw new PostApiException("약속시간은 현재시간 이후 부터 24시간 이내에 가능합니다.");
         }
-
 
 //        String[] categoryList = new String[]{"맛집","카페","노래방","운동","친목","전시","여행","쇼핑","스터디","게임"};
 
