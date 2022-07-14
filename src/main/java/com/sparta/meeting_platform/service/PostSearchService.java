@@ -29,14 +29,29 @@ public class PostSearchService {
     public TempAndJoinCountSearchDto getAvgTemp(Long postId){
         String roomId = String.valueOf(postId);
         List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByRoomId(roomId);
-        int temp = 0;
-        int joinCount = 0;
-        for (InvitedUsers invitedUser : invitedUsers) {
-            temp += invitedUser.getUser().getMannerTemp();
-           joinCount += 1;
+        try{
+            int temp = 0;
+            int joinCount = 0;
+            for (InvitedUsers invitedUser : invitedUsers) {
+                temp += invitedUser.getUser().getMannerTemp();
+                joinCount += 1;
+            }
+            int avgTemp = temp/joinCount;
+            return new TempAndJoinCountSearchDto(joinCount,avgTemp);
+        } catch (ArithmeticException e){
+            return new TempAndJoinCountSearchDto(0,0);
         }
-        int avgTemp = temp/joinCount;
-        return new TempAndJoinCountSearchDto(joinCount,avgTemp);
+
+//            int temp = 0;
+//            int joinCount = 0;
+//            for (InvitedUsers invitedUser : invitedUsers) {
+//                temp += invitedUser.getUser().getMannerTemp();
+//                joinCount += 1;
+//            }
+//            int avgTemp = temp/joinCount;
+//            return new TempAndJoinCountSearchDto(joinCount,avgTemp);
+
+
     }
     public TempAndJoinCountSearchDto getJoinPeopleInfo(Long postId){
         String roomId = String.valueOf(postId);

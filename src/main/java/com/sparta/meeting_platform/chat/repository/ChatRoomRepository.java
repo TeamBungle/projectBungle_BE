@@ -8,7 +8,6 @@ import com.sparta.meeting_platform.chat.model.InvitedUsers;
 import com.sparta.meeting_platform.chat.service.RedisSubscriber;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.repository.PostRepository;
-import com.sparta.meeting_platform.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -18,10 +17,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Repository
@@ -34,7 +30,6 @@ public class ChatRoomRepository {
     private final PostRepository postRepository;
     private final InvitedUsersRepository invitedUsersRepository;
     private final ChatMessageJpaRepository chatMessageJpaRepository;
-    private final UserRepository userRepository;
     // Redis
     private static final String CHAT_ROOMS = "CHAT_ROOM";
     private final RedisTemplate<String, Object> redisTemplate;
@@ -53,22 +48,23 @@ public class ChatRoomRepository {
     public List<ChatRoomResponseDto> findAllRoom(Long userId) {
         List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByUserId(userId);
         List<ChatRoomResponseDto> chatRoomResponseDtoList = new ArrayList<>();
-        for (InvitedUsers invitedUsers1 : invitedUsers) {
-                Post post = postRepository.findByUserId(invitedUsers1.getUser().getId());
-                ChatRoomResponseDto chatRoomResponseDto = new ChatRoomResponseDto();
-                chatRoomResponseDto.setPostUrl(post.getPostUrls().get(0));
-                chatRoomResponseDto.setLetter(post.getIsLetter());
-                chatRoomResponseDto.setPostTitle(post.getTitle());
-                chatRoomResponseDto.setPostCreatedAt(post.getCreatedAt());
-                ChatMessage chatMessage = chatMessageJpaRepository.findTop1ByRoomIdOrderByCreatedAtDesc(invitedUsers1.getRoomId());
-                if (chatMessage.getMessage() != null) {
-                    chatRoomResponseDto.setLastMessage(chatMessage.getMessage());
-                } else {
-                    chatRoomResponseDto.setLastMessage("파일 전송");
-                }
-                chatRoomResponseDto.setLastMessageTime(chatMessage.getCreatedAt());
-                chatRoomResponseDtoList.add(chatRoomResponseDto);
+        for (InvitedUsers invitedUser : invitedUsers) {
+            Optional<Post> post = postRepository.findById(Long.parseLong(invitedUser.getRoomId()));
+            ChatMessage chatMessage = chatMessageJpaRepository.findTop1ByRoomIdOrderByCreatedAtDesc(invitedUser.getRoomId());
+            ChatRoomResponseDto chatRoomResponseDto = new ChatRoomResponseDto();
+            if(chatMessage.getMessage().isEmpty()){
+                chatRoomResponseDto.setLastMessage("파일 전송이 완료되었습니다.");
+            }else {
+                chatRoomResponseDto.setLastMessage(chatMessage.getMessage());
             }
+            chatRoomResponseDto.setLastMessageTime(chatMessage.getCreatedAt());
+            chatRoomResponseDto.setPostTime(post.get().getTime());
+            chatRoomResponseDto.setPostTitle(post.get().getTitle());
+            chatRoomResponseDto.setPostUrl(post.get().getPostUrls().get(0));
+            chatRoomResponseDto.setLetter(post.get().getIsLetter());
+            chatRoomResponseDto.setPostId(post.get().getId());
+            chatRoomResponseDtoList.add(chatRoomResponseDto);
+        }
         return chatRoomResponseDtoList;
     }
 
@@ -83,9 +79,10 @@ public class ChatRoomRepository {
             topics.put(roomId, topic);
         }
     }
+
     /*
-    * 채팅방 생성 , 게시글 생성시 만들어진 postid를 받아와서 게시글 id로 사용한다.
-    */
+     * 채팅방 생성 , 게시글 생성시 만들어진 postid를 받아와서 게시글 id로 사용한다.
+     */
     @Transactional
     public void createChatRoom(Post post, UserDto userDto) {
         ChatRoom chatRoom = ChatRoom.create(post, userDto);

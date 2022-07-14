@@ -2,6 +2,7 @@ package com.sparta.meeting_platform.service;
 
 import com.sparta.meeting_platform.chat.dto.UserDto;
 import com.sparta.meeting_platform.chat.repository.ChatRoomRepository;
+import com.sparta.meeting_platform.chat.repository.InvitedUsersRepository;
 import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.domain.User;
@@ -36,9 +37,7 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+
 import java.util.*;
 
 
@@ -55,6 +54,7 @@ public class PostService {
     private final MapSearchService mapSearchService;
     private Double distance = 400.0;
     private final ChatRoomRepository chatRoomRepository;
+    private final InvitedUsersRepository invitedUsersRepository;
 
     private final FileExtFilter fileExtFilter;
 
@@ -272,9 +272,9 @@ public class PostService {
         SearchMapDto searchMapDto = mapSearchService.findLatAndLong(requestDto.getPlace());
         Point point = mapSearchService.makePoint(searchMapDto.getLongitude(), searchMapDto.getLatitude());
         Post post = new Post(user, requestDto, searchMapDto.getLongitude(), searchMapDto.getLatitude(), point);
-//        postRepository.save(post);
-//        UserDto userDto = new UserDto(user);
-//        chatRoomRepository.createChatRoom(post, userDto);
+        postRepository.save(post);
+        UserDto userDto = new UserDto(user);
+        chatRoomRepository.createChatRoom(post, userDto);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공", post.getId()), HttpStatus.OK);
     }
 
@@ -324,7 +324,7 @@ public class PostService {
                 .isLetter(post.getIsLetter())
                 .build();
 
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 수정 페이지 이동 성공", postResponseDto), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 수정 페이지 이동 성공",postResponseDto), HttpStatus.OK);
     }
 
 
@@ -336,6 +336,8 @@ public class PostService {
         if (!post.getUser().getId().equals(userId)) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "본인 게시글이 아닙니다."), HttpStatus.OK);
         } else {
+            invitedUsersRepository.deleteByUserIdAndRoomId(user.getId(),postId.toString());
+            likeRepository.deleteByPostId(postId);
             postRepository.deleteById(postId);
             user.setIsOwner(false);
             return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공", user.getIsOwner()), HttpStatus.OK);

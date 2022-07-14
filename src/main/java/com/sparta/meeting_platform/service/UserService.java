@@ -143,7 +143,7 @@ public class UserService {
         }
         user.get().updateProfile(requestDto, profileUrl);
 
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "프로필 설정 성공"), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "프로필 조회 성공",new ProfileResponseDto(user.get())), HttpStatus.OK);
     }
 
     // 회원 탈퇴
@@ -167,6 +167,7 @@ public class UserService {
         return new ResponseEntity<>(new FinalResponseDto<>(true, "회원 탈퇴 성공"), HttpStatus.OK);
     }
 
+    //페이지 이동
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getProfile(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
