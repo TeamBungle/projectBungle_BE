@@ -69,7 +69,7 @@ public class PostService {
         String convertedDate2 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         Query realTimeQuery = em.createNativeQuery("SELECT * FROM post AS p "
                         + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                        + "AND p.time < :convertedDate1"
+                        + "AND p.time < convertedDate1"
                         + " ORDER BY p.time desc", Post.class)
                 .setParameter("convertedDate1", convertedDate1)
                 .setMaxResults(4);
@@ -272,9 +272,9 @@ public class PostService {
         SearchMapDto searchMapDto = mapSearchService.findLatAndLong(requestDto.getPlace());
         Point point = mapSearchService.makePoint(searchMapDto.getLongitude(), searchMapDto.getLatitude());
         Post post = new Post(user, requestDto, searchMapDto.getLongitude(), searchMapDto.getLatitude(), point);
-        postRepository.save(post);
-        UserDto userDto = new UserDto(user);
-        chatRoomRepository.createChatRoom(post, userDto);
+//        postRepository.save(post);
+//        UserDto userDto = new UserDto(user);
+//        chatRoomRepository.createChatRoom(post, userDto);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공", post.getId()), HttpStatus.OK);
     }
 
