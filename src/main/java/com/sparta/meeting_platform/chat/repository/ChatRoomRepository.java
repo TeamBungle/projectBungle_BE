@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
 @Repository
@@ -43,7 +44,7 @@ public class ChatRoomRepository {
         topics = new HashMap<>();
     }
 
-    //내가 참여한 모든 채팅방 목록 조히
+    //내가 참여한 모든 채팅방 목록 조회
     @Transactional
     public List<ChatRoomResponseDto> findAllRoom(Long userId) {
         List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByUserId(userId);
@@ -85,6 +86,7 @@ public class ChatRoomRepository {
     public void createChatRoom(Post post, UserDto userDto) {
         ChatRoom chatRoom = ChatRoom.create(post, userDto);
         opsHashChatRoom.put(CHAT_ROOMS, chatRoom.getRoomId(), chatRoom); // redis 저장
+        redisTemplate.expire(CHAT_ROOMS,30, TimeUnit.MINUTES);
         chatRoomJpaRepository.save(chatRoom); // DB 저장
     }
 
