@@ -1,12 +1,8 @@
 package com.sparta.meeting_platform.chat.config;
 
-import com.sparta.meeting_platform.chat.model.InvitedUsers;
 import com.sparta.meeting_platform.chat.repository.ChatMessageRepository;
 import com.sparta.meeting_platform.chat.repository.InvitedUsersRepository;
 import com.sparta.meeting_platform.chat.service.ChatRoomService;
-import com.sparta.meeting_platform.domain.Post;
-import com.sparta.meeting_platform.exception.ChatApiException;
-import com.sparta.meeting_platform.exception.PostApiException;
 import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -17,12 +13,13 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
+
 import java.util.List;
 import java.util.Optional;
 
 /*
-* Websocket 을 통하여 요청이 들어오면 Intercept 하여 JWt 인증 구현 및 사전처리
-*/
+ * Websocket 을 통하여 요청이 들어오면 Intercept 하여 JWt 인증 구현 및 사전처리
+ */
 @Slf4j
 @RequiredArgsConstructor
 @Component
@@ -35,6 +32,7 @@ public class StompHandler implements ChannelInterceptor {
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
+        log.info(String.valueOf(message));
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
         log.info("simpDestination : {}", message.getHeaders().get("simpDestination"));
         log.info("sessionId : {}", message.getHeaders().get("simpSessionId"));
@@ -44,31 +42,32 @@ public class StompHandler implements ChannelInterceptor {
         if (StompCommand.CONNECT == accessor.getCommand()) {
             log.info("CONNECT : {}", sessionId);
             jwtTokenProvider.validateToken(accessor.getFirstNativeHeader("token"));
+
             // 구독 요청시 유저의 카운트수를 저장하고 최대인원수를 관리하며 , 세션정보를 저장한다.
         } else if (StompCommand.SUBSCRIBE == accessor.getCommand()) {
             log.info("SUBSCRIBE : {}", sessionId);
             String roomId = chatRoomService.getRoomId((String) Optional.ofNullable(message.getHeaders().get("simpDestination")).orElse("InvalidRoomId"));
             log.info("roomId : {}", roomId);
-            chatMessageRepository.setUserEnterInfo(roomId, sessionId);
             chatMessageRepository.plusUserCnt(roomId);
-            Long postId = Long.valueOf(roomId);
-            Post post = postRepository.findById(postId).orElseThrow(
-                    () -> new PostApiException("존재하지 않는 게시물 입니다!")
-            );
-            List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByRoomId(roomId);
-            int nowPeople = invitedUsers.size();
-            int maxPeople = post.getPersonnel();
-            if (nowPeople >= maxPeople) {
-                throw new ChatApiException("채팅방 정원 초과!");
-            }
-            // 구독자가 연결을 끊을시, 저장해두었던 세션정보를 삭제하고, 인원수를 줄여준다.
+            chatMessageRepository.setUserEnterInfo(roomId, sessionId);
+
+            // 채팅방 나간 유저의 카운트 수를 반영하고, 방에서 세션정보를 지움
+        } else if (StompCommand.UNSUBSCRIBE == accessor.getCommand()) {
+            log.info("UNSUBSCRIBE : {}", sessionId);
+            String roomId = chatRoomService.getRoomId((String) Optional.ofNullable(message.getHeaders().get("simpDestination")).orElse("InvalidRoomId"));
+            log.info("roomId : {}", roomId);
+            chatMessageRepository.removeUserEnterInfo(sessionId,roomId);
+            chatMessageRepository.minusUserCnt(roomId);
+
         } else if (StompCommand.DISCONNECT == accessor.getCommand()) {
             log.info("DISCONNECT : {}", sessionId);
-            String roomId = chatMessageRepository.getRoomId(sessionId);
-            log.info("roomId: {}", roomId);
-            chatMessageRepository.minusUserCnt(roomId);
-            // 퇴장한 클라이언트의 roomId 맵핑 정보를 삭제한다.
-            chatMessageRepository.removeUserEnterInfo(sessionId);
+            chatMessageRepository.removeAllUserEnterInfo(sessionId);
+            List<String> roomIds = chatMessageRepository.getRoomsId(sessionId);
+
+            for (String roomId : roomIds) {
+                chatMessageRepository.minusUserCnt(roomId);
+                log.info("roomId: {}", roomId);
+            }
         }
         return message;
     }

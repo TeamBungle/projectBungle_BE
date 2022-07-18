@@ -3,6 +3,10 @@ package com.sparta.meeting_platform.chat.repository;
 import com.sparta.meeting_platform.chat.dto.ChatMessageDto;
 import com.sparta.meeting_platform.chat.dto.FindChatMessageDto;
 import com.sparta.meeting_platform.chat.model.ChatMessage;
+import com.sparta.meeting_platform.domain.Post;
+import com.sparta.meeting_platform.exception.ChatApiException;
+import com.sparta.meeting_platform.exception.PostApiException;
+import com.sparta.meeting_platform.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.HashOperations;
@@ -16,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -31,7 +36,8 @@ public class ChatMessageRepository {
     private final ChatMessageJpaRepository chatMessageJpaRepository;
     private final RedisTemplate<String, Object> redisTemplate; // redisTemplate 사용
     private final StringRedisTemplate stringRedisTemplate; // StringRedisTemplate 사용
-    private HashOperations<String, String, String> hashOpsEnterInfo; // Redis 의 Hashes 사용
+    private final PostRepository postRepository;
+    private HashOperations<String, String, List<String>> hashOpsEnterInfo; // Redis 의 Hashes 사용
     private HashOperations<String, String, List<ChatMessageDto>> opsHashChatMessage; // Redis 의 Hashes 사용
     private ValueOperations<String, String> valueOps; // Redis 의 String 구조 사용
 
@@ -95,28 +101,56 @@ public class ChatMessageRepository {
 
     // 구독 요청시
     public void setUserEnterInfo(String roomId, String sessionId) {
-        hashOpsEnterInfo.put(ENTER_INFO, sessionId, roomId);
+        List<String> roomIdList = hashOpsEnterInfo.get(ENTER_INFO, sessionId);
+
+        if (roomIdList == null) {
+            roomIdList = new ArrayList<>();
+        }
+        roomIdList.add(roomId);
+        hashOpsEnterInfo.put(ENTER_INFO, sessionId, roomIdList);
         redisTemplate.expire(ENTER_INFO,30, TimeUnit.MINUTES);
         log.info("hashPosEnterInfo.put : {}", hashOpsEnterInfo.get(ENTER_INFO, sessionId));
     }
 
     // 구독시 유저 카운트 증가
     public void plusUserCnt(String roomId) {
-        valueOps.increment(USER_COUNT + "_" + roomId); // redis string type에서 사용하는 increment 함수, 유저 카운트 증
+        int count = Integer.parseInt(Objects.requireNonNull(valueOps.get(USER_COUNT + "_" + roomId)));
+        Long postId = Long.valueOf(roomId);
+        Post post = postRepository.findById(postId).orElseThrow(
+                () -> new PostApiException("존재하지 않는 게시물 입니다!")
+        );
+
+        if (count < post.getPersonnel()) {
+            valueOps.increment(USER_COUNT + "_" + roomId); // redis string type에서 사용하는 increment 함수, 유저 카운트 증가
+        } else {
+            throw new ChatApiException("채팅방 정원 초과!");
+        }
     }
 
-    // disconnect 시 유저 카운트 감소
+    // unsubscribe 시 유저 카운트 감소
     public void minusUserCnt(String roomId) {
         Optional.ofNullable(valueOps.decrement(USER_COUNT + "_" + roomId)).filter(count -> count > 0);
     }
 
     //sessionId 로 roomId 가져오기
-    public String getRoomId(String sessionId) {
+    public List<String> getRoomsId(String sessionId) {
+        log.info("세션당 채팅방 :" + sessionId);
         return hashOpsEnterInfo.get(ENTER_INFO, sessionId);
     }
 
-    // disconnect 시 유저 세션정보와 맵핑된 채팅방ID 삭제
-    public void removeUserEnterInfo(String sessionId) {
+    public void removeUserEnterInfo(String sessionId, String roomId) {
+        List<String> roomIdList = hashOpsEnterInfo.get(ENTER_INFO, sessionId);
+
+        if (roomIdList == null) {
+            roomIdList = new ArrayList<>();
+        }
+        roomIdList.remove(roomId);
+        hashOpsEnterInfo.put(ENTER_INFO, sessionId, roomIdList);
+        log.info("hashPosEnterInfo.put : {}", hashOpsEnterInfo.get(ENTER_INFO, sessionId));
+    }
+
+    // DISCONNECT 시 유저 세션정보와 맵핑된 채팅방ID 삭제
+    public void removeAllUserEnterInfo(String sessionId) {
         hashOpsEnterInfo.delete(ENTER_INFO, sessionId);
         if (hashOpsEnterInfo.get(ENTER_INFO, sessionId) == null) {
             log.info("세션 삭제 완료 : {}", sessionId);
