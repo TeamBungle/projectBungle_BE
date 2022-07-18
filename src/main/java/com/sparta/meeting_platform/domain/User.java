@@ -1,7 +1,7 @@
 package com.sparta.meeting_platform.domain;
 
-import com.sparta.meeting_platform.dto.user.ProfileRequestDto;
-import com.sparta.meeting_platform.dto.user.SignupRequestDto;
+import com.sparta.meeting_platform.dto.UserDto.ProfileRequestDto;
+import com.sparta.meeting_platform.dto.UserDto.SignupRequestDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

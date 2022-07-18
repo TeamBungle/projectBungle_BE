@@ -6,27 +6,19 @@ import com.sparta.meeting_platform.domain.ResignUser;
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.domain.UserRoleEnum;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
-import com.sparta.meeting_platform.dto.user.*;
+import com.sparta.meeting_platform.dto.UserDto.*;
 import com.sparta.meeting_platform.exception.EmailApiException;
 import com.sparta.meeting_platform.exception.UserApiException;
 import com.sparta.meeting_platform.repository.*;
 import com.sparta.meeting_platform.security.JwtTokenProvider;
-
-import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.mail.MessagingException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -99,7 +91,7 @@ public class UserService {
         jwtTokenProvider.createToken(requestDto.getUsername());
 
         return new ResponseEntity<>(new FinalResponseDto<>
-                        (true, "로그인 성공!!", user.getNickName(),user.getMannerTemp(),user.getUsername()),HttpStatus.OK);
+                        (true, "로그인 성공!!", user.getNickName(),user.getMannerTemp(),user.getId()),HttpStatus.OK);
     }
 
     // 이메일 인증 토큰 확인

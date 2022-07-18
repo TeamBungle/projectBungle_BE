@@ -18,9 +18,12 @@ public class ChatMessageDto {
     private String sender; // nickname
     private String profileUrl;
     private Long enterUserCnt;
-    private String username;
+    private Long userId;
     private String createdAt;
     private String fileUrl;
+
+    private Boolean quitOwner;
+
 
     public ChatMessageDto(FindChatMessageDto chatMessage) {
         this.type = chatMessage.getType();
@@ -29,9 +32,9 @@ public class ChatMessageDto {
         this.sender = chatMessage.getSender();
         this.profileUrl = chatMessage.getProfileUrl();
         this.enterUserCnt = chatMessage.getEnterUserCnt();
-        this.username = chatMessage.getUsername();
+        this.userId = chatMessage.getUserId();
         this.createdAt = chatMessage.getCreatedAt();
         this.fileUrl = chatMessage.getFileUrl();
-
+        this.quitOwner = chatMessage.getQuitOwner();
     }
 }

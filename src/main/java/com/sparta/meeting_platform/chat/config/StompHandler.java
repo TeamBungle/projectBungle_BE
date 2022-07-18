@@ -1,9 +1,13 @@
 package com.sparta.meeting_platform.chat.config;
 
+import com.sparta.meeting_platform.chat.model.InvitedUsers;
 import com.sparta.meeting_platform.chat.repository.ChatMessageRepository;
 import com.sparta.meeting_platform.chat.repository.InvitedUsersRepository;
 import com.sparta.meeting_platform.chat.service.ChatRoomService;
+import com.sparta.meeting_platform.domain.User;
+import com.sparta.meeting_platform.exception.ChatApiException;
 import com.sparta.meeting_platform.repository.PostRepository;
+import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +19,7 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /*
@@ -29,6 +34,8 @@ public class StompHandler implements ChannelInterceptor {
     private final ChatMessageRepository chatMessageRepository;
     private final PostRepository postRepository;
     private final InvitedUsersRepository invitedUsersRepository;
+
+    private final UserRepository userRepository;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -48,6 +55,13 @@ public class StompHandler implements ChannelInterceptor {
             log.info("SUBSCRIBE : {}", sessionId);
             String roomId = chatRoomService.getRoomId((String) Optional.ofNullable(message.getHeaders().get("simpDestination")).orElse("InvalidRoomId"));
             log.info("roomId : {}", roomId);
+            String username = jwtTokenProvider.getUserPk(Objects.requireNonNull(accessor.getFirstNativeHeader("token")));
+            Optional<User> user = userRepository.findByUsername(username);
+            List<InvitedUsers> invitedUsersList = invitedUsersRepository.findAllByRoomId(roomId);
+            if (invitedUsersList.size() > postRepository.findById(Long.parseLong(roomId)).get().getPersonnel()) {
+                invitedUsersRepository.deleteByUserIdAndRoomId(user.get().getId(), roomId);
+                throw new ChatApiException("채팅방 정원 초과!");
+            }
             chatMessageRepository.plusUserCnt(roomId);
             chatMessageRepository.setUserEnterInfo(roomId, sessionId);
 
@@ -56,18 +70,8 @@ public class StompHandler implements ChannelInterceptor {
             log.info("UNSUBSCRIBE : {}", sessionId);
             String roomId = chatRoomService.getRoomId((String) Optional.ofNullable(message.getHeaders().get("simpDestination")).orElse("InvalidRoomId"));
             log.info("roomId : {}", roomId);
-            chatMessageRepository.removeUserEnterInfo(sessionId,roomId);
+            chatMessageRepository.removeUserEnterInfo(sessionId, roomId);
             chatMessageRepository.minusUserCnt(roomId);
-
-        } else if (StompCommand.DISCONNECT == accessor.getCommand()) {
-            log.info("DISCONNECT : {}", sessionId);
-            chatMessageRepository.removeAllUserEnterInfo(sessionId);
-            List<String> roomIds = chatMessageRepository.getRoomsId(sessionId);
-
-            for (String roomId : roomIds) {
-                chatMessageRepository.minusUserCnt(roomId);
-                log.info("roomId: {}", roomId);
-            }
         }
         return message;
     }

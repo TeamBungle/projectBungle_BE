@@ -1,8 +1,11 @@
 package com.sparta.meeting_platform.service;
 
 import com.sparta.meeting_platform.chat.dto.UserDto;
-import com.sparta.meeting_platform.chat.repository.ChatRoomRepository;
-import com.sparta.meeting_platform.chat.repository.InvitedUsersRepository;
+import com.sparta.meeting_platform.chat.model.ChatMessage;
+import com.sparta.meeting_platform.chat.model.ChatRoom;
+import com.sparta.meeting_platform.chat.model.ResignChatMessage;
+import com.sparta.meeting_platform.chat.model.ResignChatRoom;
+import com.sparta.meeting_platform.chat.repository.*;
 import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.domain.User;
@@ -11,7 +14,7 @@ import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
 import com.sparta.meeting_platform.dto.SearchMapDto;
-import com.sparta.meeting_platform.dto.user.MyPageDto;
+import com.sparta.meeting_platform.dto.UserDto.MyPageDto;
 import com.sparta.meeting_platform.exception.PostApiException;
 import com.sparta.meeting_platform.exception.UserApiException;
 import com.sparta.meeting_platform.repository.LikeRepository;
@@ -53,6 +56,10 @@ public class PostService {
     private final InvitedUsersRepository invitedUsersRepository;
 
     private final FileExtFilter fileExtFilter;
+    private final ChatRoomJpaRepository chatRoomJpaRepository;
+    private final ChatMessageJpaRepository chatMessageJpaRepository;
+    private final ResignChatMessageJpaRepository resignChatMessageJpaRepository;
+    private final ResignChatRoomJpaRepository resignChatRoomJpaRepository;
 
 
     //게시글 전체 조회(4개만)
@@ -223,11 +230,11 @@ public class PostService {
             }
         }
 
-//        if(isOwner){
-//            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
-//        }else{
-//            user.setIsOwner(true);
-//        }
+        if(isOwner){
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
+        }else{
+            user.setIsOwner(true);
+        }
 //        Date date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(requestDto.getTime());
 //        LocalDateTime localDateTime = LocalDateTime.now();
 //        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -336,6 +343,17 @@ public class PostService {
             likeRepository.deleteByPostId(postId);
             postRepository.deleteById(postId);
             user.setIsOwner(false);
+            invitedUsersRepository.deleteByUser(user);
+            ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(String.valueOf(postId));
+            List<ChatMessage> chatMessage = chatMessageJpaRepository.findAllByChatRoom(chatRoom);
+            ResignChatRoom resignChatRoom = new ResignChatRoom(chatRoom);
+            resignChatRoomJpaRepository.save(resignChatRoom);
+            for (ChatMessage message : chatMessage) {
+                ResignChatMessage resignChatMessage = new ResignChatMessage(message,resignChatRoom);
+                resignChatMessageJpaRepository.save(resignChatMessage);
+            }
+            chatMessageJpaRepository.deleteByChatRoom(chatRoom);
+            chatRoomJpaRepository.deleteByRoomId(String.valueOf(postId));
             return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공", user.getIsOwner()), HttpStatus.OK);
         }
     }

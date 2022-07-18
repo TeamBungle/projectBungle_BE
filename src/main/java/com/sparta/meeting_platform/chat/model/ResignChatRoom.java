@@ -13,7 +13,7 @@ import javax.persistence.Id;
 @Setter
 @NoArgsConstructor
 @Entity
-public class LeftChatRoom {
+public class ResignChatRoom {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,4 +22,9 @@ public class LeftChatRoom {
     private String roomId;
 
     private String username;
+
+    public ResignChatRoom(ChatRoom chatRoom) {
+        this.roomId = chatRoom.getRoomId();
+        this.username = chatRoom.getUsername();
+    }
 }

@@ -39,6 +39,7 @@ public class ChatService {
     private final InvitedUsersRepository invitedUsersRepository;
     private final ChatRoomJpaRepository chatRoomJpaRepository;
 
+
     @Transactional
     public void save(ChatMessageDto messageDto, String BearerToken) {
         log.info("save Message : {}", messageDto.getMessage());
@@ -57,7 +58,8 @@ public class ChatService {
         messageDto.setSender(user.getNickName());
         messageDto.setProfileUrl(user.getProfileUrl());
         messageDto.setCreatedAt(dateToStr);
-        messageDto.setUsername(username);
+        messageDto.setUserId(user.getId());
+        messageDto.setQuitOwner(false);
         log.info("type : {}", messageDto.getType());
 
         //받아온 메세지의 타입이 ENTER 일때
@@ -76,10 +78,15 @@ public class ChatService {
             messageDto.setMessage("[알림] " + messageDto.getSender() + "님이 나가셨습니다.");
             // 들어갈때 저장했던 유저정보를 삭제해준다.
             invitedUsersRepository.deleteByUserIdAndRoomId(user.getId(),messageDto.getRoomId());
+            ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(messageDto.getRoomId());
+            if(chatRoom.getUsername().equals(username)){
+                messageDto.setQuitOwner(true);
+                messageDto.setMessage("[알림] " + "(방장) " + messageDto.getSender() + "님이 나가셨습니다. " +
+                        "더 이상 대화를 할 수 없으며 채팅방을 나가면 다시 입장할 수 없습니다.");
+            }
         }
 
         log.info("ENTER : {}", messageDto.getMessage());
-
         ChatRoom chatRoom = chatRoomJpaRepository.findByUsername(username);
         chatMessageRepository.save(messageDto); // 캐시에 저장 했다.
         ChatMessage chatMessage = new ChatMessage(messageDto,chatRoom);

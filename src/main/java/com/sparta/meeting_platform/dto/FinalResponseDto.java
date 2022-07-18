@@ -3,8 +3,8 @@ package com.sparta.meeting_platform.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
-import com.sparta.meeting_platform.dto.user.MyPageDto;
-import com.sparta.meeting_platform.dto.user.ProfileResponseDto;
+import com.sparta.meeting_platform.dto.UserDto.MyPageDto;
+import com.sparta.meeting_platform.dto.UserDto.ProfileResponseDto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,6 @@ public class FinalResponseDto<T> {
     private String message;
     private Boolean isOwner;
     private PostResponseDto postResponseDto;
-    private String username;
     private String nickName;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private int mannerTemp;
@@ -91,12 +90,12 @@ public class FinalResponseDto<T> {
         this.postResponseDto = postResponseDto;
     }
 
-    public FinalResponseDto(boolean response, String message, String nickname, int mannerTemp, String username) {
+    public FinalResponseDto(boolean response, String message, String nickname, int mannerTemp, Long userId) {
         this.response = response;
         this.message = message;
         this.nickName = nickname;
         this.mannerTemp = mannerTemp;
-        this.username = username;
+        this.userId = userId;
     }
 
     public FinalResponseDto(boolean response, String message, ProfileResponseDto profileResponseDto) {
@@ -110,4 +109,6 @@ public class FinalResponseDto<T> {
         this.message =message;
         this.isOwner =isOwner;
     }
+
+
 }
