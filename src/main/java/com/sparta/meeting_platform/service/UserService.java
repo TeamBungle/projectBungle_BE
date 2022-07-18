@@ -1,6 +1,7 @@
 package com.sparta.meeting_platform.service;
 
 
+import com.sparta.meeting_platform.chat.repository.InvitedUsersRepository;
 import com.sparta.meeting_platform.domain.EmailToken;
 import com.sparta.meeting_platform.domain.ResignUser;
 import com.sparta.meeting_platform.domain.User;
@@ -8,10 +9,12 @@ import com.sparta.meeting_platform.domain.UserRoleEnum;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.user.*;
 import com.sparta.meeting_platform.exception.EmailApiException;
+import com.sparta.meeting_platform.exception.PostApiException;
 import com.sparta.meeting_platform.exception.UserApiException;
 import com.sparta.meeting_platform.repository.*;
 import com.sparta.meeting_platform.security.JwtTokenProvider;
 
+import com.sparta.meeting_platform.util.FileExtFilter;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,6 +47,10 @@ public class UserService {
     private final PostRepository postRepository;
     private final UserRoleCheckService userRoleCheckService;
     private final EmailConfirmTokenRepository emailConfirmTokenRepository;
+
+    private final FileExtFilter fileExtFilter;
+
+    private final InvitedUsersRepository invitedUsersRepository;
 //    private final RedisService redisService;
 
     // 아이디(이메일) 중복 확인
@@ -99,7 +106,7 @@ public class UserService {
         jwtTokenProvider.createToken(requestDto.getUsername());
 
         return new ResponseEntity<>(new FinalResponseDto<>
-                        (true, "로그인 성공!!", user.getNickName(),user.getMannerTemp(),user.getUsername()),HttpStatus.OK);
+                        (true, "로그인 성공!!",user.getId(), user.getNickName(),user.getMannerTemp(),user.getUsername()),HttpStatus.OK);
     }
 
     // 이메일 인증 토큰 확인
@@ -131,6 +138,9 @@ public class UserService {
     public ResponseEntity<FinalResponseDto<?>> setProfile(Long userId, ProfileRequestDto requestDto, MultipartFile file) {
         Optional<User> user = userRepository.findById(userId);
 
+        if(!fileExtFilter.badFileExt(file)){
+            throw new PostApiException("이미지가 아닙니다.");
+        }
         if (!user.isPresent()) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "프로필 설정 실패"), HttpStatus.OK);
         }
@@ -159,6 +169,7 @@ public class UserService {
         resignUserRepository.save(resignUser);
 
         // 영속 되는 데이터 삭제 ( 추후 cascade 설정 필요 )
+        invitedUsersRepository.deleteByUserId(userId);
         likeRepository.deleteByUserId(userId);
         opinionRepository.deleteByUserId(userId);
         postRepository.deleteByUserId(userId);

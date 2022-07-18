@@ -35,6 +35,8 @@ public class PostDetailsResponseDto {
 
     private List<String> joinPeopleNickname;
 
+    private List<String> joinPeopleIntro;
+
     private int joinCount;
 
     private Boolean isLetter;
@@ -47,7 +49,7 @@ public class PostDetailsResponseDto {
 
     @Builder
     public PostDetailsResponseDto(String title,String content, String time, int personnel, String place, List<String> postUrls,
-                                  List<String> tags, List<String> categories, int bungCount,
+                                  List<String> tags, List<String> categories, int bungCount, List<String> joinPeopleIntro,
                                   int mannerTemp, List<String> joinPeopleUrl, List<String> joinPeopleNickname,
                                   int joinCount, Boolean isLetter, Boolean isLike, Double latitude ,Double longitude,Long postId) {
         this.title = title;
@@ -61,6 +63,7 @@ public class PostDetailsResponseDto {
         this.bungCount = bungCount;
         this.mannerTemp = mannerTemp;
         this.joinPeopleUrl = joinPeopleUrl;
+        this.joinPeopleIntro = joinPeopleIntro;
         this.joinPeopleNickname = joinPeopleNickname;
         this.joinCount = joinCount;
         this.isLetter = isLetter;

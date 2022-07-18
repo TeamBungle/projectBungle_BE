@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -42,20 +44,22 @@ public class SocialNaverService {
             String encodedPassword = passwordEncoder.encode(password);
 
             // 재가입 방지
-            int mannerTemp = userRoleCheckService.userResignCheck(naverUser.getEmail());
+            int mannerTemp = userRoleCheckService.userResignCheck(naverUser.getEmail().substring(1,naverUser.getEmail().length()-1));
             // 네이버 ID로 유저 정보 DB 에서 조회
-            User user = userRepository.findByNaverId(naverUser.getNaverId()).orElse(null);
+            User user = userRepository.findByUsername(naverUser.getEmail().substring(1,naverUser.getEmail().length()-1)).orElse(null);
 
             // 없으면 회원가입
             if (user == null) {
                 user = User.builder()
-                        .username(naverUser.getEmail())
+                        .username(naverUser.getEmail().substring(1,naverUser.getEmail().length()-1))
                         .password(encodedPassword)
-                        .nickName(naverUser.getNickName())
-                        .profileUrl(naverUser.getProfileUrl())
-                        .naverId(naverUser.getNaverId())
+                        .nickName(naverUser.getNickName().substring(1,naverUser.getNickName().length()-1))
+                        .profileUrl(naverUser.getProfileUrl().substring(1,naverUser.getProfileUrl().length()-1))
+                        .naverId(naverUser.getNaverId().substring(1,naverUser.getNaverId().length()-1))
                         .mannerTemp(mannerTemp)
+                        .isOwner(false)
                         .role(UserRoleEnum.USER)
+                        .createdAt(LocalDateTime.now())
                         .build();
                 userRepository.save(user);
             }
@@ -64,12 +68,15 @@ public class SocialNaverService {
             userRoleCheckService.userRoleCheck(user);
 
             // 강제 로그인
-            Authentication authentication = new UsernamePasswordAuthenticationToken(user.getUsername(), null);
-            UserDetailsImpl userDetailsImpl = ((UserDetailsImpl) authentication.getPrincipal());
-            String token = jwtTokenProvider.generateJwtToken(userDetailsImpl);
-            response.addHeader("Authorization", "BEARER" + " " + token);
+            UserDetailsImpl userDetails = new UserDetailsImpl(user);
+            Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+//            Authentication authentication = new UsernamePasswordAuthenticationToken(user.getUsername(), null);
+//            UserDetailsImpl userDetailsImpl = ((UserDetailsImpl) authentication.getPrincipal());
+            String token = jwtTokenProvider.generateJwtToken(userDetails);
+            response.addHeader("Authorization", "Bearer" + " " + token);
             return new ResponseEntity<>(new FinalResponseDto<>
-                    (true, "로그인 성공!!", user.getNickName(), user.getMannerTemp(),user.getUsername() ), HttpStatus.OK);
+                    (true, "로그인 성공!!",user.getId(), user.getNickName(), user.getMannerTemp(),user.getUsername() ), HttpStatus.OK);
         } catch (IOException e) {
             return new ResponseEntity<>(new FinalResponseDto<>
                     (false, "로그인 실패"), HttpStatus.OK);
@@ -94,7 +101,7 @@ public class SocialNaverService {
             String sb = "grant_type=authorization_code" +  // TODO grant_type 입력
                     "&client_id=fNINb0JLOoWHKPO8p2HO" + // TODO client-id 입력
                     "&client_secret=5PzjffB3yr" + // TODO client_secret 입력
-                    "&redirect_uri=http://localhost:3000/oauth/callback/naver" + // TODO 인가코드 받은 redirect_uri 입력
+                    "&redirect_uri=http://localhost:3000/oauth" + // TODO 인가코드 받은 redirect_uri 입력
                     "&code=" + code +
                     "&state=" + state;
             bw.write(sb);

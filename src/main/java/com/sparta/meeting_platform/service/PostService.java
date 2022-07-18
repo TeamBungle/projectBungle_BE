@@ -185,6 +185,15 @@ public class PostService {
                         .setParameter("convertedDate1", convertedDate1);
                 posts = query1.getResultList();
                 break;
+            case "manner":
+                Query query2 = em.createNativeQuery("SELECT * FROM post AS p "
+                                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location) "
+                                + "AND p.id in (select i.post_id, AVG(manner_temp) from invited_users i "
+                                + "GROUP BY post_id "
+                                + "WHERE i.user_id in (select u.id FROM userinfo u ))", Post.class)
+                        .setParameter("convertedDate1", convertedDate1);
+                posts = query2.getResultList();
+                break;
         }
         if (posts.size() < 1) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다"), HttpStatus.OK);
@@ -210,10 +219,14 @@ public class PostService {
         User user = checkUser(userId);
         Boolean isOwner = user.getIsOwner();
 
-//        for (MultipartFile file : files){
-//            if(!fileExtFilter.badFileExt(file)){
-//                throw new PostApiException("이미지가 아닙니다.");
-//            }
+        for (MultipartFile file : files){
+            if(!fileExtFilter.badFileExt(file)){
+                throw new PostApiException("이미지가 아닙니다.");
+            }
+        }
+
+//        if (files.size() > 3) {
+//            throw new PostApiException("게시글 사진은 3개 이하 입니다.");
 //        }
 
         if (requestDto.getTags().size() > 3) {
@@ -227,11 +240,11 @@ public class PostService {
             }
         }
 
-//        if(isOwner){
-//            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
-//        }else{
-//            user.setIsOwner(true);
-//        }
+        if(isOwner){
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
+        }else{
+            user.setIsOwner(true);
+        }
 //        Date date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(requestDto.getTime());
 //        LocalDateTime localDateTime = LocalDateTime.now();
 //        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -266,9 +279,7 @@ public class PostService {
             }
             requestDto.setPostUrls(postUrls);
         }
-        if (requestDto.getPostUrls().size() > 3) {
-            throw new PostApiException("게시글 사진은 3개 이하 입니다.");
-        }
+
         SearchMapDto searchMapDto = mapSearchService.findLatAndLong(requestDto.getPlace());
         Point point = mapSearchService.makePoint(searchMapDto.getLongitude(), searchMapDto.getLatitude());
         Post post = new Post(user, requestDto, searchMapDto.getLongitude(), searchMapDto.getLatitude(), point);
@@ -336,7 +347,7 @@ public class PostService {
         if (!post.getUser().getId().equals(userId)) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "본인 게시글이 아닙니다."), HttpStatus.OK);
         } else {
-            invitedUsersRepository.deleteByUserIdAndRoomId(user.getId(),postId.toString());
+            invitedUsersRepository.deleteAllByRoomId(post.getId().toString());
             likeRepository.deleteByPostId(postId);
             postRepository.deleteById(postId);
             user.setIsOwner(false);
