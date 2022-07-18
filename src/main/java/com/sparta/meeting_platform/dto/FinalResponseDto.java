@@ -18,14 +18,11 @@ import java.util.List;
 public class FinalResponseDto<T> {
 
     private List<T> List;
-
     private List<String> postUrls;
-
     private boolean response;
     private String message;
     private Boolean isOwner;
     private PostResponseDto postResponseDto;
-
     private String username;
     private String nickName;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -36,6 +33,7 @@ public class FinalResponseDto<T> {
     private List<PostResponseDto> postListRealTime;
     private List<PostResponseDto> postListEndTime;
     private PostDetailsResponseDto postDetailsResponseDto;
+    private Long userId;
 
 
     public FinalResponseDto(boolean response, String message, Long postId, List<String> postUrls) {
@@ -55,10 +53,11 @@ public class FinalResponseDto<T> {
 
     }
 
-    public FinalResponseDto(boolean response, String message, Long postId) {
+    public FinalResponseDto(boolean response, String message, Long postId, Long userId) {
         this.response = response;
         this.message = message;
         this.postId = postId;
+        this.userId = userId;
     }
 
 

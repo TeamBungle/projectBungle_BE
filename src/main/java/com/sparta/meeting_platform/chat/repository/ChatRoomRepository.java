@@ -67,7 +67,6 @@ public class ChatRoomRepository {
         }
         return chatRoomResponseDtoList;
     }
-
     /**
      * 채팅방 입장 : redis에 topic을 만들고 pub/sub 통신을 하기 위해 리스너를 설정한다.
      */
@@ -79,7 +78,6 @@ public class ChatRoomRepository {
             topics.put(roomId, topic);
         }
     }
-
     /*
      * 채팅방 생성 , 게시글 생성시 만들어진 postid를 받아와서 게시글 id로 사용한다.
      */

@@ -68,7 +68,6 @@ public class RedisConfig {
         return stringRedisTemplate;
     }
 
-
     /*
     redisPublisher 에서 메세지가 발행(publish) 되면
     MessageListener 에서 처리합니다

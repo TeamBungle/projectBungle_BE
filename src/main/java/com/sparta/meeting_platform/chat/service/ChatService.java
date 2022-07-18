@@ -109,7 +109,6 @@ public class ChatService {
         );
         List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByRoomId(roomId);
         List<UserinfoDto> users = new ArrayList<>();
-
         for (InvitedUsers invitedUser : invitedUsers) {
            User user = invitedUser.getUser();
             users.add(new UserinfoDto(user.getNickName(),user.getProfileUrl(),user.getId()));
