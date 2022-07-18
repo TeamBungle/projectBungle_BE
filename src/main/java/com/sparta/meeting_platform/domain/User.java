@@ -23,7 +23,7 @@ public class User {
     @Id
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false,unique = true)
     private String username;
 
     @Column(nullable = false)
@@ -87,7 +87,8 @@ public class User {
 
     @Builder
     public User(String username, String password, String nickName, String profileUrl, Long kakaoId, String googleId,
-                String naverId, LocalDateTime createdAt, int mannerTemp, Boolean isOwner, String intro, int bungCount, UserRoleEnum role) {
+                String naverId, LocalDateTime createdAt, int mannerTemp, Boolean isOwner, String intro, int bungCount,
+                UserRoleEnum role) {
         this.username = username;
         this.password = password;
         this.nickName = nickName;

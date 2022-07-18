@@ -58,6 +58,7 @@ public class PostSearchService {
         List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByRoomId(roomId);
         List<String> joinPeopleUrl = new ArrayList<>();
         List<String>  joinPeopleNickName =  new ArrayList<>();
+        List<String> joinPeopleIntro = new ArrayList<>();
         int temp = 0;
         int joinCount = 0;
         for (InvitedUsers invitedUser : invitedUsers) {
@@ -65,9 +66,11 @@ public class PostSearchService {
             joinCount += 1;
            joinPeopleUrl.add(invitedUser.getUser().getProfileUrl());
            joinPeopleNickName.add(invitedUser.getUser().getNickName());
+           joinPeopleIntro.add(invitedUser.getUser().getIntro());
+
         }
         int avgTemp = temp/joinCount;
-        return new TempAndJoinCountSearchDto(joinPeopleUrl,joinPeopleNickName,avgTemp,joinCount);
+        return new TempAndJoinCountSearchDto(joinPeopleUrl,joinPeopleNickName,joinPeopleIntro,avgTemp,joinCount);
     }
 
     //카페고리및태그 리스트->스트링 변환
@@ -224,6 +227,7 @@ public class PostSearchService {
                 .categories(post.getCategories())
                 .bungCount(post.getUser().getBungCount())
                 .mannerTemp(post.getUser().getMannerTemp())
+                .joinPeopleIntro(tempAndJoinCountSearchDto.getJoinPeopleIntro())
                 .joinPeopleUrl(tempAndJoinCountSearchDto.getJoinPeopleUrl())
                 .joinPeopleNickname(tempAndJoinCountSearchDto.getJoinPeopleNickName())
                 .joinCount(tempAndJoinCountSearchDto.getJoinCount())

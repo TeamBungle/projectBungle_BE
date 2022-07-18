@@ -23,6 +23,7 @@ public class FinalResponseDto<T> {
 
     private boolean response;
     private String message;
+    private Long userId;
     private Boolean isOwner;
     private PostResponseDto postResponseDto;
 
@@ -92,12 +93,14 @@ public class FinalResponseDto<T> {
         this.postResponseDto = postResponseDto;
     }
 
-    public FinalResponseDto(boolean response, String message, String nickname, int mannerTemp, String username) {
+    public FinalResponseDto(boolean response, String message,Long userId, String nickname, int mannerTemp, String username) {
         this.response = response;
         this.message = message;
         this.nickName = nickname;
         this.mannerTemp = mannerTemp;
         this.username = username;
+        this.userId = userId;
+
     }
 
     public FinalResponseDto(boolean response, String message, ProfileResponseDto profileResponseDto) {

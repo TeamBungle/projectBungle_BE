@@ -69,7 +69,7 @@ public class PostService {
         String convertedDate2 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         Query realTimeQuery = em.createNativeQuery("SELECT * FROM post AS p "
                         + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                        + "AND p.time < convertedDate1"
+                        + "AND p.time < :convertedDate1"
                         + " ORDER BY p.time desc", Post.class)
                 .setParameter("convertedDate1", convertedDate1)
                 .setMaxResults(4);
@@ -225,6 +225,10 @@ public class PostService {
             }
         }
 
+//        if (files.size() > 3) {
+//            throw new PostApiException("게시글 사진은 3개 이하 입니다.");
+//        }
+
         if (requestDto.getTags().size() > 3) {
             throw new PostApiException("최대 태그 갯수는 3개 입니다.");
 //                return new ResponseEntity<>(new FinalResponseDto<>(false, "최대 태그 갯수는 3개 입니다."), HttpStatus.OK);
@@ -236,11 +240,16 @@ public class PostService {
             }
         }
 
-//        if(isOwner){
-//            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
-//        }else{
-//            user.setIsOwner(true);
-//        }
+        if(isOwner){
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
+        }else{
+            user.setIsOwner(true);
+        }
+//        Date date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(requestDto.getTime());
+//        LocalDateTime localDateTime = LocalDateTime.now();
+//        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+
         DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime  PromiseDateTime = LocalDateTime.parse(requestDto.getTime(), inputFormat);
         LocalDateTime now = LocalDateTime.now();
@@ -270,15 +279,13 @@ public class PostService {
             }
             requestDto.setPostUrls(postUrls);
         }
-        if (requestDto.getPostUrls().size() > 3) {
-            throw new PostApiException("게시글 사진은 3개 이하 입니다.");
-        }
+
         SearchMapDto searchMapDto = mapSearchService.findLatAndLong(requestDto.getPlace());
         Point point = mapSearchService.makePoint(searchMapDto.getLongitude(), searchMapDto.getLatitude());
         Post post = new Post(user, requestDto, searchMapDto.getLongitude(), searchMapDto.getLatitude(), point);
-//        postRepository.save(post);
-//        UserDto userDto = new UserDto(user);
-//        chatRoomRepository.createChatRoom(post, userDto);
+        postRepository.save(post);
+        UserDto userDto = new UserDto(user);
+        chatRoomRepository.createChatRoom(post, userDto);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공", post.getId()), HttpStatus.OK);
     }
 
