@@ -1,5 +1,6 @@
 package com.sparta.meeting_platform.domain;
 
+import com.sparta.meeting_platform.chat.model.InvitedUsers;
 import com.sparta.meeting_platform.dto.user.ProfileRequestDto;
 import com.sparta.meeting_platform.dto.user.SignupRequestDto;
 import lombok.Builder;
@@ -10,6 +11,7 @@ import org.springframework.data.annotation.CreatedDate;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor()
@@ -60,6 +62,18 @@ public class User {
     @Column(nullable = false)
     @Enumerated(value = EnumType.STRING)
     private  UserRoleEnum role;
+
+//    @OneToMany(cascade = CascadeType.REMOVE)
+//    private List<Opinion> opinionList;
+//
+//    @OneToMany
+//    private List<Like> likeList;
+//
+//    @OneToMany(cascade = CascadeType.REMOVE)
+//    private List<Post> postList;
+//
+//    @OneToMany(cascade = CascadeType.REMOVE)
+//    private List<InvitedUsers> invitedUsersList;
 
     public User(SignupRequestDto requestDto, int mannerTemp) {
         this.username = requestDto.getUsername();

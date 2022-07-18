@@ -11,7 +11,7 @@ import java.io.File;
 public class FileExtFilter {
 
     public Boolean badFileExt (MultipartFile file){
-        String fileName = file.getName();
+        String fileName = file.getOriginalFilename();
         String ext = fileName.substring(fileName.lastIndexOf(".")+1 , fileName.length());
         final String[] badExtension = {"png","jpg"};
 

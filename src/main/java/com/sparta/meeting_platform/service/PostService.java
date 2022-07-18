@@ -210,11 +210,11 @@ public class PostService {
         User user = checkUser(userId);
         Boolean isOwner = user.getIsOwner();
 
-//        for (MultipartFile file : files){
-//            if(!fileExtFilter.badFileExt(file)){
-//                throw new PostApiException("이미지가 아닙니다.");
-//            }
-//        }
+        for (MultipartFile file : files){
+            if(!fileExtFilter.badFileExt(file)){
+                throw new PostApiException("이미지가 아닙니다.");
+            }
+        }
 
         if (requestDto.getTags().size() > 3) {
             throw new PostApiException("최대 태그 갯수는 3개 입니다.");
@@ -232,11 +232,6 @@ public class PostService {
 //        }else{
 //            user.setIsOwner(true);
 //        }
-//        Date date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(requestDto.getTime());
-//        LocalDateTime localDateTime = LocalDateTime.now();
-//        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-
-
         DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime  PromiseDateTime = LocalDateTime.parse(requestDto.getTime(), inputFormat);
         LocalDateTime now = LocalDateTime.now();
@@ -336,7 +331,7 @@ public class PostService {
         if (!post.getUser().getId().equals(userId)) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "본인 게시글이 아닙니다."), HttpStatus.OK);
         } else {
-            invitedUsersRepository.deleteByUserIdAndRoomId(user.getId(),postId.toString());
+            invitedUsersRepository.deleteAllByRoomId(post.getId().toString());
             likeRepository.deleteByPostId(postId);
             postRepository.deleteById(postId);
             user.setIsOwner(false);

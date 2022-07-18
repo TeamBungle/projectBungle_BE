@@ -1,6 +1,7 @@
 package com.sparta.meeting_platform.service;
 
 
+import com.sparta.meeting_platform.chat.repository.InvitedUsersRepository;
 import com.sparta.meeting_platform.domain.EmailToken;
 import com.sparta.meeting_platform.domain.ResignUser;
 import com.sparta.meeting_platform.domain.User;
@@ -44,6 +45,8 @@ public class UserService {
     private final PostRepository postRepository;
     private final UserRoleCheckService userRoleCheckService;
     private final EmailConfirmTokenRepository emailConfirmTokenRepository;
+
+    private final InvitedUsersRepository invitedUsersRepository;
 //    private final RedisService redisService;
 
     // 아이디(이메일) 중복 확인
@@ -159,6 +162,7 @@ public class UserService {
         resignUserRepository.save(resignUser);
 
         // 영속 되는 데이터 삭제 ( 추후 cascade 설정 필요 )
+        invitedUsersRepository.deleteByUserId(userId);
         likeRepository.deleteByUserId(userId);
         opinionRepository.deleteByUserId(userId);
         postRepository.deleteByUserId(userId);
