@@ -9,10 +9,12 @@ import com.sparta.meeting_platform.domain.UserRoleEnum;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.user.*;
 import com.sparta.meeting_platform.exception.EmailApiException;
+import com.sparta.meeting_platform.exception.PostApiException;
 import com.sparta.meeting_platform.exception.UserApiException;
 import com.sparta.meeting_platform.repository.*;
 import com.sparta.meeting_platform.security.JwtTokenProvider;
 
+import com.sparta.meeting_platform.util.FileExtFilter;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,6 +47,8 @@ public class UserService {
     private final PostRepository postRepository;
     private final UserRoleCheckService userRoleCheckService;
     private final EmailConfirmTokenRepository emailConfirmTokenRepository;
+
+    private final FileExtFilter fileExtFilter;
 
     private final InvitedUsersRepository invitedUsersRepository;
 //    private final RedisService redisService;
@@ -134,6 +138,9 @@ public class UserService {
     public ResponseEntity<FinalResponseDto<?>> setProfile(Long userId, ProfileRequestDto requestDto, MultipartFile file) {
         Optional<User> user = userRepository.findById(userId);
 
+        if(!fileExtFilter.badFileExt(file)){
+            throw new PostApiException("이미지가 아닙니다.");
+        }
         if (!user.isPresent()) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "프로필 설정 실패"), HttpStatus.OK);
         }
