@@ -67,7 +67,7 @@ public class SocialKakaoService {
         int mannerTemp = kakaoUser.getMannerTemp();
 
         return new ResponseEntity<>(new FinalResponseDto<>
-                (true, "로그인 성공", nickname, mannerTemp,kakaoUser.getUsername() ), HttpStatus.OK);
+                (true, "로그인 성공",kakaoUser.getId(), nickname, mannerTemp,kakaoUser.getUsername() ), HttpStatus.OK);
     }
     //header 에 Content-type 지정
     //1번
@@ -157,6 +157,7 @@ public class SocialKakaoService {
                     .createdAt(createdAt)
                     .kakaoId(kakaoId)
                     .mannerTemp(mannerTemp)
+                    .isOwner(false)
                     .role(UserRoleEnum.USER)
                     .build();
             userRepository.save(kakaoUser);

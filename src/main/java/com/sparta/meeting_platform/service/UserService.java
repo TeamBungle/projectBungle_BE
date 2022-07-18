@@ -99,7 +99,7 @@ public class UserService {
         jwtTokenProvider.createToken(requestDto.getUsername());
 
         return new ResponseEntity<>(new FinalResponseDto<>
-                        (true, "로그인 성공!!", user.getNickName(),user.getMannerTemp(),user.getUsername()),HttpStatus.OK);
+                        (true, "로그인 성공!!",user.getId(), user.getNickName(),user.getMannerTemp(),user.getUsername()),HttpStatus.OK);
     }
 
     // 이메일 인증 토큰 확인

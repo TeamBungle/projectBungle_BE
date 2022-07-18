@@ -132,7 +132,7 @@ public class SocialGoogleService {
         httpServletResponse.addHeader("Authorization", "Bearer" + " " + jwt_token);
 
         return new ResponseEntity<>(new FinalResponseDto<>
-                (true, "로그인 성공!!", user.getNickName(), user.getMannerTemp(),user.getUsername() ), HttpStatus.OK);
+                (true, "로그인 성공!!",user.getId(), user.getNickName(), user.getMannerTemp(),user.getUsername() ), HttpStatus.OK);
     }
 
 }
