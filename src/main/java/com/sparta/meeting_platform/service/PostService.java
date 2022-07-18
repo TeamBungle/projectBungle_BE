@@ -185,6 +185,15 @@ public class PostService {
                         .setParameter("convertedDate1", convertedDate1);
                 posts = query1.getResultList();
                 break;
+            case "manner":
+                Query query2 = em.createNativeQuery("SELECT * FROM post AS p "
+                                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location) "
+                                + "AND p.id in (select i.post_id, AVG(manner_temp) from invited_users i "
+                                + "GROUP BY post_id "
+                                + "WHERE i.user_id in (select u.id FROM userinfo u ))", Post.class)
+                        .setParameter("convertedDate1", convertedDate1);
+                posts = query2.getResultList();
+                break;
         }
         if (posts.size() < 1) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다"), HttpStatus.OK);
