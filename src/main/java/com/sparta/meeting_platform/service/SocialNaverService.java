@@ -46,7 +46,7 @@ public class SocialNaverService {
             // 재가입 방지
             int mannerTemp = userRoleCheckService.userResignCheck(naverUser.getEmail().substring(1,naverUser.getEmail().length()-1));
             // 네이버 ID로 유저 정보 DB 에서 조회
-            User user = userRepository.findByNaverId(naverUser.getNaverId().substring(1,naverUser.getNaverId().length()-1)).orElse(null);
+            User user = userRepository.findByUsername(naverUser.getEmail().substring(1,naverUser.getEmail().length()-1)).orElse(null);
 
             // 없으면 회원가입
             if (user == null) {
@@ -74,7 +74,7 @@ public class SocialNaverService {
 //            Authentication authentication = new UsernamePasswordAuthenticationToken(user.getUsername(), null);
 //            UserDetailsImpl userDetailsImpl = ((UserDetailsImpl) authentication.getPrincipal());
             String token = jwtTokenProvider.generateJwtToken(userDetails);
-            response.addHeader("Authorization", "BEARER" + " " + token);
+            response.addHeader("Authorization", "Bearer" + " " + token);
             return new ResponseEntity<>(new FinalResponseDto<>
                     (true, "로그인 성공!!",user.getId(), user.getNickName(), user.getMannerTemp(),user.getUsername() ), HttpStatus.OK);
         } catch (IOException e) {
