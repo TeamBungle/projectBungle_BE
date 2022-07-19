@@ -61,12 +61,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOriginPattern("http://localhost:3000");
-        configuration.addAllowedOriginPattern("http://jeju.project.s3-website.ap-northeast-2.amazonaws.com/");
-        configuration.addAllowedOriginPattern("http://jeju.project.s3-website.ap-northeast-2.amazonaws.com/:3000/");
+//        configuration.addAllowedOriginPattern("http://localhost:3000");
+        configuration.addAllowedOriginPattern("https://localhost:3000");
+//        configuration.addAllowedOriginPattern("http://jeju.project.s3-website.ap-northeast-2.amazonaws.com/");
+//        configuration.addAllowedOriginPattern("http://jeju.project.s3-website.ap-northeast-2.amazonaws.com/:3000/");
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
         configuration.addExposedHeader("Authorization");
+        configuration.addExposedHeader("RefreshToken");
         configuration.setAllowCredentials(true);
 //        configuration.validateAllowCredentials();
         configuration.setMaxAge(3600L);
