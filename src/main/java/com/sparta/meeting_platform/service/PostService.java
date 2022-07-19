@@ -1,5 +1,7 @@
 package com.sparta.meeting_platform.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.meeting_platform.chat.dto.UserDto;
 import com.sparta.meeting_platform.chat.repository.ChatRoomRepository;
 import com.sparta.meeting_platform.chat.repository.InvitedUsersRepository;
@@ -21,6 +23,7 @@ import com.sparta.meeting_platform.repository.mapping.PostMapping;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.util.FileExtFilter;
 import com.sparta.meeting_platform.util.PostListComparator;
+import io.lettuce.core.ScriptOutputType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Point;
@@ -219,11 +222,12 @@ public class PostService {
         User user = checkUser(userId);
         Boolean isOwner = user.getIsOwner();
 
+        if(files != null){
         for (MultipartFile file : files){
             if(!fileExtFilter.badFileExt(file)){
                 throw new PostApiException("이미지가 아닙니다.");
             }
-        }
+        }}
 
 //        if (files.size() > 3) {
 //            throw new PostApiException("게시글 사진은 3개 이하 입니다.");
