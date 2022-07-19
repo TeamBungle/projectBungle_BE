@@ -118,4 +118,7 @@ public class User {
         this.intro = requestDto.getIntro();
     }
 
+    public void updateMannerTemp() {
+        this.mannerTemp += 5;
+    }
 }
