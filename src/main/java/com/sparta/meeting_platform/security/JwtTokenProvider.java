@@ -45,7 +45,7 @@ public class JwtTokenProvider {
     }
 
     // 토큰 생성
-    public void createToken(String userPk) {
+    public String createToken(String userPk) {
         Claims claims = Jwts.claims().setSubject(userPk);
         Date now = new Date();
         String token= Jwts.builder()
@@ -57,6 +57,7 @@ public class JwtTokenProvider {
                 .compact();
 
         response.addHeader(AUTH_HEADER,"Bearer " + token);
+        return token;
     }
 
     public String createRefreshToken() {

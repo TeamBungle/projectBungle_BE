@@ -1,7 +1,7 @@
 package com.sparta.meeting_platform.service;
 
 
-import com.sparta.meeting_platform.Location;
+import com.sparta.meeting_platform.util.Location;
 import com.sparta.meeting_platform.dto.SearchMapDto;
 import com.sparta.meeting_platform.exception.MapApiException;
 import com.sparta.meeting_platform.util.Direction;

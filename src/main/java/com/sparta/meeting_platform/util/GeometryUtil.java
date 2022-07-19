@@ -1,8 +1,6 @@
 package com.sparta.meeting_platform.util;
 
 
-import com.sparta.meeting_platform.Location;
-
 public class GeometryUtil {
 
     public static Location calculate(Double baseLatitude, Double baseLongitude, Double distance,

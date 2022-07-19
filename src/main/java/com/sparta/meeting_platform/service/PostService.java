@@ -219,11 +219,7 @@ public class PostService {
         User user = checkUser(userId);
         Boolean isOwner = user.getIsOwner();
 
-        for (MultipartFile file : files){
-            if(!fileExtFilter.badFileExt(file)){
-                throw new PostApiException("이미지가 아닙니다.");
-            }
-        }
+
 
 //        if (files.size() > 3) {
 //            throw new PostApiException("게시글 사진은 3개 이하 입니다.");
@@ -275,6 +271,9 @@ public class PostService {
         } else {
             List<String> postUrls = new ArrayList<>();
             for (MultipartFile file : files) {
+                if(!fileExtFilter.badFileExt(file)){
+                    throw new PostApiException("이미지가 아닙니다.");
+                }
                 postUrls.add(s3Service.upload(file));
             }
             requestDto.setPostUrls(postUrls);
