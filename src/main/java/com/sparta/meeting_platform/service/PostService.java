@@ -218,9 +218,6 @@ public class PostService {
     public ResponseEntity<FinalResponseDto<?>> createPost(Long userId, PostRequestDto requestDto, List<MultipartFile> files) throws Exception {
         User user = checkUser(userId);
         Boolean isOwner = user.getIsOwner();
-
-
-
 //        if (files.size() > 3) {
 //            throw new PostApiException("게시글 사진은 3개 이하 입니다.");
 //        }
@@ -294,16 +291,18 @@ public class PostService {
     public ResponseEntity<FinalResponseDto<?>> updatePost(Long postId, Long userId, PostRequestDto requestDto, List<MultipartFile> files) throws Exception {
         checkUser(userId);
         Post post = checkPost(postId);
-        if (files == null) {
-            requestDto.setPostUrls(post.getPostUrls());
-            // 기본 이미지로 변경 필요
-        } else {
-            List<String> postUrls = new ArrayList<>();
+
+        List<String> postUrls = new ArrayList<>();
+        if (files != null) {
             for (MultipartFile file : files) {
                 postUrls.add(s3Service.upload(file));
             }
-            requestDto.setPostUrls(postUrls);
         }
+        if (requestDto.getPostUrls().size()>0){
+            postUrls.addAll(requestDto.getPostUrls());
+        }
+        requestDto.setPostUrls(postUrls);
+
         SearchMapDto searchMapDto = mapSearchService.findLatAndLong(requestDto.getPlace());
         Point point = mapSearchService.makePoint(searchMapDto.getLongitude(), searchMapDto.getLatitude());
         post.update(searchMapDto.getLongitude(), searchMapDto.getLatitude(), requestDto, point);
