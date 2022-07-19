@@ -7,12 +7,12 @@ import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.service.LikeService;
 import com.sparta.meeting_platform.service.PostService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
+import javax.validation.Valid;
+import java.text.ParseException;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -82,7 +82,7 @@ public class PostController {
     // 게시글 작성
     @PostMapping("")
     public ResponseEntity<FinalResponseDto<?>> createPost(
-            @RequestPart(value = "postDto") PostRequestDto requestDto,
+            @Valid @RequestPart(value = "postDto") PostRequestDto requestDto,
             @RequestPart(value = "postImg",required = false) List<MultipartFile> files,
             @AuthenticationPrincipal UserDetailsImpl userDetails) throws Exception {
 
@@ -98,6 +98,14 @@ public class PostController {
             @AuthenticationPrincipal UserDetailsImpl userDetails) throws Exception {
 
         return postService.updatePost(postId, getUserId(userDetails), requestDto, files);
+    }
+
+    //게시글 수정 페이지 이동
+    @GetMapping("/mypost")
+    public ResponseEntity<FinalResponseDto<?>> getMyPost(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        Long userId = getUserId(userDetails);
+        return postService.getMyPost(userId);
     }
 
     //게시글 삭제
@@ -136,15 +144,15 @@ public class PostController {
         return postService.getMyPagePost(userDetails);
     }
 
-//
-//    //게시글 검색(제목에포함된단어로)
-//    @GetMapping("/search")
-//    public ResponseEntity<FinalResponseDto<?>> getSearch(@RequestParam(value = "keyword") String keyword,
-//                                                         @RequestParam(value = "latitude") Double latitude,
-//                                                         @RequestParam(value = "longitude") Double longitude,
-//                                                         @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
-//        Long userId = getUserId(userDetails);
-//        return postService.getSearch(keyword,userId,longitude,latitude);
-//    }
+
+    //게시글 검색(제목에포함된단어로)
+    @GetMapping("/search")
+    public ResponseEntity<FinalResponseDto<?>> getSearch(@RequestParam(value = "keyword") String keyword,
+                                                         @RequestParam(value = "latitude") Double latitude,
+                                                         @RequestParam(value = "longitude") Double longitude,
+                                                         @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        Long userId = getUserId(userDetails);
+        return postService.getSearch(keyword,userId,longitude,latitude);
+    }
 
 }

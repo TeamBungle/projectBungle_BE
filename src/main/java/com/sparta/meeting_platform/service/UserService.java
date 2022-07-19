@@ -1,6 +1,7 @@
 package com.sparta.meeting_platform.service;
 
 
+import com.sparta.meeting_platform.chat.repository.InvitedUsersRepository;
 import com.sparta.meeting_platform.domain.EmailToken;
 import com.sparta.meeting_platform.domain.ResignUser;
 import com.sparta.meeting_platform.domain.User;
@@ -8,9 +9,13 @@ import com.sparta.meeting_platform.domain.UserRoleEnum;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.user.*;
 import com.sparta.meeting_platform.exception.EmailApiException;
+import com.sparta.meeting_platform.exception.PostApiException;
 import com.sparta.meeting_platform.exception.UserApiException;
 import com.sparta.meeting_platform.repository.*;
 import com.sparta.meeting_platform.security.JwtTokenProvider;
+
+import com.sparta.meeting_platform.util.FileExtFilter;
+import io.jsonwebtoken.Jwts;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.security.redis.RedisService;
 import io.jsonwebtoken.Jwts;
@@ -46,6 +51,11 @@ public class UserService {
     private final UserRoleCheckService userRoleCheckService;
     private final EmailConfirmTokenRepository emailConfirmTokenRepository;
     private final RedisService redisService;
+
+    private final FileExtFilter fileExtFilter;
+
+    private final InvitedUsersRepository invitedUsersRepository;
+//    private final RedisService redisService;
 
     // 아이디(이메일) 중복 확인
     @Transactional(readOnly = true)
@@ -100,7 +110,7 @@ public class UserService {
         jwtTokenProvider.createToken(requestDto.getUsername());
 
         return new ResponseEntity<>(new FinalResponseDto<>
-                        (true, "로그인 성공!!", user.getNickName(),user.getMannerTemp()), HttpStatus.OK);
+                        (true, "로그인 성공!!",user.getId(), user.getNickName(),user.getMannerTemp(),user.getUsername()),HttpStatus.OK);
     }
 
     // 이메일 인증 토큰 확인
@@ -132,6 +142,9 @@ public class UserService {
     public ResponseEntity<FinalResponseDto<?>> setProfile(Long userId, ProfileRequestDto requestDto, MultipartFile file) {
         Optional<User> user = userRepository.findById(userId);
 
+        if(!fileExtFilter.badFileExt(file)){
+            throw new PostApiException("이미지가 아닙니다.");
+        }
         if (!user.isPresent()) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "프로필 설정 실패"), HttpStatus.OK);
         }
@@ -144,7 +157,7 @@ public class UserService {
         }
         user.get().updateProfile(requestDto, profileUrl);
 
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "프로필 설정 성공"), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "프로필 조회 성공",new ProfileResponseDto(user.get())), HttpStatus.OK);
     }
 
     // 회원 탈퇴
@@ -160,6 +173,7 @@ public class UserService {
         resignUserRepository.save(resignUser);
 
         // 영속 되는 데이터 삭제 ( 추후 cascade 설정 필요 )
+        invitedUsersRepository.deleteByUserId(userId);
         likeRepository.deleteByUserId(userId);
         opinionRepository.deleteByUserId(userId);
         postRepository.deleteByUserId(userId);
@@ -168,6 +182,7 @@ public class UserService {
         return new ResponseEntity<>(new FinalResponseDto<>(true, "회원 탈퇴 성공"), HttpStatus.OK);
     }
 
+    //페이지 이동
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getProfile(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
@@ -192,16 +207,12 @@ public class UserService {
             throw new UserApiException("refresh token 기간이 만료 되었습니다.");
         }
 
-        // refreshToken 유저 정보 꺼내기
-//        User user = userRepository.findByRefreshToken(token).orElse(null);
         // Redis에서 refreshToken 유저 정보 꺼내기
         String user = redisService.getValues(token);
         if(user == null){
             throw new UserApiException("토큰 정보가 없습니다.");
         }
 
-        // refreshToken 재발행
-//        user.setRefreshToken(jwtTokenProvider.createRefreshToken());
         // refresh token 발행 후 Redis에 저장
         redisService.setValues(jwtTokenProvider.createRefreshToken(), user, Duration.ofMillis(1000*60*60*24*7));
         // 재발행 후 기존 데이터 삭제

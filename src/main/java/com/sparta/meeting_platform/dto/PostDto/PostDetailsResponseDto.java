@@ -10,6 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 public class PostDetailsResponseDto {
 
+    private Long postId;
     private String title;
 
     private String content;
@@ -34,17 +35,23 @@ public class PostDetailsResponseDto {
 
     private List<String> joinPeopleNickname;
 
+    private List<String> joinPeopleIntro;
+
     private int joinCount;
 
     private Boolean isLetter;
 
     private Boolean isLike = false;
 
+    private Double latitude;
+
+    private Double longitude;
+
     @Builder
     public PostDetailsResponseDto(String title,String content, String time, int personnel, String place, List<String> postUrls,
-                                  List<String> tags, List<String> categories, int bungCount,
+                                  List<String> tags, List<String> categories, int bungCount, List<String> joinPeopleIntro,
                                   int mannerTemp, List<String> joinPeopleUrl, List<String> joinPeopleNickname,
-                                  int joinCount, Boolean isLetter, Boolean isLike) {
+                                  int joinCount, Boolean isLetter, Boolean isLike, Double latitude ,Double longitude,Long postId) {
         this.title = title;
         this.content = content;
         this.time = time;
@@ -56,9 +63,13 @@ public class PostDetailsResponseDto {
         this.bungCount = bungCount;
         this.mannerTemp = mannerTemp;
         this.joinPeopleUrl = joinPeopleUrl;
+        this.joinPeopleIntro = joinPeopleIntro;
         this.joinPeopleNickname = joinPeopleNickname;
         this.joinCount = joinCount;
         this.isLetter = isLetter;
         this.isLike = isLike;
+        this.latitude =latitude;
+        this.longitude = longitude;
+        this.postId = postId;
     }
 }

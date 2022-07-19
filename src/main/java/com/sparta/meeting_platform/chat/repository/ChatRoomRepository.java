@@ -1,25 +1,23 @@
 package com.sparta.meeting_platform.chat.repository;
 
 import com.sparta.meeting_platform.chat.dto.ChatRoomResponseDto;
-import com.sparta.meeting_platform.chat.dto.FindChatMessageDto;
 import com.sparta.meeting_platform.chat.dto.UserDto;
+import com.sparta.meeting_platform.chat.model.ChatMessage;
 import com.sparta.meeting_platform.chat.model.ChatRoom;
+import com.sparta.meeting_platform.chat.model.InvitedUsers;
 import com.sparta.meeting_platform.chat.service.RedisSubscriber;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.repository.PostRepository;
-import com.sparta.meeting_platform.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Repository
@@ -30,7 +28,7 @@ public class ChatRoomRepository {
     private final RedisSubscriber redisSubscriber;
     private final ChatRoomJpaRepository chatRoomJpaRepository;
     private final PostRepository postRepository;
-    private final UserRepository userRepository;
+    private final InvitedUsersRepository invitedUsersRepository;
     private final ChatMessageJpaRepository chatMessageJpaRepository;
     // Redis
     private static final String CHAT_ROOMS = "CHAT_ROOM";
@@ -45,32 +43,26 @@ public class ChatRoomRepository {
         topics = new HashMap<>();
     }
 
+    //내가 참여한 모든 채팅방 목록 조히
+    @Transactional
     public List<ChatRoomResponseDto> findAllRoom(Long userId) {
-        String username = userRepository.findById(userId).get().getUsername();
-        List<ChatRoom> chatRoomList = chatRoomJpaRepository.findAllByUsername(username);
-        List<String> chatMessage = new ArrayList<>();
-        List<String> chatMessageCreatedAt = new ArrayList<>();
+        List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByUserId(userId);
         List<ChatRoomResponseDto> chatRoomResponseDtoList = new ArrayList<>();
-        List<Post> postList = postRepository.findAllByUserId(userId);
-
-        for (ChatRoom chatRoom : chatRoomList) {
-            String roomId = chatRoom.getRoomId();
-            List<FindChatMessageDto> findMessageInfos = chatMessageJpaRepository.findAllByRoomId(roomId);
-
-            for (FindChatMessageDto findMessageInfo : findMessageInfos) {
-                chatMessage.add(findMessageInfo.getMessage());
-                chatMessageCreatedAt.add(findMessageInfo.getCreatedAt());
-            }
-        }
-
-        for (Post post : postList) {
+        for (InvitedUsers invitedUser : invitedUsers) {
+            Optional<Post> post = postRepository.findById(Long.parseLong(invitedUser.getRoomId()));
+            ChatMessage chatMessage = chatMessageJpaRepository.findTop1ByRoomIdOrderByCreatedAtDesc(invitedUser.getRoomId());
             ChatRoomResponseDto chatRoomResponseDto = new ChatRoomResponseDto();
-            chatRoomResponseDto.setPostUrl(post.getPostUrls().get(0));
-            chatRoomResponseDto.setLetter(post.getIsLetter());
-            chatRoomResponseDto.setPostTitle(post.getTitle());
-            chatRoomResponseDto.setLastMessage(chatMessage.get(chatMessage.size() - 1));
-            chatRoomResponseDto.setLastMessageTime(chatMessageCreatedAt.get(chatMessageCreatedAt.size() - 1));
-            chatRoomResponseDto.setPostCreatedAt(post.getCreatedAt());
+            if(chatMessage.getMessage().isEmpty()){
+                chatRoomResponseDto.setLastMessage("파일 전송이 완료되었습니다.");
+            }else {
+                chatRoomResponseDto.setLastMessage(chatMessage.getMessage());
+            }
+            chatRoomResponseDto.setLastMessageTime(chatMessage.getCreatedAt());
+            chatRoomResponseDto.setPostTime(post.get().getTime());
+            chatRoomResponseDto.setPostTitle(post.get().getTitle());
+            chatRoomResponseDto.setPostUrl(post.get().getPostUrls().get(0));
+            chatRoomResponseDto.setLetter(post.get().getIsLetter());
+            chatRoomResponseDto.setPostId(post.get().getId());
             chatRoomResponseDtoList.add(chatRoomResponseDto);
         }
         return chatRoomResponseDtoList;
@@ -88,11 +80,14 @@ public class ChatRoomRepository {
         }
     }
 
-    public ChatRoom createChatRoom(Post post, UserDto userDto) {
-        ChatRoom chatRoom = ChatRoom.create(post,userDto);
+    /*
+     * 채팅방 생성 , 게시글 생성시 만들어진 postid를 받아와서 게시글 id로 사용한다.
+     */
+    @Transactional
+    public void createChatRoom(Post post, UserDto userDto) {
+        ChatRoom chatRoom = ChatRoom.create(post, userDto);
         opsHashChatRoom.put(CHAT_ROOMS, chatRoom.getRoomId(), chatRoom); // redis 저장
         chatRoomJpaRepository.save(chatRoom); // DB 저장
-        return chatRoom;
     }
 
     public static ChannelTopic getTopic(String roomId) {

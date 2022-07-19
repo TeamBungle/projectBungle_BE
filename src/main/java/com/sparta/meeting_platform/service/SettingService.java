@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +38,7 @@ public class SettingService {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "공지사항 조회 실패"), HttpStatus.OK);
         }
 
-        List<Notice> foundNotice = noticeRepository.findAll();
+        List<Notice> foundNotice = noticeRepository.findAllByOrderByIdDesc();
 
         List<NoticeResponseDto> noticeResponseDtoList = new ArrayList<>();
 
@@ -57,6 +58,9 @@ public class SettingService {
         if (!user.isPresent()) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "의견 보내기 실패"), HttpStatus.OK);
         }
+        if(requestDto.getMessage() == null){
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "의견이 없습니다."), HttpStatus.OK);
+        }
         Opinion opinion = new Opinion(user.get(),requestDto);
         opinionRepository.save(opinion);
         return new ResponseEntity<>(new FinalResponseDto<>(true,"의견 보내기 성공"),HttpStatus.OK);
@@ -69,7 +73,8 @@ public class SettingService {
         if (!user.isPresent()) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "공지 작성 실패"), HttpStatus.OK);
         }
-        Notice notice = new Notice(requestDto);
+        LocalDateTime localDateTime = LocalDateTime.now();
+        Notice notice = new Notice(requestDto,localDateTime);
         noticeRepository.save(notice);
         return new ResponseEntity<>(new FinalResponseDto<>(true,"공지 작성 성공"),HttpStatus.OK);
     }

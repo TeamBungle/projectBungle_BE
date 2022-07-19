@@ -29,20 +29,36 @@ public class PostSearchService {
     public TempAndJoinCountSearchDto getAvgTemp(Long postId){
         String roomId = String.valueOf(postId);
         List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByRoomId(roomId);
-        int temp = 0;
-        int joinCount = 0;
-        for (InvitedUsers invitedUser : invitedUsers) {
-            temp += invitedUser.getUser().getMannerTemp();
-           joinCount += 1;
+        try{
+            int temp = 0;
+            int joinCount = 0;
+            for (InvitedUsers invitedUser : invitedUsers) {
+                temp += invitedUser.getUser().getMannerTemp();
+                joinCount += 1;
+            }
+            int avgTemp = temp/joinCount;
+            return new TempAndJoinCountSearchDto(joinCount,avgTemp);
+        } catch (ArithmeticException e){
+            return new TempAndJoinCountSearchDto(0,0);
         }
-        int avgTemp = temp/joinCount;
-        return new TempAndJoinCountSearchDto(joinCount,avgTemp);
+
+//            int temp = 0;
+//            int joinCount = 0;
+//            for (InvitedUsers invitedUser : invitedUsers) {
+//                temp += invitedUser.getUser().getMannerTemp();
+//                joinCount += 1;
+//            }
+//            int avgTemp = temp/joinCount;
+//            return new TempAndJoinCountSearchDto(joinCount,avgTemp);
+
+
     }
     public TempAndJoinCountSearchDto getJoinPeopleInfo(Long postId){
         String roomId = String.valueOf(postId);
         List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByRoomId(roomId);
         List<String> joinPeopleUrl = new ArrayList<>();
         List<String>  joinPeopleNickName =  new ArrayList<>();
+        List<String> joinPeopleIntro = new ArrayList<>();
         int temp = 0;
         int joinCount = 0;
         for (InvitedUsers invitedUser : invitedUsers) {
@@ -50,9 +66,11 @@ public class PostSearchService {
             joinCount += 1;
            joinPeopleUrl.add(invitedUser.getUser().getProfileUrl());
            joinPeopleNickName.add(invitedUser.getUser().getNickName());
+           joinPeopleIntro.add(invitedUser.getUser().getIntro());
+
         }
         int avgTemp = temp/joinCount;
-        return new TempAndJoinCountSearchDto(joinPeopleUrl,joinPeopleNickName,avgTemp,joinCount);
+        return new TempAndJoinCountSearchDto(joinPeopleUrl,joinPeopleNickName,joinPeopleIntro,avgTemp,joinCount);
     }
 
     //카페고리및태그 리스트->스트링 변환
@@ -198,6 +216,7 @@ public class PostSearchService {
         }
         TempAndJoinCountSearchDto tempAndJoinCountSearchDto = getJoinPeopleInfo(post.getId());
         PostDetailsResponseDto postDetailsResponseDto = PostDetailsResponseDto.builder()
+                .postId(post.getId())
                 .title(post.getTitle())
                 .content(post.getContent())
                 .time(timeCheck(post.getTime()))
@@ -208,11 +227,14 @@ public class PostSearchService {
                 .categories(post.getCategories())
                 .bungCount(post.getUser().getBungCount())
                 .mannerTemp(post.getUser().getMannerTemp())
+                .joinPeopleIntro(tempAndJoinCountSearchDto.getJoinPeopleIntro())
                 .joinPeopleUrl(tempAndJoinCountSearchDto.getJoinPeopleUrl())
                 .joinPeopleNickname(tempAndJoinCountSearchDto.getJoinPeopleNickName())
                 .joinCount(tempAndJoinCountSearchDto.getJoinCount())
                 .isLetter(post.getIsLetter())
                 .isLike(isLike)
+                .latitude(post.getLatitude())
+                .longitude(post.getLongitude())
                 .build();
         return postDetailsResponseDto;
     }

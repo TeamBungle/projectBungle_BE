@@ -135,12 +135,11 @@ public class SocialGoogleService {
         String jwt_token = jwtTokenProvider.generateJwtToken(userDetails);
         headers.set("Authorization", "BEARER" + " " + jwt_token);
         httpServletResponse.addHeader("Authorization", "Bearer" + " " + jwt_token);
-        // refresh token 발행
-//        user.setRefreshToken(jwtTokenProvider.createRefreshToken());
+
         // refresh token 발행 후 Redis에 저장
         redisService.setValues(jwtTokenProvider.createRefreshToken(), user.getUsername(), Duration.ofMillis(1000*60*60*24*7));
         return new ResponseEntity<>(new FinalResponseDto<>
-                (true, "로그인 성공!!", user.getNickName(), user.getMannerTemp(),user.getUsername() ), HttpStatus.OK);
+                (true, "로그인 성공!!",user.getId(), user.getNickName(), user.getMannerTemp(),user.getUsername() ), HttpStatus.OK);
     }
 
 }

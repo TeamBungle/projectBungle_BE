@@ -1,19 +1,24 @@
 package com.sparta.meeting_platform.dto.user;
 
+import com.sparta.meeting_platform.domain.User;
 import lombok.Getter;
 
 @Getter
 public class MyPageDto {
 
-    private String nickName;
-    private int mannerTemp;
-    private String profileUrl;
-    private int bungCount;
+    private final String nickName;
+    private final int mannerTemp;
+    private final String intro;
+    private final String profileUrl;
+    private final int bungCount;
 
-    public MyPageDto(String nickName, int mannerTemp, String profileUrl, int bungCount) {
-        this.nickName = nickName;
-        this.mannerTemp = mannerTemp;
-        this.profileUrl = profileUrl;
-        this.bungCount = bungCount;
+    public MyPageDto(User user) {
+        this.nickName = user.getNickName();
+        this.mannerTemp = user.getMannerTemp();
+        this.intro = user.getIntro();
+        this.profileUrl = user.getProfileUrl();
+        this.bungCount = user.getBungCount();
     }
+
+
 }

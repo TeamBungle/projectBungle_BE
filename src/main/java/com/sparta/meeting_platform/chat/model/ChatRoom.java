@@ -23,6 +23,7 @@ public class ChatRoom implements Serializable {
     private String roomId;
     private String username;
 
+    //채팅방 생성
     public static ChatRoom create(Post post, UserDto userDto) {
         ChatRoom chatRoom = new ChatRoom();
         chatRoom.roomId = String.valueOf(post.getId());

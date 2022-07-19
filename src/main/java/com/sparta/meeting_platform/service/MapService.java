@@ -41,7 +41,7 @@ public class MapService {
     @Transactional(readOnly = true)
     public ResponseEntity<MapResponseDto<?>> readMap(Double latitude, Double longitude, Long userId) {
         checkUser(userId);
-        Double distance = 6.0;
+        Double distance = 400.0;
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
 
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
@@ -64,7 +64,7 @@ public class MapService {
     public ResponseEntity<MapResponseDto<?>> searchMap(String address, Long userId) throws IOException, ParseException {
         checkUser(userId);
         SearchMapDto searchMapDto = mapSearchService.findLatAndLong(address);
-        Double distance = 6.0;
+        Double distance = 400.0;
         String pointFormat
                 = mapSearchService.searchPointFormat(distance, searchMapDto.getLatitude(), searchMapDto.getLongitude());
 

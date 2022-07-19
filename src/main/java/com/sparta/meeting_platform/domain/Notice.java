@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 public class Notice {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id;
+    private Long id;
 
     @CreatedDate
     @DateTimeFormat(pattern = "yyyy-mm-dd")
@@ -29,9 +29,9 @@ public class Notice {
     @Column(nullable = false)
     private String content;
 
-    public Notice(NoticeRequestDto requestDto) {
+    public Notice(NoticeRequestDto requestDto, LocalDateTime localDateTime) {
         this.title = requestDto.getTitle();
         this.content = requestDto.getContent();
-        this.createdAt = requestDto.getCreatedAt();
+        this.createdAt = localDateTime;
     }
 }

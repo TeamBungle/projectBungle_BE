@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import java.util.List;
 
 @Getter
@@ -13,7 +15,10 @@ public class PostRequestDto {
 
     private String title;
     private String time;
+
+    @Pattern(regexp = "^.{1,100}$", message = "모임내용은 100자 이내에 작성해 주세요")
     private String content;
+
     private int personnel;
     private String place;
     private List<String> tags;

@@ -12,7 +12,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PostResponseDto {
 
-    private Long id;
+    private Long postId;
 
     private String title;
 
@@ -40,6 +40,7 @@ public class PostResponseDto {
 
     private List<String> joinPeopleNickname;
 
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private int joinCount;
 
     private Boolean isLetter;
@@ -51,6 +52,7 @@ public class PostResponseDto {
 
     private String postUrl;
 
+
     private Double distance;
 
 
@@ -59,7 +61,7 @@ public class PostResponseDto {
                            List<String> tags, List<String> categories, int bungCount, int mannerTemp, List<String> joinPeopleUrl,
                            List<String> joinPeopleNickname, int joinCount, Boolean isLetter, Boolean isLike,
                            int avgTemp, String postUrl,Double distance) {
-        this.id = id;
+        this.postId = id;
         this.title = title;
         this.content = content;
         this.time = time;

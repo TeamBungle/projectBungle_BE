@@ -1,5 +1,6 @@
 package com.sparta.meeting_platform.domain;
 
+import com.sparta.meeting_platform.chat.model.InvitedUsers;
 import com.sparta.meeting_platform.dto.user.ProfileRequestDto;
 import com.sparta.meeting_platform.dto.user.SignupRequestDto;
 import lombok.Builder;
@@ -9,6 +10,8 @@ import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor()
@@ -20,7 +23,7 @@ public class User {
     @Id
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false,unique = true)
     private String username;
 
     @Column(nullable = false)
@@ -60,17 +63,32 @@ public class User {
     @Enumerated(value = EnumType.STRING)
     private  UserRoleEnum role;
 
+//    @OneToMany(cascade = CascadeType.REMOVE)
+//    private List<Opinion> opinionList;
+//
+//    @OneToMany
+//    private List<Like> likeList;
+//
+//    @OneToMany(cascade = CascadeType.REMOVE)
+//    private List<Post> postList;
+//
+//    @OneToMany(cascade = CascadeType.REMOVE)
+//    private List<InvitedUsers> invitedUsersList;
+
     public User(SignupRequestDto requestDto, int mannerTemp) {
         this.username = requestDto.getUsername();
         this.password = requestDto.getPassword();
         this.checkTime = LocalDateTime.now();
         this.mannerTemp = mannerTemp;
+        this.nickName = "벙글" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("hhmmss"));
+        this.profileUrl = "https://user-images.githubusercontent.com/87007109/178628349-839deab9-5c31-49e5-beb5-3d6b868df343.jpg";
         this.role = UserRoleEnum.NEW_USER;
     }
 
     @Builder
     public User(String username, String password, String nickName, String profileUrl, Long kakaoId, String googleId,
-                String naverId, LocalDateTime createdAt, int mannerTemp, Boolean isOwner, String intro, int bungCount, UserRoleEnum role) {
+                String naverId, LocalDateTime createdAt, int mannerTemp, Boolean isOwner, String intro, int bungCount,
+                UserRoleEnum role) {
         this.username = username;
         this.password = password;
         this.nickName = nickName;
