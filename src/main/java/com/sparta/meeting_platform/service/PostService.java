@@ -293,7 +293,7 @@ public class PostService {
         Post post = checkPost(postId);
 
         List<String> postUrls = new ArrayList<>();
-        if (files != null) {
+        if (files.size() > 0) {
             for (MultipartFile file : files) {
                 postUrls.add(s3Service.upload(file));
             }
