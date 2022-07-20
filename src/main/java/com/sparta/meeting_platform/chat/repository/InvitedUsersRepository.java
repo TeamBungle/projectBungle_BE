@@ -1,17 +1,17 @@
 package com.sparta.meeting_platform.chat.repository;
 
 import com.sparta.meeting_platform.chat.model.InvitedUsers;
-import com.sparta.meeting_platform.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
 public interface InvitedUsersRepository extends JpaRepository<InvitedUsers, Long> {
-    List<InvitedUsers> findAllByRoomId(String roomId);
-    void deleteByUserIdAndRoomId(Long userId, String roomId);
-    boolean existsByUserIdAndRoomId(Long user_id, String roomId);
+    void deleteByUserIdAndPostId(Long userId, Long postId);
+    boolean existsByUserIdAndPostId(Long user_id, Long postId);
     List<InvitedUsers> findAllByUserId(Long userId);
-    void deleteAllByRoomId(String roomId);
-
+    void deleteAllByPostId(Long postId);
     void deleteByUserId(Long userId);
+    List<InvitedUsers> findAllByPostId(Long postId);
+
+    InvitedUsers findByUserIdAndPostId(Long id, Long id1);
 }

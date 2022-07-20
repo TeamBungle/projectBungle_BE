@@ -55,7 +55,7 @@ public class StompHandler implements ChannelInterceptor {
             Post post = postRepository.findById(postId).orElseThrow(
                     () -> new PostApiException("존재하지 않는 게시물 입니다!")
             );
-            List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByRoomId(roomId);
+            List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByPostId(postId);
             int nowPeople = invitedUsers.size();
             int maxPeople = post.getPersonnel();
             if (nowPeople >= maxPeople) {

@@ -27,8 +27,7 @@ public class PostSearchService {
     private final InvitedUsersRepository invitedUsersRepository;
 
     public TempAndJoinCountSearchDto getAvgTemp(Long postId){
-        String roomId = String.valueOf(postId);
-        List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByRoomId(roomId);
+        List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByPostId(postId);
         try{
             int temp = 0;
             int joinCount = 0;
@@ -54,8 +53,7 @@ public class PostSearchService {
 
     }
     public TempAndJoinCountSearchDto getJoinPeopleInfo(Long postId){
-        String roomId = String.valueOf(postId);
-        List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByRoomId(roomId);
+        List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByPostId(postId);
         List<String> joinPeopleUrl = new ArrayList<>();
         List<String>  joinPeopleNickName =  new ArrayList<>();
         List<String> joinPeopleIntro = new ArrayList<>();

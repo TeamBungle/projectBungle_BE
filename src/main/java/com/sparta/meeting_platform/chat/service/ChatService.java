@@ -66,16 +66,16 @@ public class ChatService {
             messageDto.setMessage("[알림] " + messageDto.getSender() + "님이 입장하셨습니다.");
             String roomId = messageDto.getRoomId();
             //초대된 유저에 채팅방 아이디와 유저를 함께 저장한다
-            InvitedUsers invitedUsers = new InvitedUsers(roomId, user);
+            InvitedUsers invitedUsers = new InvitedUsers(Long.parseLong(roomId), user);
             // 이미 그방에 초대되어 있다면 중복으로 저장을 하지 않게 한다.
-            if (!invitedUsersRepository.existsByUserIdAndRoomId(user.getId(), messageDto.getRoomId())) {
+            if (!invitedUsersRepository.existsByUserIdAndPostId(user.getId(), Long.parseLong(roomId))) {
                 invitedUsersRepository.save(invitedUsers);
             }
             //받아온 메세지 타입이 QUIT 일때
         }else if (ChatMessage.MessageType.QUIT.equals(messageDto.getType())) {
             messageDto.setMessage("[알림] " + messageDto.getSender() + "님이 나가셨습니다.");
             // 들어갈때 저장했던 유저정보를 삭제해준다.
-            invitedUsersRepository.deleteByUserIdAndRoomId(user.getId(),messageDto.getRoomId());
+            invitedUsersRepository.deleteByUserIdAndPostId(user.getId(),Long.parseLong(messageDto.getRoomId()));
         }
 
         log.info("ENTER : {}", messageDto.getMessage());
@@ -107,7 +107,7 @@ public class ChatService {
         userRepository.findById(userDetails.getUser().getId()).orElseThrow(
                 () -> new UserApiException("존재하지 않는 사용자 입니다.")
         );
-        List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByRoomId(roomId);
+        List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByPostId(Long.parseLong(roomId));
         List<UserinfoDto> users = new ArrayList<>();
 
         for (InvitedUsers invitedUser : invitedUsers) {

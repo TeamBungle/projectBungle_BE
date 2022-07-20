@@ -16,12 +16,19 @@ public class InvitedUsers {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long Id;
     @Column
-    private String roomId;
+    private Long postId;
     @JoinColumn(name="USER_ID")
     @ManyToOne
     private User user;
-    public InvitedUsers(String roomId, User user) {
-        this.roomId = roomId;
+    @Column
+    private Boolean qrCheck;
+    public InvitedUsers(Long postId, User user) {
+        this.postId = postId;
         this.user = user;
+        this.qrCheck = false;
+    }
+
+    public void updateQrCheck() {
+        this.qrCheck = true;
     }
 }

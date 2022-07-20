@@ -351,7 +351,7 @@ public class PostService {
         if (!post.getUser().getId().equals(userId)) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "본인 게시글이 아닙니다."), HttpStatus.OK);
         } else {
-            invitedUsersRepository.deleteAllByRoomId(post.getId().toString());
+            invitedUsersRepository.deleteAllByPostId(post.getId());
             likeRepository.deleteByPostId(postId);
             postRepository.deleteById(postId);
             user.setIsOwner(false);
