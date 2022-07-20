@@ -3,12 +3,16 @@ package com.sparta.meeting_platform.service;
 import com.sparta.meeting_platform.chat.repository.InvitedUsersRepository;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.domain.User;
+import com.sparta.meeting_platform.dto.FinalResponseDto;
+import com.sparta.meeting_platform.dto.user.LoginRequestDto;
 import com.sparta.meeting_platform.exception.PostApiException;
 import com.sparta.meeting_platform.exception.QrcodeApiException;
 import com.sparta.meeting_platform.exception.UserApiException;
 import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,10 +24,10 @@ public class QrcodeCheckService {
     private final InvitedUsersRepository invitedUsersRepository;
 
     @Transactional
-    public void qrcodeUserCheck(Long postId, Long userId) {
+    public ResponseEntity<FinalResponseDto<?>> qrcodeUserCheck(Long postId, LoginRequestDto loginRequestDto) {
         Post post = postRepository.findById(postId).orElseThrow(
                 () -> new PostApiException("존재하지 않는 게시물 입니다."));
-        User user = userRepository.findById(userId).orElseThrow(
+        User user = userRepository.findByUsername(loginRequestDto.getUsername()).orElseThrow(
                 () -> new UserApiException("해당 유저를 찾을 수 없습니다."));
 
         if(!invitedUsersRepository.existsByUserIdAndRoomId(user.getId(),post.getId().toString())){
@@ -32,6 +36,7 @@ public class QrcodeCheckService {
             throw new QrcodeApiException("본인 게시글의 QR코드는 적용되지 않습니다.");
         }else{
             user.updateMannerTemp();
+            return new ResponseEntity<>(new FinalResponseDto<>(true, "만남 성공!!"), HttpStatus.OK);
         }
     }
 }
