@@ -1,5 +1,7 @@
 package com.sparta.meeting_platform.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.meeting_platform.chat.dto.UserDto;
 import com.sparta.meeting_platform.chat.model.ChatMessage;
 import com.sparta.meeting_platform.chat.model.ChatRoom;
@@ -24,6 +26,7 @@ import com.sparta.meeting_platform.repository.mapping.PostMapping;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.util.FileExtFilter;
 import com.sparta.meeting_platform.util.PostListComparator;
+import io.lettuce.core.ScriptOutputType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Point;
@@ -222,11 +225,12 @@ public class PostService {
         User user = checkUser(userId);
         Boolean isOwner = user.getIsOwner();
 
+        if(files != null){
         for (MultipartFile file : files){
             if(!fileExtFilter.badFileExt(file)){
                 throw new PostApiException("이미지가 아닙니다.");
             }
-        }
+        }}
 
 //        if (files.size() > 3) {
 //            throw new PostApiException("게시글 사진은 3개 이하 입니다.");
@@ -298,13 +302,22 @@ public class PostService {
     public ResponseEntity<FinalResponseDto<?>> updatePost(Long postId, Long userId, PostRequestDto requestDto, List<MultipartFile> files) throws Exception {
         checkUser(userId);
         Post post = checkPost(postId);
-        if (files == null) {
-            requestDto.setPostUrls(post.getPostUrls());
+        if (files == null && requestDto != null) {
+            requestDto.setPostUrls(requestDto.getPostUrls());
             // 기본 이미지로 변경 필요
-        } else {
+        } else if(requestDto == null && files != null){
             List<String> postUrls = new ArrayList<>();
             for (MultipartFile file : files) {
                 postUrls.add(s3Service.upload(file));
+            }
+            requestDto.setPostUrls(postUrls);
+        } else{
+            List<String> postUrls = new ArrayList<>();
+            for (MultipartFile file : files) {
+                postUrls.add(s3Service.upload(file));
+            }
+            for (String postUrl : requestDto.getPostUrls()){
+                postUrls.add(postUrl);
             }
             requestDto.setPostUrls(postUrls);
         }
@@ -350,7 +363,7 @@ public class PostService {
         if (!post.getUser().getId().equals(userId)) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "본인 게시글이 아닙니다."), HttpStatus.OK);
         } else {
-            invitedUsersRepository.deleteAllByRoomId(post.getId().toString());
+            invitedUsersRepository.deleteAllByPostId(post.getId());
             likeRepository.deleteByPostId(postId);
             postRepository.deleteById(postId);
             user.setIsOwner(false);

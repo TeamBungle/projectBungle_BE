@@ -50,8 +50,8 @@ public class ChatRoomRepository {
         List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByUserId(userId);
         List<ChatRoomResponseDto> chatRoomResponseDtoList = new ArrayList<>();
         for (InvitedUsers invitedUser : invitedUsers) {
-            Optional<Post> post = postRepository.findById(Long.parseLong(invitedUser.getRoomId()));
-            ChatMessage chatMessage = chatMessageJpaRepository.findTop1ByRoomIdOrderByCreatedAtDesc(invitedUser.getRoomId());
+            Optional<Post> post = postRepository.findById(invitedUser.getPostId());
+            ChatMessage chatMessage = chatMessageJpaRepository.findTop1ByRoomIdOrderByCreatedAtDesc(invitedUser.getPostId().toString());
             ChatRoomResponseDto chatRoomResponseDto = new ChatRoomResponseDto();
             if(chatMessage.getMessage().isEmpty()){
                 chatRoomResponseDto.setLastMessage("파일 전송이 완료되었습니다.");

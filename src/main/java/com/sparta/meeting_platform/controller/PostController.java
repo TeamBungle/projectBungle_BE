@@ -7,6 +7,8 @@ import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.service.LikeService;
 import com.sparta.meeting_platform.service.PostService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.joda.time.LocalDateTime;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +17,7 @@ import javax.validation.Valid;
 import java.text.ParseException;
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/posts")
