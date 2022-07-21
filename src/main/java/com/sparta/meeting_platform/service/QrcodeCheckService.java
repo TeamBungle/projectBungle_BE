@@ -16,7 +16,8 @@ import com.sparta.meeting_platform.dto.GoogleDto.GoogleLoginRequestDto;
 import com.sparta.meeting_platform.dto.GoogleDto.GoogleLoginResponseDto;
 import com.sparta.meeting_platform.dto.KakaoDto.KakaoUserInfoDto;
 import com.sparta.meeting_platform.dto.NaverDto.NaverUserDto;
-import com.sparta.meeting_platform.dto.user.LoginRequestDto;
+
+import com.sparta.meeting_platform.dto.UserDto.LoginRequestDto;
 import com.sparta.meeting_platform.exception.PostApiException;
 import com.sparta.meeting_platform.exception.QrcodeApiException;
 import com.sparta.meeting_platform.exception.UserApiException;

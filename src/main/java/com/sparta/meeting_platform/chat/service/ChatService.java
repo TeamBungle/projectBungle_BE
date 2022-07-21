@@ -70,7 +70,7 @@ public class ChatService {
             messageDto.setMessage("[알림] " + messageDto.getSender() + "님이 입장하셨습니다.");
             String roomId = messageDto.getRoomId();
             // 이미 그방에 초대되어 있다면 중복으로 저장을 하지 않게 한다.
-            List<InvitedUsers> invitedUsersList = invitedUsersRepository.findAllByRoomId(roomId);
+            List<InvitedUsers> invitedUsersList = invitedUsersRepository.findAllByPostId(Long.parseLong(roomId));
             log.info("invitedUserlist size : {}", invitedUsersList.size());
             for (InvitedUsers invitedUsers : invitedUsersList) {
                 if (invitedUsersList.size() >= postRepository.findById(Long.parseLong(roomId)).get().getPersonnel() && (!invitedUsers.getUser().getId().equals(user.getId()))) {
@@ -80,9 +80,9 @@ public class ChatService {
                     messageDto.setMessage("[알림] 채팅방 정원을 초과하였습니다!");
                 }
             }
-            if (!invitedUsersRepository.existsByUserIdAndRoomId(user.getId(),roomId)) {
+            if (!invitedUsersRepository.existsByUserIdAndPostId(user.getId(),Long.parseLong(roomId))) {
                 //초대된 유저에 채팅방 아이디와 유저를 함께 저장한다
-                InvitedUsers invitedUsers = new InvitedUsers(roomId, user);
+                InvitedUsers invitedUsers = new InvitedUsers(Long.parseLong(roomId), user);
                 invitedUsersRepository.save(invitedUsers);
             }
             //받아온 메세지 타입이 QUIT 일때
@@ -90,7 +90,6 @@ public class ChatService {
             messageDto.setMessage("[알림] " + messageDto.getSender() + "님이 나가셨습니다.");
             // 들어갈때 저장했던 유저정보를 삭제해준다.
             invitedUsersRepository.deleteByUserIdAndPostId(user.getId(),Long.parseLong(messageDto.getRoomId()));
-            invitedUsersRepository.deleteByUserIdAndRoomId(user.getId(),messageDto.getRoomId());
             ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(messageDto.getRoomId());
             if(chatRoom.getUsername().equals(username)){
                 messageDto.setQuitOwner(true);
