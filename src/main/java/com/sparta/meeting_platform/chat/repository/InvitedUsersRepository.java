@@ -11,7 +11,7 @@ public interface InvitedUsersRepository extends JpaRepository<InvitedUsers, Long
     void deleteByUserIdAndRoomId(Long userId, String roomId);
     boolean existsByUserIdAndRoomId(Long user_id, String roomId);
     List<InvitedUsers> findAllByUserId(Long userId);
+    void deleteByUser(User user);
     void deleteAllByRoomId(String roomId);
-
     void deleteByUserId(Long userId);
 }

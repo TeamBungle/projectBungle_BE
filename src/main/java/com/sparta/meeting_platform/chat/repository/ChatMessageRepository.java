@@ -12,18 +12,22 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
 @Slf4j
 @Repository
 public class ChatMessageRepository {
+
     private static final String CHAT_MESSAGE = "CHAT_MESSAGE"; // 채팅룸에 메세지들을 저장
     public static final String USER_COUNT = "USER_COUNT"; // 채팅룸에 입장한 클라이언트수 저장
     public static final String ENTER_INFO = "ENTER_INFO"; // 채팅룸에 입장한 클라이언트의 sessionId와 채팅룸 id를 맵핑한 정보 저장
+
     private final ChatMessageJpaRepository chatMessageJpaRepository;
     private final RedisTemplate<String, Object> redisTemplate; // redisTemplate 사용
     private final StringRedisTemplate stringRedisTemplate; // StringRedisTemplate 사용
@@ -63,6 +67,7 @@ public class ChatMessageRepository {
         //redis 의 hashes 자료구조
         //key : CHAT_MESSAGE , filed : roomId, value : chatMessageList
         opsHashChatMessage.put(CHAT_MESSAGE, roomId, chatMessageList);
+        redisTemplate.expire(CHAT_MESSAGE,30, TimeUnit.MINUTES);
         return chatMessageDto;
     }
 
@@ -83,10 +88,11 @@ public class ChatMessageRepository {
                 chatMessageDtoList.add(chatMessageDto);
             }
             //redis에 정보가 없으니, 다음부터 조회할때는 redis를 사용하기 위하여 넣어준다.
-            opsHashChatMessage.put(CHAT_MESSAGE,roomId,chatMessageDtoList);
+            opsHashChatMessage.put(CHAT_MESSAGE, roomId, chatMessageDtoList);
             return chatMessageDtoList;
         }
     }
+
     // 구독 요청시
     public void setUserEnterInfo(String roomId, String sessionId) {
         hashOpsEnterInfo.put(ENTER_INFO, sessionId, roomId);
@@ -95,23 +101,23 @@ public class ChatMessageRepository {
 
     // 구독시 유저 카운트 증가
     public void plusUserCnt(String roomId) {
-        valueOps.increment(USER_COUNT + "_" + roomId); // redis string type에서 사용하는 increment 함수, 유저 카운트 증
+        valueOps.increment(USER_COUNT + "_" + roomId); // redis string type에서 사용하는 increment 함수, 유저 카운트 증가
     }
-    // disconnect 시 유저 카운트 감소
+
+    // unsubscribe 시 유저 카운트 감소
     public void minusUserCnt(String roomId) {
         Optional.ofNullable(valueOps.decrement(USER_COUNT + "_" + roomId)).filter(count -> count > 0);
     }
+
     //sessionId 로 roomId 가져오기
-    public String getRoomId(String sessionId) {
+    public String getRoomsId(String sessionId) {
+        log.info("세션당 채팅방 :" + sessionId);
         return hashOpsEnterInfo.get(ENTER_INFO, sessionId);
     }
 
-    // disconnect 시 유저 세션정보와 맵핑된 채팅방ID 삭제
-    public void removeUserEnterInfo(String sessionId) {
-        hashOpsEnterInfo.delete(ENTER_INFO, sessionId);
-
-        if (hashOpsEnterInfo.get(ENTER_INFO, sessionId) == null) {
-            log.info("세션 삭제 완료 : {}", sessionId);
-        }
+    public void removeUserEnterInfo(String sessionId, String roomId) {
+        hashOpsEnterInfo.delete(ENTER_INFO, sessionId, roomId);
+        log.info("hashPosEnterInfo.put : {}", hashOpsEnterInfo.get(ENTER_INFO, sessionId));
     }
+
 }

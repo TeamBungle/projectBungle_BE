@@ -1,7 +1,13 @@
 package com.sparta.meeting_platform.chat.dto;
 
 import com.sparta.meeting_platform.domain.User;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@NoArgsConstructor
 public class UserDetailDto {
     private String nickname;
     private String profileUrl;
