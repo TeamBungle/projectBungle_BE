@@ -104,11 +104,8 @@ public class UserService {
         // refresh token 발행 후 저장
 //        user.setRefreshToken(jwtTokenProvider.createRefreshToken());
         // refresh token 발행 후 Redis에 저장
-        String jwt = jwtTokenProvider.createRefreshToken();
-        redisService.setValues(jwt, user.getUsername(), Duration.ofMillis(1000*60*60*24*7));
-        System.out.println("refresh token : " + jwt);
-        String accessToken = jwtTokenProvider.createToken(requestDto.getUsername());
-        System.out.println("access token : " + accessToken);
+        redisService.setValues(jwtTokenProvider.createRefreshToken(), user.getUsername(), Duration.ofMillis(1000*60*60*24*7));
+        jwtTokenProvider.createToken(requestDto.getUsername());
         return new ResponseEntity<>(new FinalResponseDto<>
                         (true, "로그인 성공!!", user.getNickName(),user.getMannerTemp(),user.getId()),HttpStatus.OK);
     }
@@ -219,11 +216,8 @@ public class UserService {
 //        redisService.deleteValues(token);
         // accessToken 재발행
 //        jwtTokenProvider.createToken(user);
-        String jwt = jwtTokenProvider.createRefreshToken();
-        redisService.setValues(jwt, user, Duration.ofMillis(1000*60*60*24*7));
-        System.out.println("refresh token : " + jwt);
-        String accessjwt = jwtTokenProvider.createToken(user);
-        System.out.println("access token : " + accessjwt);
+        redisService.setValues(jwtTokenProvider.createRefreshToken(), user, Duration.ofMillis(1000*60*60*24*7));
+        jwtTokenProvider.createToken(user);
         return new ResponseEntity<>(new FinalResponseDto<>
                 (true, "access token 갱신 완료"), HttpStatus.OK);
     }

@@ -17,7 +17,6 @@ import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
 import com.sparta.meeting_platform.dto.SearchMapDto;
 import com.sparta.meeting_platform.dto.UserDto.MyPageDto;
-import com.sparta.meeting_platform.dto.user.MyPageDto;
 import com.sparta.meeting_platform.exception.PostApiException;
 import com.sparta.meeting_platform.exception.UserApiException;
 import com.sparta.meeting_platform.repository.LikeRepository;
@@ -293,7 +292,7 @@ public class PostService {
         postRepository.save(post);
         UserDto userDto = new UserDto(user);
         chatRoomRepository.createChatRoom(post, userDto);
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공", post.getId()), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공", post.getId(), userId), HttpStatus.OK);
     }
 
 
@@ -354,7 +353,7 @@ public class PostService {
         if (!post.getUser().getId().equals(userId)) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "본인 게시글이 아닙니다."), HttpStatus.OK);
         } else {
-            invitedUsersRepository.deleteAllByRoomId(post.getId().toString());
+            invitedUsersRepository.deleteAllByPostId(post.getId());
             likeRepository.deleteByPostId(postId);
             postRepository.deleteById(postId);
             user.setIsOwner(false);
