@@ -8,6 +8,7 @@ import com.sparta.meeting_platform.chat.model.InvitedUsers;
 import com.sparta.meeting_platform.chat.repository.*;
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.exception.UserApiException;
+import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.security.JwtTokenProvider;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
@@ -38,6 +39,7 @@ public class ChatService {
     private final S3Service s3Service;
     private final InvitedUsersRepository invitedUsersRepository;
     private final ChatRoomJpaRepository chatRoomJpaRepository;
+    private final PostRepository postRepository;
 
 
     @Transactional
@@ -67,10 +69,20 @@ public class ChatService {
             chatRoomRepository.enterChatRoom(messageDto.getRoomId());
             messageDto.setMessage("[알림] " + messageDto.getSender() + "님이 입장하셨습니다.");
             String roomId = messageDto.getRoomId();
-            //초대된 유저에 채팅방 아이디와 유저를 함께 저장한다
-            InvitedUsers invitedUsers = new InvitedUsers(roomId, user);
             // 이미 그방에 초대되어 있다면 중복으로 저장을 하지 않게 한다.
-            if (!invitedUsersRepository.existsByUserIdAndRoomId(user.getId(), messageDto.getRoomId())) {
+            List<InvitedUsers> invitedUsersList = invitedUsersRepository.findAllByRoomId(roomId);
+            log.info("invitedUserlist size : {}", invitedUsersList.size());
+            for (InvitedUsers invitedUsers : invitedUsersList) {
+                if (invitedUsersList.size() >= postRepository.findById(Long.parseLong(roomId)).get().getPersonnel() && (!invitedUsers.getUser().getId().equals(user.getId()))) {
+                    log.info("persoonel size : {}", postRepository.findById(Long.parseLong(roomId)).get().getPersonnel());
+                    log.info("inviteduserId: {}", invitedUsers.getUser().getId());
+                    log.info("user.getid: {}", user.getId());
+                    messageDto.setMessage("[알림] 채팅방 정원을 초과하였습니다!");
+                }
+            }
+            if (!invitedUsersRepository.existsByUserIdAndRoomId(user.getId(),roomId)) {
+                //초대된 유저에 채팅방 아이디와 유저를 함께 저장한다
+                InvitedUsers invitedUsers = new InvitedUsers(roomId, user);
                 invitedUsersRepository.save(invitedUsers);
             }
             //받아온 메세지 타입이 QUIT 일때
