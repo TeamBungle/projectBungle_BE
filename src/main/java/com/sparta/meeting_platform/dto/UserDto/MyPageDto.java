@@ -1,4 +1,4 @@
-package com.sparta.meeting_platform.dto.user;
+package com.sparta.meeting_platform.dto.UserDto;
 
 import com.sparta.meeting_platform.domain.User;
 import lombok.Getter;

@@ -3,8 +3,11 @@ package com.sparta.meeting_platform.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.meeting_platform.chat.dto.UserDto;
-import com.sparta.meeting_platform.chat.repository.ChatRoomRepository;
-import com.sparta.meeting_platform.chat.repository.InvitedUsersRepository;
+import com.sparta.meeting_platform.chat.model.ChatMessage;
+import com.sparta.meeting_platform.chat.model.ChatRoom;
+import com.sparta.meeting_platform.chat.model.ResignChatMessage;
+import com.sparta.meeting_platform.chat.model.ResignChatRoom;
+import com.sparta.meeting_platform.chat.repository.*;
 import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.domain.User;
@@ -13,7 +16,7 @@ import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
 import com.sparta.meeting_platform.dto.SearchMapDto;
-import com.sparta.meeting_platform.dto.user.MyPageDto;
+import com.sparta.meeting_platform.dto.UserDto.MyPageDto;
 import com.sparta.meeting_platform.exception.PostApiException;
 import com.sparta.meeting_platform.exception.UserApiException;
 import com.sparta.meeting_platform.repository.LikeRepository;
@@ -27,7 +30,6 @@ import io.lettuce.core.ScriptOutputType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Point;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -36,11 +38,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import java.io.File;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-
 import java.util.*;
 
 
@@ -60,6 +59,10 @@ public class PostService {
     private final InvitedUsersRepository invitedUsersRepository;
 
     private final FileExtFilter fileExtFilter;
+    private final ChatRoomJpaRepository chatRoomJpaRepository;
+    private final ChatMessageJpaRepository chatMessageJpaRepository;
+    private final ResignChatMessageJpaRepository resignChatMessageJpaRepository;
+    private final ResignChatRoomJpaRepository resignChatRoomJpaRepository;
 
 
     //게시글 전체 조회(4개만)
@@ -290,7 +293,7 @@ public class PostService {
         postRepository.save(post);
         UserDto userDto = new UserDto(user);
         chatRoomRepository.createChatRoom(post, userDto);
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공", post.getId()), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 개설 성공", post.getId(), userId), HttpStatus.OK);
     }
 
 
@@ -364,6 +367,17 @@ public class PostService {
             likeRepository.deleteByPostId(postId);
             postRepository.deleteById(postId);
             user.setIsOwner(false);
+            invitedUsersRepository.deleteByUser(user);
+            ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(String.valueOf(postId));
+            List<ChatMessage> chatMessage = chatMessageJpaRepository.findAllByChatRoom(chatRoom);
+            ResignChatRoom resignChatRoom = new ResignChatRoom(chatRoom);
+            resignChatRoomJpaRepository.save(resignChatRoom);
+            for (ChatMessage message : chatMessage) {
+                ResignChatMessage resignChatMessage = new ResignChatMessage(message,resignChatRoom);
+                resignChatMessageJpaRepository.save(resignChatMessage);
+            }
+            chatMessageJpaRepository.deleteByChatRoom(chatRoom);
+            chatRoomJpaRepository.deleteByRoomId(String.valueOf(postId));
             return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공", user.getIsOwner()), HttpStatus.OK);
         }
     }

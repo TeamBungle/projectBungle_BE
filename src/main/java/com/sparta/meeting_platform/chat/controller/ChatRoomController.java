@@ -1,6 +1,5 @@
 package com.sparta.meeting_platform.chat.controller;
 
-
 import com.sparta.meeting_platform.chat.dto.ChatRoomResponseDto;
 import com.sparta.meeting_platform.chat.repository.ChatRoomRepository;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
@@ -29,4 +28,7 @@ public class ChatRoomController {
     public String roomInfo(@PathVariable Long postId) {
         return String.valueOf(postId);
     }
+
+
+
 }
