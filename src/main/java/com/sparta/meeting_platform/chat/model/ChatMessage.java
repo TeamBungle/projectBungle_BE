@@ -30,11 +30,13 @@ public class ChatMessage {
     @Column
     private Long enterUserCnt;
     @Column
-    private String username;
+    private Long userId ;
     @Column
     private String createdAt;
     @Column
     private String fileUrl;
+    @Column
+    private Boolean quitOwner = false;
 
     @JoinColumn(name = "CHAT_ROOM_ID")
     @ManyToOne
@@ -47,7 +49,7 @@ public class ChatMessage {
         this.sender = chatMessageDto.getSender();
         this.profileUrl = chatMessageDto.getProfileUrl();
         this.enterUserCnt = chatMessageDto.getEnterUserCnt();
-        this.username = chatMessageDto.getUsername();
+        this.userId = chatMessageDto.getUserId();
         this.createdAt = chatMessageDto.getCreatedAt();
         this.fileUrl = chatMessageDto.getFileUrl();
         this.chatRoom = chatRoom;

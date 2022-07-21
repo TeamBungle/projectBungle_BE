@@ -27,6 +27,7 @@ public class RedisConfig {
     @Value("${spring.redis.port}")
     private int port;
 
+
      /*
      *  redisConnectionFactory 를 통해 외부 redis 를 연결한다.
      *  Spring 에서 Redis 접근하는 방식은 2가지의 프레임워크가 있다(Lettuce 와 Jedis)
@@ -71,7 +72,6 @@ public class RedisConfig {
         stringRedisTemplate.setConnectionFactory(redisConnectionFactory());
         return stringRedisTemplate;
     }
-
 
     /*
     redisPublisher 에서 메세지가 발행(publish) 되면

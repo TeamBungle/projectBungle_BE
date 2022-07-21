@@ -1,10 +1,10 @@
 package com.sparta.meeting_platform.controller;
 
 import com.sparta.meeting_platform.dto.FinalResponseDto;
-import com.sparta.meeting_platform.dto.user.DuplicateRequestDto;
-import com.sparta.meeting_platform.dto.user.LoginRequestDto;
-import com.sparta.meeting_platform.dto.user.ProfileRequestDto;
-import com.sparta.meeting_platform.dto.user.SignupRequestDto;
+import com.sparta.meeting_platform.dto.UserDto.DuplicateRequestDto;
+import com.sparta.meeting_platform.dto.UserDto.LoginRequestDto;
+import com.sparta.meeting_platform.dto.UserDto.ProfileRequestDto;
+import com.sparta.meeting_platform.dto.UserDto.SignupRequestDto;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.service.UserService;
 import lombok.RequiredArgsConstructor;

@@ -4,10 +4,6 @@ plugins {
     id 'java'
 }
 
-jar {
-    enabled = false
-}
-
 group = 'com.sparta'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '1.8'
@@ -82,8 +78,9 @@ dependencies {
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
-    // Redis
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    // QRcode
+    implementation group: 'com.google.zxing', name: 'core', version: '3.5.0'
+    implementation group: 'com.google.zxing', name: 'javase', version: '3.5.0'
 
     // webrtc test용
     annotationProcessor 'org.projectlombok:lombok'

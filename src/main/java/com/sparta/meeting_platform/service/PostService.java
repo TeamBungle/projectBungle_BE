@@ -1,8 +1,13 @@
 package com.sparta.meeting_platform.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.meeting_platform.chat.dto.UserDto;
-import com.sparta.meeting_platform.chat.repository.ChatRoomRepository;
-import com.sparta.meeting_platform.chat.repository.InvitedUsersRepository;
+import com.sparta.meeting_platform.chat.model.ChatMessage;
+import com.sparta.meeting_platform.chat.model.ChatRoom;
+import com.sparta.meeting_platform.chat.model.ResignChatMessage;
+import com.sparta.meeting_platform.chat.model.ResignChatRoom;
+import com.sparta.meeting_platform.chat.repository.*;
 import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.domain.User;
@@ -11,6 +16,7 @@ import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
 import com.sparta.meeting_platform.dto.SearchMapDto;
+import com.sparta.meeting_platform.dto.UserDto.MyPageDto;
 import com.sparta.meeting_platform.dto.user.MyPageDto;
 import com.sparta.meeting_platform.exception.PostApiException;
 import com.sparta.meeting_platform.exception.UserApiException;
@@ -21,10 +27,10 @@ import com.sparta.meeting_platform.repository.mapping.PostMapping;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.util.FileExtFilter;
 import com.sparta.meeting_platform.util.PostListComparator;
+import io.lettuce.core.ScriptOutputType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Point;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -33,11 +39,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import java.io.File;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-
 import java.util.*;
 
 
@@ -57,6 +60,10 @@ public class PostService {
     private final InvitedUsersRepository invitedUsersRepository;
 
     private final FileExtFilter fileExtFilter;
+    private final ChatRoomJpaRepository chatRoomJpaRepository;
+    private final ChatMessageJpaRepository chatMessageJpaRepository;
+    private final ResignChatMessageJpaRepository resignChatMessageJpaRepository;
+    private final ResignChatRoomJpaRepository resignChatRoomJpaRepository;
 
 
     //게시글 전체 조회(4개만)
@@ -218,6 +225,13 @@ public class PostService {
     public ResponseEntity<FinalResponseDto<?>> createPost(Long userId, PostRequestDto requestDto, List<MultipartFile> files) throws Exception {
         User user = checkUser(userId);
         Boolean isOwner = user.getIsOwner();
+
+        for (MultipartFile file : files){
+            if(!fileExtFilter.badFileExt(file)){
+                throw new PostApiException("이미지가 아닙니다.");
+            }
+        }
+
 //        if (files.size() > 3) {
 //            throw new PostApiException("게시글 사진은 3개 이하 입니다.");
 //        }
@@ -268,9 +282,6 @@ public class PostService {
         } else {
             List<String> postUrls = new ArrayList<>();
             for (MultipartFile file : files) {
-                if(!fileExtFilter.badFileExt(file)){
-                    throw new PostApiException("이미지가 아닙니다.");
-                }
                 postUrls.add(s3Service.upload(file));
             }
             requestDto.setPostUrls(postUrls);
@@ -291,20 +302,16 @@ public class PostService {
     public ResponseEntity<FinalResponseDto<?>> updatePost(Long postId, Long userId, PostRequestDto requestDto, List<MultipartFile> files) throws Exception {
         checkUser(userId);
         Post post = checkPost(postId);
-
-        List<String> postUrls = new ArrayList<>();
-        if (files.size() > 0) {
+        if (files == null) {
+            requestDto.setPostUrls(post.getPostUrls());
+            // 기본 이미지로 변경 필요
+        } else {
+            List<String> postUrls = new ArrayList<>();
             for (MultipartFile file : files) {
                 postUrls.add(s3Service.upload(file));
             }
+            requestDto.setPostUrls(postUrls);
         }
-
-
-        if (requestDto.getPostUrls().size()>0){
-            postUrls.addAll(requestDto.getPostUrls());
-        }
-        requestDto.setPostUrls(postUrls);
-
         SearchMapDto searchMapDto = mapSearchService.findLatAndLong(requestDto.getPlace());
         Point point = mapSearchService.makePoint(searchMapDto.getLongitude(), searchMapDto.getLatitude());
         post.update(searchMapDto.getLongitude(), searchMapDto.getLatitude(), requestDto, point);

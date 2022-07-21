@@ -1,8 +1,8 @@
 package com.sparta.meeting_platform.domain;
 
+import com.sparta.meeting_platform.dto.UserDto.ProfileRequestDto;
+import com.sparta.meeting_platform.dto.UserDto.SignupRequestDto;
 import com.sparta.meeting_platform.chat.model.InvitedUsers;
-import com.sparta.meeting_platform.dto.user.ProfileRequestDto;
-import com.sparta.meeting_platform.dto.user.SignupRequestDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -118,4 +118,7 @@ public class User {
         this.intro = requestDto.getIntro();
     }
 
+    public void updateMannerTemp() {
+        this.mannerTemp += 5;
+    }
 }

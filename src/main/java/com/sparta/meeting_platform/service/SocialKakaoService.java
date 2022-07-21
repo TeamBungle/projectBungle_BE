@@ -74,7 +74,7 @@ public class SocialKakaoService {
         int mannerTemp = kakaoUser.getMannerTemp();
 
         return new ResponseEntity<>(new FinalResponseDto<>
-                (true, "로그인 성공",kakaoUser.getId(), nickname, mannerTemp,kakaoUser.getUsername() ), HttpStatus.OK);
+                (true, "로그인 성공", nickname, mannerTemp,kakaoUser.getId() ), HttpStatus.OK);
     }
     //header 에 Content-type 지정
     //1번
@@ -109,7 +109,7 @@ public class SocialKakaoService {
     }
 
         //2번
-    private KakaoUserInfoDto getKakaoUserInfo(String accessToken) throws JsonProcessingException {
+    public KakaoUserInfoDto getKakaoUserInfo(String accessToken) throws JsonProcessingException {
         // HTTP Header 생성
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + accessToken);
@@ -177,7 +177,7 @@ public class SocialKakaoService {
     }
 
     // 4번
-    private Authentication forceLoginKakaoUser(User kakaoUser) {
+    public Authentication forceLoginKakaoUser(User kakaoUser) {
         UserDetails userDetails = new UserDetailsImpl(kakaoUser);
         Authentication authentication =
                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
@@ -187,7 +187,7 @@ public class SocialKakaoService {
     }
 
     // 5번
-    private void kakaoUsersAuthorizationInput(Authentication authentication, HttpServletResponse response) {
+    public void kakaoUsersAuthorizationInput(Authentication authentication, HttpServletResponse response) {
         // response header에 token 추가
         UserDetailsImpl userDetailsImpl = ((UserDetailsImpl) authentication.getPrincipal());
         String token = jwtTokenProvider.generateJwtToken(userDetailsImpl);

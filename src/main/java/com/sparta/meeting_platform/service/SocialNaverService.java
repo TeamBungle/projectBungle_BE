@@ -84,7 +84,7 @@ public class SocialNaverService {
             // refresh token 발행 후 Redis에 저장
             redisService.setValues(jwtTokenProvider.createRefreshToken(), user.getUsername(), Duration.ofMillis(1000*60*60*24*7));
             return new ResponseEntity<>(new FinalResponseDto<>
-                    (true, "로그인 성공!!",user.getId(), user.getNickName(), user.getMannerTemp(),user.getUsername() ), HttpStatus.OK);
+                    (true, "로그인 성공!!",user.getNickName(), user.getMannerTemp(),user.getId()), HttpStatus.OK);
         } catch (IOException e) {
             return new ResponseEntity<>(new FinalResponseDto<>
                     (false, "로그인 실패"), HttpStatus.OK);

@@ -8,6 +8,7 @@ import com.sparta.meeting_platform.chat.model.InvitedUsers;
 import com.sparta.meeting_platform.chat.repository.*;
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.exception.UserApiException;
+import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.security.JwtTokenProvider;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
@@ -38,6 +39,8 @@ public class ChatService {
     private final S3Service s3Service;
     private final InvitedUsersRepository invitedUsersRepository;
     private final ChatRoomJpaRepository chatRoomJpaRepository;
+    private final PostRepository postRepository;
+
 
     @Transactional
     public void save(ChatMessageDto messageDto, String BearerToken) {
@@ -57,7 +60,8 @@ public class ChatService {
         messageDto.setSender(user.getNickName());
         messageDto.setProfileUrl(user.getProfileUrl());
         messageDto.setCreatedAt(dateToStr);
-        messageDto.setUsername(username);
+        messageDto.setUserId(user.getId());
+        messageDto.setQuitOwner(false);
         log.info("type : {}", messageDto.getType());
 
         //받아온 메세지의 타입이 ENTER 일때
@@ -65,21 +69,36 @@ public class ChatService {
             chatRoomRepository.enterChatRoom(messageDto.getRoomId());
             messageDto.setMessage("[알림] " + messageDto.getSender() + "님이 입장하셨습니다.");
             String roomId = messageDto.getRoomId();
-            //초대된 유저에 채팅방 아이디와 유저를 함께 저장한다
-            InvitedUsers invitedUsers = new InvitedUsers(roomId, user);
             // 이미 그방에 초대되어 있다면 중복으로 저장을 하지 않게 한다.
-            if (!invitedUsersRepository.existsByUserIdAndRoomId(user.getId(), messageDto.getRoomId())) {
+            List<InvitedUsers> invitedUsersList = invitedUsersRepository.findAllByPostId(Long.parseLong(roomId));
+            log.info("invitedUserlist size : {}", invitedUsersList.size());
+            for (InvitedUsers invitedUsers : invitedUsersList) {
+                if (invitedUsersList.size() >= postRepository.findById(Long.parseLong(roomId)).get().getPersonnel() && (!invitedUsers.getUser().getId().equals(user.getId()))) {
+                    log.info("persoonel size : {}", postRepository.findById(Long.parseLong(roomId)).get().getPersonnel());
+                    log.info("inviteduserId: {}", invitedUsers.getUser().getId());
+                    log.info("user.getid: {}", user.getId());
+                    messageDto.setMessage("[알림] 채팅방 정원을 초과하였습니다!");
+                }
+            }
+            if (!invitedUsersRepository.existsByUserIdAndPostId(user.getId(),Long.parseLong(roomId))) {
+                //초대된 유저에 채팅방 아이디와 유저를 함께 저장한다
+                InvitedUsers invitedUsers = new InvitedUsers(Long.parseLong(roomId), user);
                 invitedUsersRepository.save(invitedUsers);
             }
             //받아온 메세지 타입이 QUIT 일때
         }else if (ChatMessage.MessageType.QUIT.equals(messageDto.getType())) {
             messageDto.setMessage("[알림] " + messageDto.getSender() + "님이 나가셨습니다.");
             // 들어갈때 저장했던 유저정보를 삭제해준다.
-            invitedUsersRepository.deleteByUserIdAndRoomId(user.getId(),messageDto.getRoomId());
+            invitedUsersRepository.deleteByUserIdAndPostId(user.getId(),Long.parseLong(messageDto.getRoomId()));
+            ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(messageDto.getRoomId());
+            if(chatRoom.getUsername().equals(username)){
+                messageDto.setQuitOwner(true);
+                messageDto.setMessage("[알림] " + "(방장) " + messageDto.getSender() + "님이 나가셨습니다. " +
+                        "더 이상 대화를 할 수 없으며 채팅방을 나가면 다시 입장할 수 없습니다.");
+            }
         }
 
         log.info("ENTER : {}", messageDto.getMessage());
-
         ChatRoom chatRoom = chatRoomJpaRepository.findByUsername(username);
         chatMessageRepository.save(messageDto); // 캐시에 저장 했다.
         ChatMessage chatMessage = new ChatMessage(messageDto,chatRoom);
@@ -107,9 +126,8 @@ public class ChatService {
         userRepository.findById(userDetails.getUser().getId()).orElseThrow(
                 () -> new UserApiException("존재하지 않는 사용자 입니다.")
         );
-        List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByRoomId(roomId);
+        List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByPostId(Long.parseLong(roomId));
         List<UserinfoDto> users = new ArrayList<>();
-
         for (InvitedUsers invitedUser : invitedUsers) {
            User user = invitedUser.getUser();
             users.add(new UserinfoDto(user.getNickName(),user.getProfileUrl(),user.getId()));
