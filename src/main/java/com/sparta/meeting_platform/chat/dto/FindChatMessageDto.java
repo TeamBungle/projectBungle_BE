@@ -10,7 +10,8 @@ public interface FindChatMessageDto {
     String getMessage();
     String getProfileUrl();
     Long getEnterUserCnt();
-    String getUsername();
+    Long getUserId();
     String getCreatedAt();
     String getFileUrl();
+    Boolean getQuitOwner();
 }

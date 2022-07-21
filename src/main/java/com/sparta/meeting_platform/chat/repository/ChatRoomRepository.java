@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
 @Repository
@@ -43,7 +44,7 @@ public class ChatRoomRepository {
         topics = new HashMap<>();
     }
 
-    //내가 참여한 모든 채팅방 목록 조히
+    //내가 참여한 모든 채팅방 목록 조회
     @Transactional
     public List<ChatRoomResponseDto> findAllRoom(Long userId) {
         List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByUserId(userId);
@@ -67,7 +68,6 @@ public class ChatRoomRepository {
         }
         return chatRoomResponseDtoList;
     }
-
     /**
      * 채팅방 입장 : redis에 topic을 만들고 pub/sub 통신을 하기 위해 리스너를 설정한다.
      */
@@ -79,7 +79,6 @@ public class ChatRoomRepository {
             topics.put(roomId, topic);
         }
     }
-
     /*
      * 채팅방 생성 , 게시글 생성시 만들어진 postid를 받아와서 게시글 id로 사용한다.
      */
@@ -87,6 +86,7 @@ public class ChatRoomRepository {
     public void createChatRoom(Post post, UserDto userDto) {
         ChatRoom chatRoom = ChatRoom.create(post, userDto);
         opsHashChatRoom.put(CHAT_ROOMS, chatRoom.getRoomId(), chatRoom); // redis 저장
+        redisTemplate.expire(CHAT_ROOMS,30, TimeUnit.MINUTES);
         chatRoomJpaRepository.save(chatRoom); // DB 저장
     }
 
