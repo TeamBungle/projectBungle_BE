@@ -1,7 +1,7 @@
 package com.sparta.meeting_platform.service;
 
 
-import com.sparta.meeting_platform.Location;
+import com.sparta.meeting_platform.util.Location;
 import com.sparta.meeting_platform.dto.SearchMapDto;
 import com.sparta.meeting_platform.exception.MapApiException;
 import com.sparta.meeting_platform.util.Direction;
@@ -33,8 +33,7 @@ public class MapSearchService {
     public Point makePoint(Double longitude, Double latitude) throws org.locationtech.jts.io.ParseException {
         String pointWKT = String.format("POINT(%s %s)",latitude,longitude);
         // WKTReader를 통해 WKT를 실제 타입으로 변환합니다.
-        Point point = (Point) new WKTReader().read(pointWKT);
-        return point;
+        return (Point) new WKTReader().read(pointWKT);
     }
 
 
@@ -102,7 +101,6 @@ public class MapSearchService {
         double y1 = northEast.getLongitude();
         double x2 = southWest.getLatitude();
         double y2 = southWest.getLongitude();
-        String pointFormat = String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2);
-        return pointFormat;
+        return String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2);
     }
 }

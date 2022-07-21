@@ -1,7 +1,5 @@
 package com.sparta.meeting_platform.service;
 
-import com.sparta.meeting_platform.Location;
-import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.MapListDto;
@@ -10,15 +8,9 @@ import com.sparta.meeting_platform.dto.SearchMapDto;
 import com.sparta.meeting_platform.exception.UserApiException;
 import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.exception.MapApiException;
-import com.sparta.meeting_platform.repository.LikeRepository;
-import com.sparta.meeting_platform.repository.PostRepository;
-import com.sparta.meeting_platform.util.Direction;
-import com.sparta.meeting_platform.util.GeometryUtil;
 import com.sparta.meeting_platform.util.MapListComparator;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.mapping.Array;
 import org.json.simple.parser.ParseException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;

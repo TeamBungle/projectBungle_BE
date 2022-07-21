@@ -78,9 +78,17 @@ dependencies {
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
-    // QRcodeddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+    // QRcode
     implementation group: 'com.google.zxing', name: 'core', version: '3.5.0'
     implementation group: 'com.google.zxing', name: 'javase', version: '3.5.0'
+
+    // webrtc test용
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // openvidu
+    implementation group: 'io.openvidu', name: 'openvidu-java-client', version: '2.22.0'
+
 
 }
 

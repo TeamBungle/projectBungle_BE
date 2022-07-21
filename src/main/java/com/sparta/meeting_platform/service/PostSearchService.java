@@ -306,7 +306,12 @@ public class PostSearchService {
         LocalDateTime localDateTime = LocalDateTime.parse(time, inputFormat);
         if (!localDateTime.isAfter(LocalDateTime.now())) {
             Duration duration = Duration.between(localDateTime, LocalDateTime.now());
-            return duration.getSeconds() / 60 + "분 경과";
+            if(duration.getSeconds() < 60 * 60){
+                return duration.getSeconds() / 60 + "분 경과";
+            } else {
+                return duration.getSeconds() / 60 / 60 + "시 경과";
+            }
+
         }
         return localDateTime.getHour() + "시 시작 예정";
     }

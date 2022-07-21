@@ -10,6 +10,7 @@ import com.sparta.meeting_platform.dto.NaverDto.NaverUserDto;
 import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.security.JwtTokenProvider;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
+import com.sparta.meeting_platform.security.redis.RedisService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,12 +19,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.UUID;
 
 @Service
@@ -34,7 +37,9 @@ public class SocialNaverService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final  UserRoleCheckService userRoleCheckService;
+    private final RedisService redisService;
 
+    @Transactional
     public ResponseEntity<FinalResponseDto<?>> naverLogin(String code, String state, HttpServletResponse response) {
 
         try {
@@ -75,6 +80,9 @@ public class SocialNaverService {
 //            UserDetailsImpl userDetailsImpl = ((UserDetailsImpl) authentication.getPrincipal());
             String token = jwtTokenProvider.generateJwtToken(userDetails);
             response.addHeader("Authorization", "Bearer" + " " + token);
+
+            // refresh token 발행 후 Redis에 저장
+            redisService.setValues(jwtTokenProvider.createRefreshToken(), user.getUsername(), Duration.ofMillis(1000*60*60*24*7));
             return new ResponseEntity<>(new FinalResponseDto<>
                     (true, "로그인 성공!!",user.getNickName(), user.getMannerTemp(),user.getId()), HttpStatus.OK);
         } catch (IOException e) {

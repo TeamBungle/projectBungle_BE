@@ -153,7 +153,7 @@ public class PostController {
     public ResponseEntity<FinalResponseDto<?>> getSearch(@RequestParam(value = "keyword") String keyword,
                                                          @RequestParam(value = "latitude") Double latitude,
                                                          @RequestParam(value = "longitude") Double longitude,
-                                                         @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
+                                                         @AuthenticationPrincipal UserDetailsImpl userDetails) {
         Long userId = getUserId(userDetails);
         return postService.getSearch(keyword,userId,longitude,latitude);
     }

@@ -225,12 +225,11 @@ public class PostService {
         User user = checkUser(userId);
         Boolean isOwner = user.getIsOwner();
 
-        if(files != null){
         for (MultipartFile file : files){
             if(!fileExtFilter.badFileExt(file)){
                 throw new PostApiException("이미지가 아닙니다.");
             }
-        }}
+        }
 
 //        if (files.size() > 3) {
 //            throw new PostApiException("게시글 사진은 3개 이하 입니다.");
@@ -302,22 +301,13 @@ public class PostService {
     public ResponseEntity<FinalResponseDto<?>> updatePost(Long postId, Long userId, PostRequestDto requestDto, List<MultipartFile> files) throws Exception {
         checkUser(userId);
         Post post = checkPost(postId);
-        if (files == null && requestDto != null) {
-            requestDto.setPostUrls(requestDto.getPostUrls());
+        if (files == null) {
+            requestDto.setPostUrls(post.getPostUrls());
             // 기본 이미지로 변경 필요
-        } else if(requestDto == null && files != null){
+        } else {
             List<String> postUrls = new ArrayList<>();
             for (MultipartFile file : files) {
                 postUrls.add(s3Service.upload(file));
-            }
-            requestDto.setPostUrls(postUrls);
-        } else{
-            List<String> postUrls = new ArrayList<>();
-            for (MultipartFile file : files) {
-                postUrls.add(s3Service.upload(file));
-            }
-            for (String postUrl : requestDto.getPostUrls()){
-                postUrls.add(postUrl);
             }
             requestDto.setPostUrls(postUrls);
         }
@@ -367,17 +357,6 @@ public class PostService {
             likeRepository.deleteByPostId(postId);
             postRepository.deleteById(postId);
             user.setIsOwner(false);
-            invitedUsersRepository.deleteByUser(user);
-            ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(String.valueOf(postId));
-            List<ChatMessage> chatMessage = chatMessageJpaRepository.findAllByChatRoom(chatRoom);
-            ResignChatRoom resignChatRoom = new ResignChatRoom(chatRoom);
-            resignChatRoomJpaRepository.save(resignChatRoom);
-            for (ChatMessage message : chatMessage) {
-                ResignChatMessage resignChatMessage = new ResignChatMessage(message,resignChatRoom);
-                resignChatMessageJpaRepository.save(resignChatMessage);
-            }
-            chatMessageJpaRepository.deleteByChatRoom(chatRoom);
-            chatRoomJpaRepository.deleteByRoomId(String.valueOf(postId));
             return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공", user.getIsOwner()), HttpStatus.OK);
         }
     }

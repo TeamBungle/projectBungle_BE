@@ -1,4 +1,4 @@
-package com.sparta.meeting_platform;
+package com.sparta.meeting_platform.util;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

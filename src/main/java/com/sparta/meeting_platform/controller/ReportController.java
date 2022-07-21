@@ -24,6 +24,7 @@ public class ReportController {
 
     @GetMapping("/user/reports")
     public ResponseEntity<FinalResponseDto<?>> getUserReport (@AuthenticationPrincipal UserDetailsImpl userDetails){
+        // 신고 내용 반환
         return reportService.getUserReport(userDetails.getUser().getId());
     }
 

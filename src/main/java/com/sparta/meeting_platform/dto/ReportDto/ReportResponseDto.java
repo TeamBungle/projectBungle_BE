@@ -16,6 +16,6 @@ public class ReportResponseDto {
         this.nickName = report.getBadMannerNickName();
         this.profileUrl = report.getBadMannerUrl();
         this.history= report.getHistory();
-    };
+    }
 
 }

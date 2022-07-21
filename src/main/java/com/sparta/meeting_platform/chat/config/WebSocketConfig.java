@@ -35,7 +35,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     * 메세지를 받을때, 경로를 설정해준다
     * "/sub"이 api에 prefix로 붙은경우, messagebroker가 해당 경로를 가로챈다
     * 2.setApplicationDestinationPrefixes
-    * - 메세지를 보낼때 관련 경로를 성정해주는 함수.
+    * - 메세지를 보낼때 관련 경로를 설정해주는 함수.
     * - 클라이언트가 메세지를 보낼때, api에 prefix로 "/pub"이 붙어있으면 broker로 메세지가 보내진다.
     *  */
     @Override

@@ -1,6 +1,8 @@
 package com.sparta.meeting_platform.security;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sparta.meeting_platform.exception.UserApiException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -30,9 +32,12 @@ public class JwtTokenProvider {
 
     // 토큰 유효시간
     // 프론트엔드와 약속해야 함
-    private Long tokenValidTime = 24*60*60*1000L;
+    private final Long tokenValidTime = 5*60*1000L;  // 5분
+    private final Long refreshTokenValidTime = 7*24*60*60*1000L;  // 1주일
 
     private final UserDetailsService userDetailsService;
+
+    private final ObjectMapper objectMapper;
 
     @PostConstruct
     protected void init() {
@@ -40,7 +45,7 @@ public class JwtTokenProvider {
     }
 
     // 토큰 생성
-    public void createToken(String userPk) {
+    public String createToken(String userPk) {
         Claims claims = Jwts.claims().setSubject(userPk);
         Date now = new Date();
         String token= Jwts.builder()
@@ -51,7 +56,19 @@ public class JwtTokenProvider {
                 //signature에 들어갈 secret값 세팅
                 .compact();
 
-        response.addHeader(AUTH_HEADER,"Bearer " +token);
+        response.addHeader(AUTH_HEADER,"Bearer " + token);
+        return token;
+    }
+
+    public String createRefreshToken() {
+        Date now = new Date();
+        String refreshToken= Jwts.builder()
+                .setIssuedAt(now)
+                .setExpiration(new Date(now.getTime() + refreshTokenValidTime))
+                .signWith(SignatureAlgorithm.HS256, secretKey)
+                .compact();
+        response.addHeader("RefreshToken","Bearer " + refreshToken);
+        return refreshToken;
     }
 
     public String generateJwtToken(UserDetails userDetails) {
@@ -69,14 +86,13 @@ public class JwtTokenProvider {
     }
 
     // 토큰에서 회원 정보 추출
-    public String getUserPk(String BearerToken) {
-        String token = BearerToken.replace("Bearer ", "");
-        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().getSubject();
+    public String getUserPk(String jwtToken) {
+        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(setTokenName(jwtToken)).getBody().getSubject();
     }
 
     // JWT 토큰에서 인증 정보 조회
-    public Authentication getAuthentication(String token) {
-        UserDetails userDetails = userDetailsService.loadUserByUsername(this.getUserPk(token));
+    public Authentication getAuthentication(String jwtToken) {
+        UserDetails userDetails = userDetailsService.loadUserByUsername(this.getUserPk(setTokenName(jwtToken)));
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
@@ -84,17 +100,27 @@ public class JwtTokenProvider {
     //"X-AUTH-TOKEN":"TOKEN 깞"
     public String resolveToken(HttpServletRequest request) {
         return request.getHeader("Authorization");
-
+    }
+    public String resolveRefreshToken(HttpServletRequest request) {
+        return request.getHeader("RefreshToken");
     }
 
     // 토큰의 유효성 + 만료일자 확인
     public boolean validateToken(String jwtToken) {
+
         try {
-            String Token = jwtToken.replace("Bearer ", "");
-            Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(Token);
+            Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(setTokenName(jwtToken));
             return !claims.getBody().getExpiration().before(new Date());
         } catch (Exception e) {
             return false;
         }
     }
+
+    // Bearer 삭제
+    private String setTokenName(String bearerToken){
+        return bearerToken.replace("Bearer ", "");
+    }
+
+
 }
+

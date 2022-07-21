@@ -59,4 +59,14 @@ public class UserController {
         return userService.getProfile(userDetails.getUser().getId());
     }
 
+    // 만료된 access token 재 발급
+    @PostMapping(value = "/user/refresh")
+    public ResponseEntity<FinalResponseDto<?>> refreshToken(
+            @RequestHeader(value="Authorization") String accessToken,
+            @RequestHeader(value="RefreshToken") String refreshToken ) {
+
+        return userService.refreshToken(accessToken, refreshToken);
+    }
+
+
 }

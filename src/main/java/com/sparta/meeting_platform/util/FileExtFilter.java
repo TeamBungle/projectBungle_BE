@@ -1,5 +1,6 @@
 package com.sparta.meeting_platform.util;
 
+import com.sparta.meeting_platform.exception.PostApiException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -8,17 +9,21 @@ import org.springframework.web.multipart.MultipartFile;
 public class FileExtFilter {
 
     public Boolean badFileExt (MultipartFile file){
-        String fileName = file.getOriginalFilename();
-        String ext = fileName.substring(fileName.lastIndexOf(".")+1 , fileName.length());
-        final String[] badExtension = {"png","jpg","jpeg"};
 
-        for (String s : badExtension) {
-            if (ext.equals(s)) {
-                return true;
+        try{
+            String fileName = file.getOriginalFilename();
+            String ext = fileName.substring(fileName.lastIndexOf(".")+1 , fileName.length());
+            final String[] badExtension = {"png","jpg","jpeg"};
+
+            for (String s : badExtension) {
+                if (ext.equals(s)) {
+                    return true;
+                }
+
             }
-
+            return false;
+        } catch (NullPointerException e){
+            throw new PostApiException("잘못된 형식의 파일 입니다");
         }
-        return false;
-
     }
 }
