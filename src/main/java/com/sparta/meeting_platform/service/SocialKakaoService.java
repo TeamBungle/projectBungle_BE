@@ -138,7 +138,7 @@ public class SocialKakaoService {
         int mannerTemp = userRoleCheckService.userResignCheck(kakaoUserInfoDto.getEmail());
         // DB 에 중복된 Kakao Id 가 있는지 확인
         Long kakaoId = kakaoUserInfoDto.getKakaoId();
-        User findKakao = userRepository.findByKakaoId(kakaoId)
+        User findKakao = userRepository.findByUsername(kakaoUserInfoDto.getEmail())
                 .orElse(null);
 
         //DB에 중복된 계정이 없으면 회원가입 처리
@@ -157,6 +157,7 @@ public class SocialKakaoService {
                     .createdAt(createdAt)
                     .kakaoId(kakaoId)
                     .mannerTemp(mannerTemp)
+                    .isOwner(false)
                     .role(UserRoleEnum.USER)
                     .build();
             userRepository.save(kakaoUser);

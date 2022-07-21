@@ -21,8 +21,10 @@ public class FinalResponseDto<T> {
     private List<String> postUrls;
     private boolean response;
     private String message;
+    private Long userId;
     private Boolean isOwner;
     private PostResponseDto postResponseDto;
+    private String username;
     private String nickName;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private int mannerTemp;
@@ -32,7 +34,6 @@ public class FinalResponseDto<T> {
     private List<PostResponseDto> postListRealTime;
     private List<PostResponseDto> postListEndTime;
     private PostDetailsResponseDto postDetailsResponseDto;
-    private Long userId;
 
 
     public FinalResponseDto(boolean response, String message, Long postId, List<String> postUrls) {
@@ -109,6 +110,4 @@ public class FinalResponseDto<T> {
         this.message =message;
         this.isOwner =isOwner;
     }
-
-
 }
