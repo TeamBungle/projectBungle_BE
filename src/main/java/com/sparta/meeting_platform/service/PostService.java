@@ -298,6 +298,8 @@ public class PostService {
                 postUrls.add(s3Service.upload(file));
             }
         }
+
+
         if (requestDto.getPostUrls().size()>0){
             postUrls.addAll(requestDto.getPostUrls());
         }
