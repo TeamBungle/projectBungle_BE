@@ -27,8 +27,6 @@ public class RedisConfig {
     @Value("${spring.redis.port}")
     private int port;
 
-    @Value("${spring.redis.password}")
-    private String password;
 
      /*
      *  redisConnectionFactory 를 통해 외부 redis 를 연결한다.
