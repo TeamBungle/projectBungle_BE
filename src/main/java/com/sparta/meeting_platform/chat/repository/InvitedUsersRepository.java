@@ -12,8 +12,7 @@ public interface InvitedUsersRepository extends JpaRepository<InvitedUsers, Long
     List<InvitedUsers> findAllByUserId(Long userId);
     void deleteAllByPostId(Long postId);
     void deleteByUserId(Long userId);
-    void deleteByUser(User user);
     List<InvitedUsers> findAllByPostId(Long postId);
-
     InvitedUsers findByUserIdAndPostId(Long id, Long id1);
+    int countByPostId(Long postId);
 }

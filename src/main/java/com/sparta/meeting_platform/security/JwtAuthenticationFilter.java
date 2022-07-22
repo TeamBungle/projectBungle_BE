@@ -1,10 +1,9 @@
 package com.sparta.meeting_platform.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.web.filter.GenericFilterBean;
 
 import javax.servlet.FilterChain;
@@ -21,10 +20,8 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        response.setContentType("application/json");
-        response.setCharacterEncoding("utf-8");
-        final ObjectMapper mapper = new ObjectMapper();
-
+//        response.setContentType("application/json");
+//        response.setCharacterEncoding("utf-8");
         // 헤더에서 jwt 토큰 받아옴
         String token = jwtTokenProvider.resolveToken((HttpServletRequest) request);
 
@@ -35,11 +32,11 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } else if(token != null && !jwtTokenProvider.validateToken(token)){
             String result = jwtTokenProvider.resolveRefreshToken((HttpServletRequest) request);
+
             if(result == null){
                 throw new JwtException("access token 이 만료 되었습니다.");
             }
         }
-
         chain.doFilter(request, response);
     }
 }

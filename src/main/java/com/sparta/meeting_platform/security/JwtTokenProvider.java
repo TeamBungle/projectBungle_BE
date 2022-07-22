@@ -37,8 +37,6 @@ public class JwtTokenProvider {
 
     private final UserDetailsService userDetailsService;
 
-    private final ObjectMapper objectMapper;
-
     @PostConstruct
     protected void init() {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
@@ -79,7 +77,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .setClaims(claims)//정보저장
                 .setIssuedAt(now)//토큰 발행 시간 정보
-                .setExpiration(new Date(now.getTime() + 24*60*60*1000L))
+                .setExpiration(new Date(now.getTime() + tokenValidTime))
                 .signWith(SignatureAlgorithm.HS256, secretKey)//사용할 암호화 알고리즘
                 //signature에 들어갈 secret값 세팅
                 .compact();
