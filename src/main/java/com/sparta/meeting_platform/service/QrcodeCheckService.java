@@ -87,8 +87,8 @@ public class QrcodeCheckService {
     public ResponseEntity<FinalResponseDto<?>> googleLogin(String authCode, HttpServletResponse httpServletResponse, Long postId) throws JsonProcessingException {
         ResponseEntity<FinalResponseDto<?>> finalResponseDtoResponseEntity
                 = socialGoogleService.googleLogin(authCode,httpServletResponse);
-        String username = finalResponseDtoResponseEntity.getBody().getUsername();
-        User user = userRepository.findByUsername(username).orElseThrow(
+        Long userId = finalResponseDtoResponseEntity.getBody().getUserId();
+        User user = userRepository.findById(userId).orElseThrow(
                 () -> new UserApiException("해당 유저를 찾을 수 없습니다."));
         Post post = postRepository.findById(postId).orElseThrow(
                 () -> new PostApiException("존재하지 않는 게시물 입니다."));

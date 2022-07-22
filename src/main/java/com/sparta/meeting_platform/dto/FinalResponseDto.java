@@ -1,6 +1,7 @@
 package com.sparta.meeting_platform.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.sparta.meeting_platform.chat.videoChat.VideoChatResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
 import com.sparta.meeting_platform.dto.UserDto.MyPageDto;
@@ -24,7 +25,6 @@ public class FinalResponseDto<T> {
     private Long userId;
     private Boolean isOwner;
     private PostResponseDto postResponseDto;
-    private String username;
     private String nickName;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private int mannerTemp;
@@ -34,6 +34,7 @@ public class FinalResponseDto<T> {
     private List<PostResponseDto> postListRealTime;
     private List<PostResponseDto> postListEndTime;
     private PostDetailsResponseDto postDetailsResponseDto;
+    private VideoChatResponseDto videoChatResponseDto;
 
 
     public FinalResponseDto(boolean response, String message, Long postId, List<String> postUrls) {
@@ -110,4 +111,11 @@ public class FinalResponseDto<T> {
         this.message =message;
         this.isOwner =isOwner;
     }
+
+    public FinalResponseDto(boolean response, String message, VideoChatResponseDto videoChatResponseDto) {
+        this.response = response;
+        this.message = message;
+        this.videoChatResponseDto = videoChatResponseDto;
+    }
+
 }

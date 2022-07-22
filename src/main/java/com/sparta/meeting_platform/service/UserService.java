@@ -101,8 +101,6 @@ public class UserService {
             throw new UserApiException("비밀번호를 확인해 주세요");
         }
 
-        // refresh token 발행 후 저장
-//        user.setRefreshToken(jwtTokenProvider.createRefreshToken());
         // refresh token 발행 후 Redis에 저장
         redisService.setValues(jwtTokenProvider.createRefreshToken(), user.getUsername(), Duration.ofMillis(1000*60*60*24*7));
         jwtTokenProvider.createToken(requestDto.getUsername());
@@ -211,12 +209,10 @@ public class UserService {
         }
 
         // refresh token 발행 후 Redis에 저장
-//        redisService.setValues(jwtTokenProvider.createRefreshToken(), user, Duration.ofMillis(1000*60*60*24*7));
-        // 재발행 후 기존 데이터 삭제
-//        redisService.deleteValues(token);
-        // accessToken 재발행
-//        jwtTokenProvider.createToken(user);
         redisService.setValues(jwtTokenProvider.createRefreshToken(), user, Duration.ofMillis(1000*60*60*24*7));
+        // 재발행 후 기존 데이터 삭제
+        redisService.deleteValues(token);
+        // accessToken 재발행
         jwtTokenProvider.createToken(user);
         return new ResponseEntity<>(new FinalResponseDto<>
                 (true, "access token 갱신 완료"), HttpStatus.OK);
