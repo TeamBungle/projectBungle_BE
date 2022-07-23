@@ -79,6 +79,9 @@ public class ChatService {
                     log.info("user.getid: {}", user.getId());
                     messageDto.setMessage("[알림] 채팅방 정원을 초과하였습니다!");
                 }
+                if(invitedUsers.getUser().equals(user)){
+                    invitedUsers.setReadCheck(true);
+                }
             }
             if (!invitedUsersRepository.existsByUserIdAndPostId(user.getId(),Long.parseLong(roomId))) {
                 //초대된 유저에 채팅방 아이디와 유저를 함께 저장한다
@@ -101,7 +104,7 @@ public class ChatService {
         log.info("ENTER : {}", messageDto.getMessage());
         ChatRoom chatRoom = chatRoomJpaRepository.findByUsername(username);
         chatMessageRepository.save(messageDto); // 캐시에 저장 했다.
-        ChatMessage chatMessage = new ChatMessage(messageDto,chatRoom);
+        ChatMessage chatMessage = new ChatMessage(messageDto,chatRoom,date);
         chatMessageJpaRepository.save(chatMessage); // DB 저장
         // Websocket 에 발행된 메시지를 redis 로 발행한다(publish)
         redisPublisher.publish(ChatRoomRepository.getTopic(messageDto.getRoomId()), messageDto);

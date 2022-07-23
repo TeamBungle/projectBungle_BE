@@ -2,6 +2,8 @@ package com.sparta.meeting_platform.chat.dto;
 
 import com.sparta.meeting_platform.chat.model.ChatMessage;
 
+import java.util.Date;
+
 public interface FindChatMessageDto {
 
     ChatMessage.MessageType getType();
@@ -11,7 +13,7 @@ public interface FindChatMessageDto {
     String getProfileUrl();
     Long getEnterUserCnt();
     Long getUserId();
-    String getCreatedAt();
+    Date getCreatedAt();
     String getFileUrl();
     Boolean getQuitOwner();
 }

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -50,6 +51,9 @@ public class ChatRoomRepository {
         List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByUserId(userId);
         List<ChatRoomResponseDto> chatRoomResponseDtoList = new ArrayList<>();
         for (InvitedUsers invitedUser : invitedUsers) {
+            if(invitedUser.getReadCheck()){
+                invitedUser.setReadCheck(false);
+            }
             Optional<Post> post = postRepository.findById(invitedUser.getPostId());
             ChatMessage chatMessage = chatMessageJpaRepository.findTop1ByRoomIdOrderByCreatedAtDesc(invitedUser.getPostId().toString());
             ChatRoomResponseDto chatRoomResponseDto = new ChatRoomResponseDto();
@@ -58,13 +62,19 @@ public class ChatRoomRepository {
             }else {
                 chatRoomResponseDto.setLastMessage(chatMessage.getMessage());
             }
-            chatRoomResponseDto.setLastMessageTime(chatMessage.getCreatedAt());
+
+            Date from = chatMessage.getCreatedAt();
+            SimpleDateFormat transFormat = new SimpleDateFormat("dd,MM,yyyy,HH,mm,ss", Locale.KOREA);
+            String date = transFormat.format(from);
+
+            chatRoomResponseDto.setLastMessageTime(date);
             chatRoomResponseDto.setPostTime(post.get().getTime());
             chatRoomResponseDto.setPostTitle(post.get().getTitle());
             chatRoomResponseDto.setPostUrl(post.get().getPostUrls().get(0));
             chatRoomResponseDto.setLetter(post.get().getIsLetter());
             chatRoomResponseDto.setPostId(post.get().getId());
             chatRoomResponseDtoList.add(chatRoomResponseDto);
+
         }
         return chatRoomResponseDtoList;
     }

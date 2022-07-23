@@ -1,12 +1,7 @@
 package com.sparta.meeting_platform.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.meeting_platform.chat.dto.UserDto;
-import com.sparta.meeting_platform.chat.model.ChatMessage;
-import com.sparta.meeting_platform.chat.model.ChatRoom;
-import com.sparta.meeting_platform.chat.model.ResignChatMessage;
-import com.sparta.meeting_platform.chat.model.ResignChatRoom;
+import com.sparta.meeting_platform.chat.model.InvitedUsers;
 import com.sparta.meeting_platform.chat.repository.*;
 import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
@@ -26,7 +21,6 @@ import com.sparta.meeting_platform.repository.mapping.PostMapping;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.util.FileExtFilter;
 import com.sparta.meeting_platform.util.PostListComparator;
-import io.lettuce.core.ScriptOutputType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Point;
@@ -216,6 +210,10 @@ public class PostService {
         Post post = checkPost(postId);
         Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
         PostDetailsResponseDto postDetailsResponseDto = postSearchService.detailPost(like, post);
+        InvitedUsers invitedUsers = invitedUsersRepository.findByUserId(userId);
+        if(invitedUsers.getReadCheck()){
+            invitedUsers.setReadCheck(false);
+        }
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postDetailsResponseDto), HttpStatus.OK);
     }
 

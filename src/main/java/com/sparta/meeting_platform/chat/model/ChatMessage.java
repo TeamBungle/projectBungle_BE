@@ -1,8 +1,12 @@
 package com.sparta.meeting_platform.chat.model;
 
 import com.sparta.meeting_platform.chat.dto.ChatMessageDto;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import javax.persistence.*;
+import java.util.Date;
 
 @Setter
 @Getter
@@ -32,7 +36,7 @@ public class ChatMessage {
     @Column
     private Long userId ;
     @Column
-    private String createdAt;
+    private Date createdAt;
     @Column
     private String fileUrl;
     @Column
@@ -42,7 +46,7 @@ public class ChatMessage {
     @ManyToOne
     private ChatRoom chatRoom;
 
-    public ChatMessage(ChatMessageDto chatMessageDto,ChatRoom chatRoom) {
+    public ChatMessage(ChatMessageDto chatMessageDto, ChatRoom chatRoom, Date createdAt) {
         this.type = chatMessageDto.getType();
         this.roomId = chatMessageDto.getRoomId();
         this.message = chatMessageDto.getMessage();
@@ -50,7 +54,7 @@ public class ChatMessage {
         this.profileUrl = chatMessageDto.getProfileUrl();
         this.enterUserCnt = chatMessageDto.getEnterUserCnt();
         this.userId = chatMessageDto.getUserId();
-        this.createdAt = chatMessageDto.getCreatedAt();
+        this.createdAt = createdAt;
         this.fileUrl = chatMessageDto.getFileUrl();
         this.chatRoom = chatRoom;
     }

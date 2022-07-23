@@ -14,9 +14,8 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
@@ -84,7 +83,10 @@ public class ChatMessageRepository {
             List<FindChatMessageDto> chatMessages = chatMessageJpaRepository.findAllByRoomId(roomId);
 
             for (FindChatMessageDto chatMessage : chatMessages) {
-                ChatMessageDto chatMessageDto = new ChatMessageDto(chatMessage);
+                Date from = chatMessage.getCreatedAt();
+                SimpleDateFormat transFormat = new SimpleDateFormat("dd,MM,yyyy,HH,mm,ss", Locale.KOREA);
+                String date = transFormat.format(from);
+                ChatMessageDto chatMessageDto = new ChatMessageDto(chatMessage,date);
                 chatMessageDtoList.add(chatMessageDto);
             }
             //redis에 정보가 없으니, 다음부터 조회할때는 redis를 사용하기 위하여 넣어준다.
