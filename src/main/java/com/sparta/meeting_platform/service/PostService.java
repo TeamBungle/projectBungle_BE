@@ -186,13 +186,27 @@ public class PostService {
                 posts = query1.getResultList();
                 break;
             case "manner":
-                Query query2 = em.createNativeQuery("SELECT * FROM post AS p "
-                                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location) "
-                                + "AND p.id in (select i.post_id, AVG(manner_temp) from invited_users i "
+                Query query2 = em.createNativeQuery("SELECT *, q.manner_avg FROM post AS p "
+                                + "INNER JOIN ( SELECT user_id, AVG(u.manner_temp) AS manner_avg FROM invited_users AS i "
+                                + "INNER JOIN ( SELECT id, manner_temp FROM userinfo AS u "
+                                + ") ON i.user_id = u.id "
                                 + "GROUP BY post_id "
-                                + "WHERE i.user_id in (select u.id FROM userinfo u ))", Post.class)
+                                + ") ON p.id = i.post_id "
+                                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location) "
+                                + "AND p.time > :convertedDate1 "
+                                , Post.class)
+//                        + "AND p.id in (select i.post_id from invited_users i "
+//                                + "GROUP BY post_id "
+//                                + "INNER JOIN userinfo u ON i.user_id = u.id ", Post.class);
                         .setParameter("convertedDate1", convertedDate1);
                 posts = query2.getResultList();
+                break;
+            case "manner2":
+                Query query3 = em.createNativeQuery("SELECT *, AVG(manner_temp) FROM invited_users AS i "
+                            + "INNER JOIN userinfo u ON i.user_id = u.id "
+                            + "WHERE i.post_id "
+                            + "GROUP BY i.post_id", Post.class);
+                  posts = query3.getResultList();
                 break;
         }
         if (posts.size() < 1) {
@@ -233,12 +247,6 @@ public class PostService {
     public ResponseEntity<FinalResponseDto<?>> createPost(Long userId, PostRequestDto requestDto, List<MultipartFile> files) throws Exception {
         User user = checkUser(userId);
         Boolean isOwner = user.getIsOwner();
-
-        for (MultipartFile file : files) {
-            if (!fileExtFilter.badFileExt(file)) {
-                throw new PostApiException("이미지가 아닙니다.");
-            }
-        }
 
 //        if (files.size() > 3) {
 //            throw new PostApiException("게시글 사진은 3개 이하 입니다.");
@@ -291,6 +299,9 @@ public class PostService {
         } else {
             List<String> postUrls = new ArrayList<>();
             for (MultipartFile file : files) {
+                if (!fileExtFilter.badFileExt(file)) {
+                    throw new PostApiException("이미지가 아닙니다.");
+                }
                 postUrls.add(s3Service.upload(file));
             }
             requestDto.setPostUrls(postUrls);
@@ -459,7 +470,7 @@ public class PostService {
             case "manner":
                 Query query2 = em.createNativeQuery("SELECT * FROM post AS p "
                                 + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location) "
-                                + "AND p.id in (select i.post_id, AVG(manner_temp) from invited_users i "
+                                + "AND p.id in (select i.post_id, AVG(u.manner_temp) from invited_users i "
                                 + "GROUP BY post_id "
                                 + "WHERE i.user_id in (select u.id FROM userinfo u ))", Post.class)
                         .setParameter("convertedDate1", convertedDate1);
