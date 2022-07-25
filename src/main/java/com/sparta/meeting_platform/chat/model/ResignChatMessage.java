@@ -3,7 +3,6 @@ package com.sparta.meeting_platform.chat.model;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
@@ -12,22 +11,23 @@ import java.time.LocalDateTime;
 @Entity
 @NoArgsConstructor
 public class ResignChatMessage {
-    // 메시지 타입 : 입장, 채팅, 나가기
+
     public enum MessageType {
         ENTER, TALK, QUIT
     }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column
-    private String roomId; // 방번호 (postId)
+    private String roomId;
     @Enumerated(EnumType.STRING)
     @Column
-    private ChatMessage.MessageType type; // 메시지 타입
+    private ChatMessage.MessageType type;
     @Column
-    private String sender; // nickname
+    private String sender;
     @Column
-    private String message; // 메시지
+    private String message;
     @Column
     private String profileUrl;
     @Column
@@ -39,7 +39,7 @@ public class ResignChatMessage {
     @Column
     private String fileUrl;
     @JoinColumn(name = "CHAT_ROOM_ID")
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private ResignChatRoom chatRoom;
 
     public ResignChatMessage(ChatMessage chatMessage, ResignChatRoom chatRoom) {

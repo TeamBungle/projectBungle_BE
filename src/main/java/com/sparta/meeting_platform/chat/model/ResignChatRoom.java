@@ -3,11 +3,7 @@ package com.sparta.meeting_platform.chat.model;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Getter
 @Setter
@@ -18,9 +14,9 @@ public class ResignChatRoom {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long Id;
-
+    @Column
     private String roomId;
-
+    @Column
     private String username;
 
     public ResignChatRoom(ChatRoom chatRoom) {
