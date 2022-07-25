@@ -18,7 +18,5 @@ public interface InvitedUsersRepository extends JpaRepository<InvitedUsers, Long
 
     InvitedUsers findByUserIdAndPostId(Long id, Long id1);
 
-    Optional<InvitedUsers> findByUserId(Long userId);
-
     List<InvitedUsers> findAllByUserIdAndReadCheck(Long userId, Boolean readCheck);
 }
