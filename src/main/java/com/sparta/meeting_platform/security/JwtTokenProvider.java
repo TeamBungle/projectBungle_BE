@@ -2,7 +2,6 @@ package com.sparta.meeting_platform.security;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sparta.meeting_platform.exception.UserApiException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -32,7 +31,7 @@ public class JwtTokenProvider {
 
     // 토큰 유효시간
     // 프론트엔드와 약속해야 함
-    private final Long tokenValidTime = 5*60*1000L;  // 5분
+    private final Long tokenValidTime = 24*60*60*1000L;  // 5분
     private final Long refreshTokenValidTime = 7*24*60*60*1000L;  // 1주일
 
     private final UserDetailsService userDetailsService;
@@ -79,7 +78,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .setClaims(claims)//정보저장
                 .setIssuedAt(now)//토큰 발행 시간 정보
-                .setExpiration(new Date(now.getTime() + 24*60*60*1000L))
+                .setExpiration(new Date(now.getTime() + tokenValidTime))
                 .signWith(SignatureAlgorithm.HS256, secretKey)//사용할 암호화 알고리즘
                 //signature에 들어갈 secret값 세팅
                 .compact();

@@ -1,12 +1,7 @@
 package com.sparta.meeting_platform.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.meeting_platform.chat.dto.UserDto;
-import com.sparta.meeting_platform.chat.model.ChatMessage;
-import com.sparta.meeting_platform.chat.model.ChatRoom;
-import com.sparta.meeting_platform.chat.model.ResignChatMessage;
-import com.sparta.meeting_platform.chat.model.ResignChatRoom;
+import com.sparta.meeting_platform.chat.model.*;
 import com.sparta.meeting_platform.chat.repository.*;
 import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
@@ -26,7 +21,6 @@ import com.sparta.meeting_platform.repository.mapping.PostMapping;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.util.FileExtFilter;
 import com.sparta.meeting_platform.util.PostListComparator;
-import io.lettuce.core.ScriptOutputType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Point;
@@ -99,7 +93,7 @@ public class PostService {
     //카테고리별 게시글 조회
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getPostsByCategories(Long userId, List<String> categories, Double latitude, Double longitude) {
-        checkUser(userId);
+        User user = checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
         String mergeList = postSearchService.categoryOrTagListMergeString(categories);
         LocalDateTime localDateTime = LocalDateTime.now();
@@ -116,7 +110,7 @@ public class PostService {
         }
         List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId, longitude, latitude);
         Collections.sort(postList, new PostListComparator());
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList, user.getIsOwner()), HttpStatus.OK);
     }
 
     //게시글 조회 (제목에 포함된 단어로)
@@ -141,14 +135,14 @@ public class PostService {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른단어로 검색해주세요"), HttpStatus.BAD_REQUEST);
         }
         List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId, longitude, latitude);
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList, user.get().getIsOwner()), HttpStatus.OK);
     }
 
 
     //태그별 게시글 조회
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getPostsByTags(Long userId, List<String> tags, Double latitude, Double longitude) {
-        checkUser(userId);
+        User user = checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
         String mergeList = postSearchService.categoryOrTagListMergeString(tags);
         Query query = em.createNativeQuery("SELECT * FROM post AS p "
@@ -162,14 +156,14 @@ public class PostService {
         }
         List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId, longitude, latitude);
         Collections.sort(postList, new PostListComparator());
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList, user.getIsOwner()), HttpStatus.OK);
     }
 
 
     //게시글 더 보기 조회 추가 해야함
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> morePostList(Long userId, String status, Double latitude, Double longitude) {
-        checkUser(userId);
+        User user = checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
         List<Post> posts = new ArrayList<>();
         LocalDateTime localDateTime = LocalDateTime.now();
@@ -205,35 +199,50 @@ public class PostService {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다"), HttpStatus.OK);
         }
         List<PostResponseDto> postList = postSearchService.searchTimeOrMannerPostList(posts, userId);
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList, user.getIsOwner()), HttpStatus.OK);
     }
 
 
     //게시글 상세 조회
-    @Transactional(readOnly = true)
+    @Transactional
     public ResponseEntity<FinalResponseDto<?>> getPostsDetails(Long postId, Long userId) {
-        checkUser(userId);
+        User user = checkUser(userId);
         Post post = checkPost(postId);
         Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
         PostDetailsResponseDto postDetailsResponseDto = postSearchService.detailPost(like, post);
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postDetailsResponseDto), HttpStatus.OK);
+        Optional<List<InvitedUsers>> invitedUsers = Optional.ofNullable((invitedUsersRepository.findAllByUserId(userId)));
+
+        if (!invitedUsers.isPresent()) {
+            return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postDetailsResponseDto, user.getIsOwner()), HttpStatus.OK);
+
+        }
+
+        for (InvitedUsers users : invitedUsers.get()) {
+            if (users.getPostId().equals(postId)) {
+                if (users.getReadCheck()) {
+                    users.setReadCheck(false);
+                    users.setReadCheckTime(LocalDateTime.now());
+                }
+            }
+        }
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postDetailsResponseDto, user.getIsOwner()), HttpStatus.OK);
     }
 
-
+    // 게시글 생성
     @Transactional
     public ResponseEntity<FinalResponseDto<?>> createPost(Long userId, PostRequestDto requestDto, List<MultipartFile> files) throws Exception {
         User user = checkUser(userId);
         Boolean isOwner = user.getIsOwner();
 
-        for (MultipartFile file : files){
-            if(!fileExtFilter.badFileExt(file)){
+        for (MultipartFile file : files) {
+            if (!fileExtFilter.badFileExt(file)) {
                 throw new PostApiException("이미지가 아닙니다.");
             }
         }
 
-//        if (files.size() > 3) {
-//            throw new PostApiException("게시글 사진은 3개 이하 입니다.");
-//        }
+        if (files.size() > 3) {
+            throw new PostApiException("게시글 사진은 3개 이하 입니다.");
+        }
 
         if (requestDto.getTags().size() > 3) {
             throw new PostApiException("최대 태그 갯수는 3개 입니다.");
@@ -246,20 +255,21 @@ public class PostService {
             }
         }
 
-        if(isOwner){
+        if (isOwner) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
-        }else{
+        } else {
             user.setIsOwner(true);
         }
+
 //        Date date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(requestDto.getTime());
 //        LocalDateTime localDateTime = LocalDateTime.now();
 //        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
 
         DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        LocalDateTime  PromiseDateTime = LocalDateTime.parse(requestDto.getTime(), inputFormat);
+        LocalDateTime PromiseDateTime = LocalDateTime.parse(requestDto.getTime(), inputFormat);
         LocalDateTime now = LocalDateTime.now();
-        if(!PromiseDateTime.isAfter(now) || PromiseDateTime.isAfter(now.plusDays(1))){
+        if (!PromiseDateTime.isAfter(now) || PromiseDateTime.isAfter(now.plusDays(1))) {
             throw new PostApiException("약속시간은 현재시간 이후 부터 24시간 이내에 가능합니다.");
         }
 
@@ -318,6 +328,7 @@ public class PostService {
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 수정 성공"), HttpStatus.OK);
     }
 
+    // 수정전에 수정 페이지 보여주는 기능
     public ResponseEntity<FinalResponseDto<?>> getMyPost(Long userId) {
         User user = checkUser(userId);
         Post post = postRepository.findByUserId(userId);
@@ -341,7 +352,7 @@ public class PostService {
                 .isLetter(post.getIsLetter())
                 .build();
 
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 수정 페이지 이동 성공",postResponseDto), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 수정 페이지 이동 성공", postResponseDto, user.getIsOwner()), HttpStatus.OK);
     }
 
 
@@ -357,6 +368,17 @@ public class PostService {
             likeRepository.deleteByPostId(postId);
             postRepository.deleteById(postId);
             user.setIsOwner(false);
+            invitedUsersRepository.deleteByUser(user);
+            ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(String.valueOf(postId));
+            List<ChatMessage> chatMessage = chatMessageJpaRepository.findAllByChatRoom(chatRoom);
+            ResignChatRoom resignChatRoom = new ResignChatRoom(chatRoom);
+            resignChatRoomJpaRepository.save(resignChatRoom);
+            for (ChatMessage message : chatMessage) {
+                ResignChatMessage resignChatMessage = new ResignChatMessage(message, resignChatRoom);
+                resignChatMessageJpaRepository.save(resignChatMessage);
+            }
+            chatMessageJpaRepository.deleteByRoomId(String.valueOf(postId));
+            chatRoomJpaRepository.deleteByRoomId(String.valueOf(postId));
             return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공", user.getIsOwner()), HttpStatus.OK);
         }
     }
@@ -365,19 +387,19 @@ public class PostService {
     // 찜한 게시글 전체 조회
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getLikedPosts(Long userId) {
-        checkUser(userId);
+        User user = checkUser(userId);
         List<PostMapping> posts = likeRepository.findAllByUserIdAndIsLikeTrueOrderByPost_Id(userId);
         List<PostResponseDto> postList = postSearchService.searchLikePostList(posts, userId);
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "좋아요한 게시글 조회 성공", postList), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "좋아요한 게시글 조회 성공", postList, user.getIsOwner()), HttpStatus.OK);
     }
 
 
-    //나의 번개 페이지 조회
+    // 나의 번개 페이지 조회
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getMyPage(UserDetailsImpl userDetails) {
         User user = checkUser(userDetails.getUser().getId());
         MyPageDto myPageDto = new MyPageDto(user);
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "나의 번개 페이지 조회 성공", myPageDto), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "나의 번개 페이지 조회 성공", myPageDto, user.getIsOwner()), HttpStatus.OK);
     }
 
 
@@ -388,7 +410,7 @@ public class PostService {
         Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId()).orElse(null);
         PostResponseDto postResponseDto = postSearchService.searchMyPost(like, post);
 
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "나의 번개 페이지 조회 성공", postResponseDto), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "나의 번개 페이지 조회 성공", postResponseDto, user.getIsOwner()), HttpStatus.OK);
     }
 
     // 유저 존재 여부

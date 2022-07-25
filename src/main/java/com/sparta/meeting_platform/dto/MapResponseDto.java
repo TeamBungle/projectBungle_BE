@@ -15,12 +15,13 @@ import java.util.List;
 public class MapResponseDto<T> {
     private boolean response;
     private String message;
-
     private List<MapListDto> mapListDtos;
+    boolean isOwner;
 
-    public MapResponseDto(boolean response, String message, List<MapListDto> mapListDtos) {
+    public MapResponseDto(boolean response, String message, List<MapListDto> mapListDtos, boolean isOwner) {
         this.response = response;
         this.message = message;
         this.mapListDtos = mapListDtos;
+        this.isOwner = isOwner;
     }
 }

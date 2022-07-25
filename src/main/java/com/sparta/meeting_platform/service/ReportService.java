@@ -28,12 +28,12 @@ public class ReportService {
         User user = userRepository.findById(reporterId).orElse(null);
         User reportedUser = userRepository.findById(badMannerId).orElse(null);
 
-        if (user==null || reportedUser==null || reporterId.equals(badMannerId)) {
+        if (user == null || reportedUser == null || reporterId.equals(badMannerId)) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "신고하기 실패"), HttpStatus.OK);
         }
         Boolean isReport = reportRepository.existsByReporterIdAndBadMannerId(reporterId, badMannerId);
 
-        if(isReport.equals(true)){
+        if (isReport.equals(true)) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "신고하기 실패"), HttpStatus.OK);
         }
         Report report = new Report(reporterId, badMannerId, reportedUser.getNickName(), reportedUser.getProfileUrl(), history);
@@ -42,22 +42,23 @@ public class ReportService {
         return new ResponseEntity<>(new FinalResponseDto<>(true, "신고하기 성공"), HttpStatus.OK);
 
     }
+
     @Transactional(readOnly = true)
     //신고내역 조회
     public ResponseEntity<FinalResponseDto<?>> getUserReport(Long id) {
         User user = userRepository.findById(id).orElseThrow(
-                ()-> new ReportApiException("신고 내역 조회 실패")
+                () -> new ReportApiException("신고 내역 조회 실패")
         );
         List<Report> reports = reportRepository.findAllByReporterIdOrderByIdDesc(user.getId());
 
-        if (reports.size() < 1){
-            return new ResponseEntity<>(new FinalResponseDto<>(false,"신고내역이 존재하지 않습니다"),HttpStatus.OK);
+        if (reports.size() < 1) {
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "신고내역이 존재하지 않습니다"), HttpStatus.OK);
         }
         List<ReportResponseDto> reportResponseDtos = new ArrayList<>();
-        for (Report report : reports){
+        for (Report report : reports) {
             ReportResponseDto reportResponseDto = new ReportResponseDto(report);
             reportResponseDtos.add(reportResponseDto);
         }
-        return new ResponseEntity<>(new FinalResponseDto<>(true,"신고 내역 조회 성공", reportResponseDtos),HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "신고 내역 조회 성공", reportResponseDtos, user.getIsOwner()), HttpStatus.OK);
     }
 }
