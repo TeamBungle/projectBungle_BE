@@ -240,9 +240,9 @@ public class PostService {
             }
         }
 
-        if (files.size() > 3) {
-            throw new PostApiException("게시글 사진은 3개 이하 입니다.");
-        }
+//        if (files.size() > 3) {
+//            throw new PostApiException("게시글 사진은 3개 이하 입니다.");
+//        }
 
         if (requestDto.getTags().size() > 3) {
             throw new PostApiException("최대 태그 갯수는 3개 입니다.");
@@ -425,6 +425,52 @@ public class PostService {
         Post post = postRepository.findById(postId).orElseThrow(
                 () -> new PostApiException("존재하지 않는 게시물 입니다."));
         return post;
+    }
+
+    public ResponseEntity<FinalResponseDto<?>> morePostListInfiniteScroll(Long lastId, Long userId, String status, Double latitude, Double longitude, int size) {
+        User user = checkUser(userId);
+        String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
+        List<Post> posts = new ArrayList<>();
+        LocalDateTime localDateTime = LocalDateTime.now();
+        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        switch (status) {
+            case "endTime":
+                Query query = em.createNativeQuery("SELECT * FROM post AS p "
+                                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+                                + "AND p.time > :convertedDate1 "
+                                + "AND p.id > :lastId "
+                                + " ORDER BY p.time ", Post.class)
+                        .setParameter("convertedDate1", convertedDate1)
+                        .setParameter("lastId", lastId)
+                        .setParameter("pageSize",size);
+                posts = query.getResultList();
+                break;
+            case "realTime":
+                Query query1 = em.createNativeQuery("SELECT * FROM post AS p "
+                                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
+                                + "AND p.time < (SELECT post.time FROM post WHERE id = :lastId) "
+                                + "ORDER BY p.time desc "
+                                + "LIMIT :pageSize", Post.class)
+//                        .setParameter("convertedDate1", convertedDate1)
+                        .setParameter("lastId", lastId)
+                        .setParameter("pageSize",size);
+                posts = query1.getResultList();
+                break;
+            case "manner":
+                Query query2 = em.createNativeQuery("SELECT * FROM post AS p "
+                                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location) "
+                                + "AND p.id in (select i.post_id, AVG(manner_temp) from invited_users i "
+                                + "GROUP BY post_id "
+                                + "WHERE i.user_id in (select u.id FROM userinfo u ))", Post.class)
+                        .setParameter("convertedDate1", convertedDate1);
+                posts = query2.getResultList();
+                break;
+        }
+        if (posts.size() < 1) {
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다"), HttpStatus.OK);
+        }
+        List<PostResponseDto> postList = postSearchService.searchTimeOrMannerPostList(posts, userId);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList, user.getIsOwner()), HttpStatus.OK);
     }
 
 

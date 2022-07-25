@@ -321,8 +321,14 @@ public class PostSearchService {
                 return duration.getSeconds() / 60 / 60 + "시 경과";
             }
 
+        }else{
+            if(localDateTime.getDayOfMonth()==LocalDateTime.now().getDayOfMonth()){
+                return localDateTime.getHour() + "시 시작 예정";
+            } else {
+                return "내일 " + localDateTime.getHour() + "시 시작 예정";
+            }
+
         }
-        return localDateTime.getHour() + "시 시작 예정";
     }
 
     public double deg2rad(double deg) {

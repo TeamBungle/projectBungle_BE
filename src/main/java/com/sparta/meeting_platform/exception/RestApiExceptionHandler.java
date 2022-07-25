@@ -10,9 +10,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class RestApiExceptionHandler {
 
     @ExceptionHandler(value = {
+            ChatApiException.class,
             EmailApiException.class,
             MapApiException.class,
             PostApiException.class,
+            QrcodeApiException.class,
             ReportApiException.class,
             SettingApiException.class,
             SocialApiException.class,

@@ -31,7 +31,7 @@ public class PostController {
         return user.getId();
     }
 
-    //게시긇 전체 조회
+    //게시글 전체 조회
     @GetMapping("")
     public ResponseEntity<FinalResponseDto<?>> getPosts(@RequestParam(value = "latitude") Double latitude,
                                                         @RequestParam(value = "longitude") Double longitude,
@@ -70,6 +70,19 @@ public class PostController {
                                                             @AuthenticationPrincipal UserDetailsImpl userDetails){
         Long userId = getUserId(userDetails);
         return postService.morePostList(userId,status,latitude,longitude);
+    }
+
+    // 게시글 더보기 무한스크롤
+    @GetMapping("/more/{lastId}")
+    public ResponseEntity<FinalResponseDto<?>> morePostListInfiniteScroll(
+            @PathVariable Long lastId,
+            @RequestParam(value = "latitude") Double latitude,
+            @RequestParam(value = "longitude") Double longitude,
+            @RequestParam(value = "status") String status,
+            @RequestParam(value = "size") int size,
+            @AuthenticationPrincipal UserDetailsImpl userDetails){
+        Long userId = getUserId(userDetails);
+        return postService.morePostListInfiniteScroll(lastId, userId,status,latitude,longitude,size);
     }
 
     //게시글 상세 조회

@@ -13,9 +13,7 @@ import com.sparta.meeting_platform.dto.GoogleDto.GoogleLoginDto;
 import com.sparta.meeting_platform.dto.GoogleDto.GoogleLoginRequestDto;
 import com.sparta.meeting_platform.dto.GoogleDto.GoogleLoginResponseDto;
 import com.sparta.meeting_platform.repository.UserRepository;
-import com.sparta.meeting_platform.security.JwtTokenProvider;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
-import com.sparta.meeting_platform.security.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,24 +26,23 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.http.HttpServletResponse;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Service
+
 @RequiredArgsConstructor
+@Service
 public class SocialGoogleService {
 
     private final UserRepository userRepository;
     private final GoogleConfig googleConfig;
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final  UserRoleCheckService userRoleCheckService;
-    private final RedisService redisService;
+    private final UserRoleCheckService userRoleCheckService;
+    private final UserService userService;
 
     @Transactional
     public ResponseEntity<FinalResponseDto<?>> googleLogin
-            (String authCode, HttpServletResponse httpServletResponse) throws JsonProcessingException {
+            (String authCode) throws JsonProcessingException {
         RestTemplate restTemplate = new RestTemplate();
         // 1. "인가코드" 로 "액세스 토큰" 요청
         // 2. 토큰으로 구글 API 호출
@@ -132,12 +129,8 @@ public class SocialGoogleService {
         userRoleCheckService.userRoleCheck(user);
 
         // 5번 response Header에 JWT 토큰 추가
-        String jwt_token = jwtTokenProvider.generateJwtToken(userDetails);
-        headers.set("Authorization", "BEARER" + " " + jwt_token);
-        httpServletResponse.addHeader("Authorization", "Bearer" + " " + jwt_token);
+        userService.accessAndRefreshTokenProcess(user.getUsername());
 
-        // refresh token 발행 후 Redis에 저장
-        redisService.setValues(jwtTokenProvider.createRefreshToken(), user.getUsername(), Duration.ofMillis(1000*60*60*24*7));
         return new ResponseEntity<>(new FinalResponseDto<>
                 (true, "로그인 성공!!", user.getNickName(), user.getMannerTemp(),user.getId() ), HttpStatus.OK);
     }

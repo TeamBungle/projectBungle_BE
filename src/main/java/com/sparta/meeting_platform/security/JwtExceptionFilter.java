@@ -1,7 +1,5 @@
 package com.sparta.meeting_platform.security;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.JwtException;
@@ -24,7 +22,7 @@ public class JwtExceptionFilter extends GenericFilterBean {
         try {
             chain.doFilter(request, response); // go to JwtAuthenticationFilter
         } catch (JwtException e) {
-            setErrorResponse(HttpStatus.UNAUTHORIZED, response, e);
+            setErrorResponse(HttpStatus.OK, response, e);
         } catch (NoSuchElementException e) {
             setErrorResponse(HttpStatus.BAD_REQUEST, response, e);
         }
