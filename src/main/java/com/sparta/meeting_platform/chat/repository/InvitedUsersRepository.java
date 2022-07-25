@@ -5,6 +5,7 @@ import com.sparta.meeting_platform.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface InvitedUsersRepository extends JpaRepository<InvitedUsers, Long> {
     void deleteByUserIdAndPostId(Long userId, Long postId);
@@ -17,7 +18,7 @@ public interface InvitedUsersRepository extends JpaRepository<InvitedUsers, Long
 
     InvitedUsers findByUserIdAndPostId(Long id, Long id1);
 
-    InvitedUsers findByUserId(Long userId);
+    Optional<InvitedUsers> findByUserId(Long userId);
 
     List<InvitedUsers> findAllByUserIdAndReadCheck(Long userId, Boolean readCheck);
 }

@@ -23,7 +23,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry
-                .addEndpoint("/ws/chat")
+                .addEndpoint("/wss/chat")
 //                .setAllowedOriginPatterns("https://jeju.project.s3-website.ap-northeast-2.amazonaws.com/")
                 .setAllowedOriginPatterns("https://localhost:3000/")
                 .withSockJS();

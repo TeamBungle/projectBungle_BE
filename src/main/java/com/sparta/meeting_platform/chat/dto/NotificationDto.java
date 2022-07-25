@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -12,6 +12,6 @@ import java.util.Date;
 public class NotificationDto {
     String message;
     String nickname;
-    Date createdAt;
-    String postTitle;
+    LocalDateTime createdAt;
+    String roomId;
 }

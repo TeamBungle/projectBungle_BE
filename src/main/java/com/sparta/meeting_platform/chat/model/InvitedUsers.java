@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -26,7 +26,7 @@ public class InvitedUsers {
     @Column
     private Boolean readCheck;
     @Column
-    private Date readCheckTime;
+    private LocalDateTime readCheckTime;
     public InvitedUsers(Long postId, User user) {
         this.postId = postId;
         this.user = user;

@@ -21,9 +21,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 @Service
 @Slf4j
@@ -43,23 +45,24 @@ public class ChatService {
 
 
     @Transactional
-    public void save(ChatMessageDto messageDto, String BearerToken) {
-        log.info("save Message : {}", messageDto.getMessage());
-        String username = jwtTokenProvider.getUserPk(BearerToken); // 토큰에서 유저 아이디 가져오기
-        User user = userRepository.findByUsername(username).orElseThrow(
+    public void save(ChatMessageDto messageDto, Long BearerToken) {
+        // 토큰에서 유저 아이디 가져오기
+        User user = userRepository.findById(BearerToken).orElseThrow(
                 () -> new NullPointerException("존재하지 않는 사용자 입니다!")
         );
         //date type 을 string으로 형변환시킨다.
-        DateFormat dateFormat = new SimpleDateFormat("dd,MM,yyyy,HH,mm,ss", Locale.KOREA);
-        Calendar calendar = Calendar.getInstance();
-        Date date = new Date(calendar.getTimeInMillis());
-        dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Seoul"));
-        String dateToStr = dateFormat.format(date);
+//        DateFormat dateFormat = new SimpleDateFormat("dd,MM,yyyy,HH,mm,ss", Locale.KOREA);
+//        Calendar calendar = Calendar.getInstance();
+//        Date date = new Date(calendar.getTimeInMillis());
+//        dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Seoul"));
+//        String dateToStr = dateFormat.format(date);
+        LocalDateTime createdAt = LocalDateTime.now();
+        String formatDate = createdAt.format(DateTimeFormatter.ofPattern("dd,MM,yyyy,HH,mm,ss", Locale.KOREA));
         Long enterUserCnt = chatMessageRepository.getUserCnt(messageDto.getRoomId());
         messageDto.setEnterUserCnt(enterUserCnt);
         messageDto.setSender(user.getNickName());
         messageDto.setProfileUrl(user.getProfileUrl());
-        messageDto.setCreatedAt(dateToStr);
+        messageDto.setCreatedAt(formatDate);
         messageDto.setUserId(user.getId());
         messageDto.setQuitOwner(false);
         log.info("type : {}", messageDto.getType());
@@ -94,7 +97,7 @@ public class ChatService {
             // 들어갈때 저장했던 유저정보를 삭제해준다.
             invitedUsersRepository.deleteByUserIdAndPostId(user.getId(),Long.parseLong(messageDto.getRoomId()));
             ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(messageDto.getRoomId());
-            if(chatRoom.getUsername().equals(username)){
+            if(chatRoom.getUsername().equals(user.getUsername())){
                 messageDto.setQuitOwner(true);
                 messageDto.setMessage("[알림] " + "(방장) " + messageDto.getSender() + "님이 나가셨습니다. " +
                         "더 이상 대화를 할 수 없으며 채팅방을 나가면 다시 입장할 수 없습니다.");
@@ -102,9 +105,9 @@ public class ChatService {
         }
 
         log.info("ENTER : {}", messageDto.getMessage());
-        ChatRoom chatRoom = chatRoomJpaRepository.findByUsername(username);
+        ChatRoom chatRoom = chatRoomJpaRepository.findByUsername(user.getUsername());
         chatMessageRepository.save(messageDto); // 캐시에 저장 했다.
-        ChatMessage chatMessage = new ChatMessage(messageDto,chatRoom,date);
+        ChatMessage chatMessage = new ChatMessage(messageDto,chatRoom,createdAt);
         chatMessageJpaRepository.save(chatMessage); // DB 저장
         // Websocket 에 발행된 메시지를 redis 로 발행한다(publish)
         redisPublisher.publish(ChatRoomRepository.getTopic(messageDto.getRoomId()), messageDto);

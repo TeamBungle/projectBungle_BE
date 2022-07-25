@@ -2,7 +2,7 @@ package com.sparta.meeting_platform.chat.dto;
 
 import com.sparta.meeting_platform.chat.model.ChatMessage;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 public interface FindChatMessageDto {
 
@@ -13,7 +13,7 @@ public interface FindChatMessageDto {
     String getProfileUrl();
     Long getEnterUserCnt();
     Long getUserId();
-    Date getCreatedAt();
+    LocalDateTime getCreatedAt();
     String getFileUrl();
     Boolean getQuitOwner();
 }

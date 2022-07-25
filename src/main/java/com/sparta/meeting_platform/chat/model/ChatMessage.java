@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Setter
 @Getter
@@ -36,7 +36,7 @@ public class ChatMessage {
     @Column
     private Long userId ;
     @Column
-    private Date createdAt;
+    private LocalDateTime createdAt;
     @Column
     private String fileUrl;
     @Column
@@ -46,7 +46,7 @@ public class ChatMessage {
     @ManyToOne
     private ChatRoom chatRoom;
 
-    public ChatMessage(ChatMessageDto chatMessageDto, ChatRoom chatRoom, Date createdAt) {
+    public ChatMessage(ChatMessageDto chatMessageDto, ChatRoom chatRoom, LocalDateTime createdAt) {
         this.type = chatMessageDto.getType();
         this.roomId = chatMessageDto.getRoomId();
         this.message = chatMessageDto.getMessage();

@@ -204,16 +204,35 @@ public class PostService {
 
 
     //게시글 상세 조회
-    @Transactional(readOnly = true)
+    @Transactional
     public ResponseEntity<FinalResponseDto<?>> getPostsDetails(Long postId, Long userId) {
         checkUser(userId);
         Post post = checkPost(postId);
         Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
         PostDetailsResponseDto postDetailsResponseDto = postSearchService.detailPost(like, post);
-        InvitedUsers invitedUsers = invitedUsersRepository.findByUserId(userId);
-        if(invitedUsers.getReadCheck()){
-            invitedUsers.setReadCheck(false);
+        Optional<List<InvitedUsers>>invitedUsers = Optional.ofNullable((invitedUsersRepository.findAllByUserId(userId)));
+
+
+        if(!invitedUsers.isPresent()) {
+            return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postDetailsResponseDto), HttpStatus.OK);
+
         }
+
+        for (InvitedUsers users : invitedUsers.get()) {
+            if(users.getPostId().equals(postId)){
+                if(users.getReadCheck()){
+                    users.setReadCheck(false);
+                    users.setReadCheckTime(LocalDateTime.now());
+                    log.info("나오냐 ? :" + users.getReadCheckTime());
+                }
+            }
+        }
+//        else if(invitedUsers.get().getReadCheck()){
+//            log.info("나오냐 ? :" + invitedUsers.get().getReadCheck());
+//            invitedUsers.get().setReadCheck(false);
+//            invitedUsers.get().setReadCheckTime(LocalDateTime.now());
+//        }
+
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postDetailsResponseDto), HttpStatus.OK);
     }
 

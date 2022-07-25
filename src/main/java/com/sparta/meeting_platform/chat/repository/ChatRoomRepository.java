@@ -17,7 +17,8 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -53,6 +54,7 @@ public class ChatRoomRepository {
         for (InvitedUsers invitedUser : invitedUsers) {
             if(invitedUser.getReadCheck()){
                 invitedUser.setReadCheck(false);
+                invitedUser.setReadCheckTime(LocalDateTime.now());
             }
             Optional<Post> post = postRepository.findById(invitedUser.getPostId());
             ChatMessage chatMessage = chatMessageJpaRepository.findTop1ByRoomIdOrderByCreatedAtDesc(invitedUser.getPostId().toString());
@@ -63,11 +65,13 @@ public class ChatRoomRepository {
                 chatRoomResponseDto.setLastMessage(chatMessage.getMessage());
             }
 
-            Date from = chatMessage.getCreatedAt();
-            SimpleDateFormat transFormat = new SimpleDateFormat("dd,MM,yyyy,HH,mm,ss", Locale.KOREA);
-            String date = transFormat.format(from);
+//            Date from = chatMessage.getCreatedAt();
+//            SimpleDateFormat transFormat = new SimpleDateFormat("dd,MM,yyyy,HH,mm,ss", Locale.KOREA);
+//            String date = transFormat.format(from);
+            LocalDateTime createdAt = chatMessage.getCreatedAt();
+            String createdAtString = createdAt.format(DateTimeFormatter.ofPattern("dd,MM,yyyy,HH,mm,ss", Locale.KOREA));
 
-            chatRoomResponseDto.setLastMessageTime(date);
+            chatRoomResponseDto.setLastMessageTime(createdAtString);
             chatRoomResponseDto.setPostTime(post.get().getTime());
             chatRoomResponseDto.setPostTitle(post.get().getTitle());
             chatRoomResponseDto.setPostUrl(post.get().getPostUrls().get(0));
