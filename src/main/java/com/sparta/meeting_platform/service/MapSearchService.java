@@ -77,6 +77,7 @@ public class MapSearchService {
             String latitude = (String) thisAddress.get("y");
             double longi = Double.parseDouble(longitude);
             double lati = Double.parseDouble(latitude);
+
             return new SearchMapDto(longi,lati);
         } catch (IndexOutOfBoundsException e){
             throw new MapApiException("잘못된 주소값입니다.");

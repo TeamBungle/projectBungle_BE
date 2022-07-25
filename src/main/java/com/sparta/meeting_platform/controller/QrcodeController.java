@@ -54,22 +54,23 @@ public class QrcodeController {
     }
 
     @GetMapping("/user/qrcode/google")
-    public ResponseEntity<FinalResponseDto<?>> googleLogin(@RequestParam(value = "code") String authCode,
-                                                           @RequestParam(value = "postId") Long postId,
-                                                           HttpServletResponse httpServletResponse) throws JsonProcessingException {
-        return qrcodeCheckService.googleLogin(authCode, httpServletResponse,postId);
+    public ResponseEntity<FinalResponseDto<?>> googleLogin(
+            @RequestParam(value = "code") String authCode,
+            @RequestParam(value = "postId") Long postId) throws JsonProcessingException {
+        return qrcodeCheckService.googleLogin(authCode, postId);
     }
 
     @GetMapping("/user/qrcode/kakao")
-    public ResponseEntity<FinalResponseDto<?>> kakaoLogin(@RequestParam(value = "code") String code,
-                                                          @RequestParam(value = "postId") Long postId,
-                                                          HttpServletResponse response) throws JsonProcessingException {
-        return qrcodeCheckService.kakaoLogin(code, response,postId);
+    public ResponseEntity<FinalResponseDto<?>> kakaoLogin(
+            @RequestParam(value = "code") String code,
+            @RequestParam(value = "postId") Long postId) throws JsonProcessingException {
+        return qrcodeCheckService.kakaoLogin(code, postId);
     }
+
     @GetMapping("/user/qrcode/naver")
-    public ResponseEntity<FinalResponseDto<?>> naverLogin(@RequestParam String code, @RequestParam String state,
-                                                          @RequestParam(value = "postId") Long postId,
-                                                          HttpServletResponse response) throws IOException {
-        return qrcodeCheckService.naverLogin(code, state, response,postId);
+    public ResponseEntity<FinalResponseDto<?>> naverLogin(
+            @RequestParam String code, @RequestParam String state,
+            @RequestParam(value = "postId") Long postId) throws IOException {
+        return qrcodeCheckService.naverLogin(code, state, postId);
     }
 }

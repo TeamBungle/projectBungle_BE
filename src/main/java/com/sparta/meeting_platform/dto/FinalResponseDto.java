@@ -1,6 +1,7 @@
 package com.sparta.meeting_platform.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.sparta.meeting_platform.chat.videoChat.VideoChatResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
 import com.sparta.meeting_platform.dto.UserDto.MyPageDto;
@@ -24,7 +25,6 @@ public class FinalResponseDto<T> {
     private Long userId;
     private Boolean isOwner;
     private PostResponseDto postResponseDto;
-    private String username;
     private String nickName;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private int mannerTemp;
@@ -34,6 +34,7 @@ public class FinalResponseDto<T> {
     private List<PostResponseDto> postListRealTime;
     private List<PostResponseDto> postListEndTime;
     private PostDetailsResponseDto postDetailsResponseDto;
+    private VideoChatResponseDto videoChatResponseDto;
 
 
     public FinalResponseDto(boolean response, String message, Long postId, List<String> postUrls) {
@@ -62,16 +63,18 @@ public class FinalResponseDto<T> {
 
 
 
-    public FinalResponseDto(boolean response, String message, PostDetailsResponseDto postDetailsResponseDto) {
+    public FinalResponseDto(boolean response, String message, PostDetailsResponseDto postDetailsResponseDto, boolean isOwner) {
         this.response = response;
         this.message = message;
         this.postDetailsResponseDto = postDetailsResponseDto;
+        this.isOwner = isOwner;
     }
 
-    public FinalResponseDto(boolean response, String message, MyPageDto myPageDto) {
+    public FinalResponseDto(boolean response, String message, MyPageDto myPageDto, boolean isOwner) {
         this.response = response;
         this.message = message;
         this.myPageDto = myPageDto;
+        this.isOwner = isOwner;
     }
 
     public FinalResponseDto(boolean response, String message) {
@@ -79,16 +82,18 @@ public class FinalResponseDto<T> {
         this.message = message;
     }
 
-    public FinalResponseDto(boolean response, String message, List<T> List) {
+    public FinalResponseDto(boolean response, String message, List<T> List, boolean isOwner) {
         this.response = response;
         this.message = message;
         this.List = List;
+        this.isOwner = isOwner;
     }
 
-    public FinalResponseDto(boolean response, String message, PostResponseDto postResponseDto) {
+    public FinalResponseDto(boolean response, String message, PostResponseDto postResponseDto, boolean isOwner) {
         this.response = response;
         this.message = message;
         this.postResponseDto = postResponseDto;
+        this.isOwner = isOwner;
     }
 
     public FinalResponseDto(boolean response, String message, String nickname, int mannerTemp, Long userId) {
@@ -99,10 +104,11 @@ public class FinalResponseDto<T> {
         this.userId = userId;
     }
 
-    public FinalResponseDto(boolean response, String message, ProfileResponseDto profileResponseDto) {
+    public FinalResponseDto(boolean response, String message, ProfileResponseDto profileResponseDto, boolean isOwner) {
         this.response = response;
         this.message = message;
         this.profileResponseDto = profileResponseDto;
+        this.isOwner = isOwner;
     }
 
     public FinalResponseDto(boolean response, String message, Boolean isOwner) {
@@ -110,4 +116,11 @@ public class FinalResponseDto<T> {
         this.message =message;
         this.isOwner =isOwner;
     }
+
+    public FinalResponseDto(boolean response, String message, VideoChatResponseDto videoChatResponseDto) {
+        this.response = response;
+        this.message = message;
+        this.videoChatResponseDto = videoChatResponseDto;
+    }
+
 }

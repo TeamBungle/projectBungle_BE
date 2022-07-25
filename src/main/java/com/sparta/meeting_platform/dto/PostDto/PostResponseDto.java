@@ -55,12 +55,15 @@ public class PostResponseDto {
 
     private Double distance;
 
+    private Double latitude;
+    private Double longitude;
+
 
     @Builder
     public PostResponseDto(Long id, String title, String content,String time, int personnel, String place, List<String> postUrls,
                            List<String> tags, List<String> categories, int bungCount, int mannerTemp, List<String> joinPeopleUrl,
                            List<String> joinPeopleNickname, int joinCount, Boolean isLetter, Boolean isLike,
-                           int avgTemp, String postUrl,Double distance) {
+                           int avgTemp, String postUrl,Double distance,Double latitude, Double longitude ) {
         this.postId = id;
         this.title = title;
         this.content = content;
@@ -80,6 +83,8 @@ public class PostResponseDto {
         this.avgTemp = avgTemp;
         this.postUrl = postUrl;
         this.distance =distance;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
 //    public PostResponseDto(Post post, String time) {

@@ -13,7 +13,8 @@ public class FileExtFilter {
         try{
             String fileName = file.getOriginalFilename();
             String ext = fileName.substring(fileName.lastIndexOf(".")+1 , fileName.length()).toLowerCase();
-            final String[] badExtension = {"png","jpg","jpeg"};
+            final String[] badExtension = {"png","jpg","jpeg", "jfif", "gif", "bmp", "img", "JPG", "PNG", "JPEG", "GIF", "BMP", "IMG"};
+
             for (String s : badExtension) {
                 if (ext.equals(s)) {
                     return true;

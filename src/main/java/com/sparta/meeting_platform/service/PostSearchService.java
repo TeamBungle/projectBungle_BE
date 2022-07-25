@@ -87,9 +87,10 @@ public class PostSearchService {
             mergeList = mergeList.substring(0, mergeList.length() - 1);
             return mergeList;
         } catch (StringIndexOutOfBoundsException e){
-          return mergeList = "'맛집','카페','노래방','운동','친목','전시','여행','쇼핑','스터디','게임'";
+            return mergeList = "'맛집','카페','노래방','운동','친목','전시','여행','쇼핑','스터디','게임'";
         }
     }
+
 
     //postlist 찾기 - 거리순
     public List<PostResponseDto> searchPostList(List<Post> posts, Long userId, Double longitude,Double latitude){
@@ -126,6 +127,8 @@ public class PostSearchService {
                     .isLetter(post.getIsLetter())
                     .isLike(isLike)
                     .distance(dist)
+                    .latitude(post.getLatitude())
+                    .longitude(post.getLongitude())
                     .build();
             postList.add(postResponseDto);
         }
@@ -160,6 +163,8 @@ public class PostSearchService {
                     .avgTemp(tempAndJoinCountSearchDto.getAveTemp())
                     .isLetter(post.getIsLetter())
                     .isLike(isLike)
+                    .latitude(post.getLatitude())
+                    .longitude(post.getLongitude())
                     .build();
             postList.add(postResponseDto);
         }
@@ -322,8 +327,14 @@ public class PostSearchService {
                 return duration.getSeconds() / 60 / 60 + "시 경과";
             }
 
+        }else{
+            if(localDateTime.getDayOfMonth()==LocalDateTime.now().getDayOfMonth()){
+                return localDateTime.getHour() + "시 시작 예정";
+            } else {
+                return "내일 " + localDateTime.getHour() + "시 시작 예정";
+            }
+
         }
-        return localDateTime.getHour() + "시 시작 예정";
     }
 
     public double deg2rad(double deg) {
