@@ -24,23 +24,21 @@ public class SocialController {
     public final SocialKakaoService socialKakaoService;
 
     @GetMapping("/google")
-    public ResponseEntity<FinalResponseDto<?>> googleLogin(@RequestParam(value = "code") String authCode,
-                                         HttpServletResponse httpServletResponse) throws JsonProcessingException {
-        return socialGoogleService.googleLogin(authCode, httpServletResponse);
+    public ResponseEntity<FinalResponseDto<?>> googleLogin(
+            @RequestParam(value = "code") String authCode) throws JsonProcessingException {
+        return socialGoogleService.googleLogin(authCode);
     }
 
 
     @GetMapping("/kakao")
-    public ResponseEntity<FinalResponseDto<?>> kakaoLogin(@RequestParam(value = "code") String code,
-                                                          HttpServletResponse response) throws JsonProcessingException {
-        log.info("요청 메서드 [GET] /api/user/kakao/callback");
-        return socialKakaoService.kakaoLogin(code, response);
+    public ResponseEntity<FinalResponseDto<?>> kakaoLogin(
+            @RequestParam(value = "code") String code) throws JsonProcessingException {
+        return socialKakaoService.kakaoLogin(code);
     }
 
 
     @GetMapping("/naver")
-    public ResponseEntity<FinalResponseDto<?>> naverLogin(@RequestParam String code, @RequestParam String state,
-                                                          HttpServletResponse response)  {
-        return socialNaverService.naverLogin(code, state, response);
+    public ResponseEntity<FinalResponseDto<?>> naverLogin(@RequestParam String code, @RequestParam String state)  {
+        return socialNaverService.naverLogin(code, state);
     }
 }

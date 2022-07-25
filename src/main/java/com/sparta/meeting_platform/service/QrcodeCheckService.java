@@ -46,10 +46,10 @@ public class QrcodeCheckService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final InvitedUsersRepository invitedUsersRepository;
-    private final GoogleConfig googleConfig;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRoleCheckService userRoleCheckService;
     private final SocialGoogleService socialGoogleService;
+    private final UserService userService;
 
     @Transactional
     public ResponseEntity<FinalResponseDto<?>> qrcodeUserCheck(Long postId, LoginRequestDto loginRequestDto) {
@@ -84,9 +84,9 @@ public class QrcodeCheckService {
     }
 
     @Transactional
-    public ResponseEntity<FinalResponseDto<?>> googleLogin(String authCode, HttpServletResponse httpServletResponse, Long postId) throws JsonProcessingException {
+    public ResponseEntity<FinalResponseDto<?>> googleLogin(String authCode, Long postId) throws JsonProcessingException {
         ResponseEntity<FinalResponseDto<?>> finalResponseDtoResponseEntity
-                = socialGoogleService.googleLogin(authCode,httpServletResponse);
+                = socialGoogleService.googleLogin(authCode);
         Long userId = finalResponseDtoResponseEntity.getBody().getUserId();
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new UserApiException("해당 유저를 찾을 수 없습니다."));
@@ -97,24 +97,27 @@ public class QrcodeCheckService {
     }
 
     @Transactional
-    public ResponseEntity<FinalResponseDto<?>> kakaoLogin(String code, HttpServletResponse response, Long postId) throws JsonProcessingException {
+    public ResponseEntity<FinalResponseDto<?>> kakaoLogin(String code, Long postId) throws JsonProcessingException {
         String accessToken = socialKakaoService.getAccessToken(code);
         KakaoUserInfoDto kakaoUserInfoDto = socialKakaoService.getKakaoUserInfo(accessToken);
         userRoleCheckService.userResignCheck(kakaoUserInfoDto.getEmail());
 
         User user = userRepository.findByUsername(kakaoUserInfoDto.getEmail()).orElseThrow(
                 () -> new UserApiException("해당 유저를 찾을 수 없습니다."));
+        userRoleCheckService.userRoleCheck(user);
         Post post = postRepository.findById(postId).orElseThrow(
                 () -> new PostApiException("존재하지 않는 게시물 입니다."));
 
-        Authentication authentication = socialKakaoService.forceLoginKakaoUser(user);
-        socialKakaoService.kakaoUsersAuthorizationInput(authentication, response);
+        socialKakaoService.forceLoginKakaoUser(user);
+
+        userService.accessAndRefreshTokenProcess(user.getUsername());
+
         qrcodeConfirm(post,user);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "만남 성공!!"), HttpStatus.OK);
     }
 
 
-    public ResponseEntity<FinalResponseDto<?>> naverLogin(String code, String state, HttpServletResponse response, Long postId) throws IOException {
+    public ResponseEntity<FinalResponseDto<?>> naverLogin(String code, String state, Long postId) throws IOException {
             // 네이버에서 가져온 유저정보 + 임의 비밀번호 생성
             NaverUserDto naverUser = socialNaverService.getNaverUserInfo(code, state);
             // 재가입 방지
@@ -128,8 +131,8 @@ public class QrcodeCheckService {
             Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String token = jwtTokenProvider.generateJwtToken(userDetails);
-            response.addHeader("Authorization", "Bearer" + " " + token);
+//            토큰 관리
+            userService.accessAndRefreshTokenProcess(user.getUsername());
 
             Post post = postRepository.findById(postId).orElseThrow(
                     () -> new PostApiException("존재하지 않는 게시물 입니다."));

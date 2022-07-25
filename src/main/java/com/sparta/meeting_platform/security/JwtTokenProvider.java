@@ -1,8 +1,6 @@
 package com.sparta.meeting_platform.security;
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sparta.meeting_platform.exception.UserApiException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -67,20 +65,6 @@ public class JwtTokenProvider {
                 .compact();
         response.addHeader("RefreshToken","Bearer " + refreshToken);
         return refreshToken;
-    }
-
-    public String generateJwtToken(UserDetails userDetails) {
-        String userPk = userDetails.getUsername();
-        Claims claims = Jwts.claims().setSubject(userPk);
-        Date now = new Date();
-        System.out.println(secretKey);
-        return Jwts.builder()
-                .setClaims(claims)//정보저장
-                .setIssuedAt(now)//토큰 발행 시간 정보
-                .setExpiration(new Date(now.getTime() + tokenValidTime))
-                .signWith(SignatureAlgorithm.HS256, secretKey)//사용할 암호화 알고리즘
-                //signature에 들어갈 secret값 세팅
-                .compact();
     }
 
     // 토큰에서 회원 정보 추출

@@ -8,9 +8,7 @@ import com.sparta.meeting_platform.domain.UserRoleEnum;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.NaverDto.NaverUserDto;
 import com.sparta.meeting_platform.repository.UserRepository;
-import com.sparta.meeting_platform.security.JwtTokenProvider;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
-import com.sparta.meeting_platform.security.redis.RedisService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +24,6 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDateTime;
-import java.time.Duration;
 import java.util.UUID;
 
 @Service
@@ -35,12 +32,11 @@ public class SocialNaverService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
     private final  UserRoleCheckService userRoleCheckService;
-    private final RedisService redisService;
+    private final UserService userService;
 
     @Transactional
-    public ResponseEntity<FinalResponseDto<?>> naverLogin(String code, String state, HttpServletResponse response) {
+    public ResponseEntity<FinalResponseDto<?>> naverLogin(String code, String state) {
 
         try {
             // 네이버에서 가져온 유저정보 + 임의 비밀번호 생성
@@ -76,13 +72,10 @@ public class SocialNaverService {
             UserDetailsImpl userDetails = new UserDetailsImpl(user);
             Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
-//            Authentication authentication = new UsernamePasswordAuthenticationToken(user.getUsername(), null);
-//            UserDetailsImpl userDetailsImpl = ((UserDetailsImpl) authentication.getPrincipal());
-            String token = jwtTokenProvider.generateJwtToken(userDetails);
-            response.addHeader("Authorization", "Bearer" + " " + token);
 
-            // refresh token 발행 후 Redis에 저장
-            redisService.setValues(jwtTokenProvider.createRefreshToken(), user.getUsername(), Duration.ofMillis(1000*60*60*24*7));
+//            토큰 관리
+            userService.accessAndRefreshTokenProcess(user.getUsername());
+
             return new ResponseEntity<>(new FinalResponseDto<>
                     (true, "로그인 성공!!",user.getNickName(), user.getMannerTemp(),user.getId()), HttpStatus.OK);
         } catch (IOException e) {
@@ -109,7 +102,7 @@ public class SocialNaverService {
             String sb = "grant_type=authorization_code" +  // TODO grant_type 입력
                     "&client_id=fNINb0JLOoWHKPO8p2HO" + // TODO client-id 입력
                     "&client_secret=5PzjffB3yr" + // TODO client_secret 입력
-                    "&redirect_uri=http://localhost:3000/oauth" + // TODO 인가코드 받은 redirect_uri 입력
+                    "&redirect_uri=https://localhost:3000/" + // TODO 인가코드 받은 redirect_uri 입력
                     "&code=" + code +
                     "&state=" + state;
             bw.write(sb);

@@ -8,9 +8,7 @@ import com.sparta.meeting_platform.domain.UserRoleEnum;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.KakaoDto.KakaoUserInfoDto;
 import com.sparta.meeting_platform.repository.UserRepository;
-import com.sparta.meeting_platform.security.JwtTokenProvider;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
-import com.sparta.meeting_platform.security.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,7 +25,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletResponse;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -43,12 +40,11 @@ public class SocialKakaoService {
 
     private final BCryptPasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
-    private final JwtTokenProvider jwtTokenProvider;
     private final UserRoleCheckService userRoleCheckService;
-    private final RedisService redisService;
+    private final UserService userService;
 
     @Transactional
-    public ResponseEntity<FinalResponseDto<?>> kakaoLogin(String code, HttpServletResponse response)
+    public ResponseEntity<FinalResponseDto<?>> kakaoLogin(String code)
             throws JsonProcessingException {
         // 1. "인가코드" 로 "액세스 토큰" 요청
         String accessToken = getAccessToken(code);
@@ -65,11 +61,9 @@ public class SocialKakaoService {
         // User 권한 확인
         userRoleCheckService.userRoleCheck(kakaoUser);
 
-        // 5. response Header에 JWT 토큰 추가
-        kakaoUsersAuthorizationInput(authentication, response);
+        //  5. response Header에 JWT 토큰 추가
+        userService.accessAndRefreshTokenProcess(kakaoUser.getUsername());
 
-        // refresh token 발행 후 Redis에 저장
-        redisService.setValues(jwtTokenProvider.createRefreshToken(), kakaoUser.getUsername(), Duration.ofMillis(1000*60*60*24*7));
         String nickname = kakaoUser.getNickName();
         int mannerTemp = kakaoUser.getMannerTemp();
 
@@ -186,14 +180,4 @@ public class SocialKakaoService {
         return authentication;
     }
 
-    // 5번
-    public void kakaoUsersAuthorizationInput(Authentication authentication, HttpServletResponse response) {
-        // response header에 token 추가
-        UserDetailsImpl userDetailsImpl = ((UserDetailsImpl) authentication.getPrincipal());
-        String token = jwtTokenProvider.generateJwtToken(userDetailsImpl);
-
-        response.addHeader("Authorization", "Bearer" + " " + token);
-
-        log.info("액세스 토큰 {}", token);
-    }
 }

@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -101,9 +102,9 @@ public class UserService {
             throw new UserApiException("비밀번호를 확인해 주세요");
         }
 
-        // refresh token 발행 후 Redis에 저장
-        redisService.setValues(jwtTokenProvider.createRefreshToken(), user.getUsername(), Duration.ofMillis(1000*60*60*24*7));
-        jwtTokenProvider.createToken(requestDto.getUsername());
+        //
+        accessAndRefreshTokenProcess(user.getUsername());
+
         return new ResponseEntity<>(new FinalResponseDto<>
                         (true, "로그인 성공!!", user.getNickName(),user.getMannerTemp(),user.getId()),HttpStatus.OK);
     }
@@ -203,19 +204,26 @@ public class UserService {
         }
 
         // Redis에서 refreshToken 유저 정보 꺼내기
-        String user = redisService.getValues(token);
-        if(user == null){
+        String username = redisService.getValues(token);
+        if(username == null){
             throw new UserApiException("토큰 정보가 없습니다.");
         }
 
-        // refresh token 발행 후 Redis에 저장
-        redisService.setValues(jwtTokenProvider.createRefreshToken(), user, Duration.ofMillis(1000*60*60*24*7));
-        // 재발행 후 기존 데이터 삭제
+        // 토큰 재발행
+        accessAndRefreshTokenProcess(username);
+        // 기존 토큰 삭제
         redisService.deleteValues(token);
-        // accessToken 재발행
-        jwtTokenProvider.createToken(user);
+
         return new ResponseEntity<>(new FinalResponseDto<>
                 (true, "access token 갱신 완료"), HttpStatus.OK);
     }
+
+    public void accessAndRefreshTokenProcess(String username){
+        String refreshToken = jwtTokenProvider.createRefreshToken();
+        redisService.setValues(refreshToken, username);
+        redisService.setExpire(refreshToken, 7*24*60*60*1000L, TimeUnit.MILLISECONDS);
+        jwtTokenProvider.createToken(username);
+    }
+
 
 }
