@@ -20,6 +20,7 @@ import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.security.redis.RedisService;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -90,7 +91,7 @@ public class UserService {
 
     // 로그인
     @Transactional
-    public ResponseEntity<FinalResponseDto<?>> login(LoginRequestDto requestDto){
+    public ResponseEntity<FinalResponseDto<?>> login(LoginRequestDto requestDto) {
         User user = userRepository.findByUsername(requestDto.getUsername()).orElseThrow(
                 () -> new UserApiException("해당 유저를 찾을 수 없습니다.")
         );
@@ -104,19 +105,19 @@ public class UserService {
         // refresh token 발행 후 저장
 //        user.setRefreshToken(jwtTokenProvider.createRefreshToken());
         // refresh token 발행 후 Redis에 저장
-        redisService.setValues(jwtTokenProvider.createRefreshToken(), user.getUsername(), Duration.ofMillis(1000*60*60*24*7));
+        redisService.setValues(jwtTokenProvider.createRefreshToken(), user.getUsername(), Duration.ofMillis(1000 * 60 * 60 * 24 * 7));
         jwtTokenProvider.createToken(requestDto.getUsername());
         return new ResponseEntity<>(new FinalResponseDto<>
-                        (true, "로그인 성공!!", user.getNickName(),user.getMannerTemp(),user.getId()),HttpStatus.OK);
+                (true, "로그인 성공!!", user.getNickName(), user.getMannerTemp(), user.getId()), HttpStatus.OK);
     }
 
     // 이메일 인증 토큰 확인
     @Transactional
-    public String confirmEmail(String token){
+    public String confirmEmail(String token) {
         EmailToken emailToken = emailConfirmTokenRepository.findById(token).orElseThrow(
-                ()-> new EmailApiException("토큰 정보가 없습니다.")
+                () -> new EmailApiException("토큰 정보가 없습니다.")
         );
-        if(emailToken.getExpirationDate().isAfter(LocalDateTime.now())){
+        if (emailToken.getExpirationDate().isAfter(LocalDateTime.now())) {
             Optional<User> user = userRepository.findByUsername(emailToken.getUserEmail());
             emailToken.useToken();    // 토큰 만료
 
@@ -139,7 +140,7 @@ public class UserService {
     public ResponseEntity<FinalResponseDto<?>> setProfile(Long userId, ProfileRequestDto requestDto, MultipartFile file) {
         Optional<User> user = userRepository.findById(userId);
 
-        if(!fileExtFilter.badFileExt(file)){
+        if (!fileExtFilter.badFileExt(file)) {
             throw new PostApiException("이미지가 아닙니다.");
         }
         if (!user.isPresent()) {
@@ -147,14 +148,14 @@ public class UserService {
         }
         String profileUrl;
 
-        if(file!=null){
+        if (file != null) {
             profileUrl = s3Service.upload(file);
         } else {
             profileUrl = user.get().getProfileUrl();
         }
         user.get().updateProfile(requestDto, profileUrl);
 
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "프로필 조회 성공",new ProfileResponseDto(user.get())), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "프로필 조회 성공", new ProfileResponseDto(user.get()), user.get().getIsOwner()), HttpStatus.OK);
     }
 
     // 회원 탈퇴
@@ -183,10 +184,10 @@ public class UserService {
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getProfile(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
-                ()->  new UserApiException("프로필 조회 실패")
+                () -> new UserApiException("프로필 조회 실패")
         );
 
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "프로필 조회 성공",new ProfileResponseDto(user)), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "프로필 조회 성공", new ProfileResponseDto(user), user.getIsOwner()), HttpStatus.OK);
 
     }
 
@@ -194,19 +195,19 @@ public class UserService {
     @Transactional
     public ResponseEntity<FinalResponseDto<?>> refreshToken(String accessToken, String refreshToken) {
         // accessToken 만료 기간 확인
-        if(jwtTokenProvider.validateToken(accessToken)){
+        if (jwtTokenProvider.validateToken(accessToken)) {
             throw new UserApiException("토큰 기간이 만료되지 않아서 갱신되지 않습니다");
         }
 
         // RefreshToken 유효성 검사
         String token = refreshToken.replace("Bearer ", "");
-        if(!jwtTokenProvider.validateToken(token)){
+        if (!jwtTokenProvider.validateToken(token)) {
             throw new UserApiException("refresh token 기간이 만료 되었습니다.");
         }
 
         // Redis에서 refreshToken 유저 정보 꺼내기
         String user = redisService.getValues(token);
-        if(user == null){
+        if (user == null) {
             throw new UserApiException("토큰 정보가 없습니다.");
         }
 
@@ -216,7 +217,7 @@ public class UserService {
 //        redisService.deleteValues(token);
         // accessToken 재발행
 //        jwtTokenProvider.createToken(user);
-        redisService.setValues(jwtTokenProvider.createRefreshToken(), user, Duration.ofMillis(1000*60*60*24*7));
+        redisService.setValues(jwtTokenProvider.createRefreshToken(), user, Duration.ofMillis(1000 * 60 * 60 * 24 * 7));
         jwtTokenProvider.createToken(user);
         return new ResponseEntity<>(new FinalResponseDto<>
                 (true, "access token 갱신 완료"), HttpStatus.OK);

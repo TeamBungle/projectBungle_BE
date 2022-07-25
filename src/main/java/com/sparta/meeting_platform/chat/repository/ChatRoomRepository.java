@@ -7,6 +7,7 @@ import com.sparta.meeting_platform.chat.model.ChatRoom;
 import com.sparta.meeting_platform.chat.model.InvitedUsers;
 import com.sparta.meeting_platform.chat.service.RedisSubscriber;
 import com.sparta.meeting_platform.domain.Post;
+import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.HashOperations;
@@ -19,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+
+import static javax.swing.text.html.HTML.Tag.U;
 
 @RequiredArgsConstructor
 @Repository
@@ -46,8 +49,8 @@ public class ChatRoomRepository {
 
     //내가 참여한 모든 채팅방 목록 조회
     @Transactional
-    public List<ChatRoomResponseDto> findAllRoom(Long userId) {
-        List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByUserId(userId);
+    public List<ChatRoomResponseDto> findAllRoom(User user) {
+        List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByUserId(user.getId());
         List<ChatRoomResponseDto> chatRoomResponseDtoList = new ArrayList<>();
         for (InvitedUsers invitedUser : invitedUsers) {
             Optional<Post> post = postRepository.findById(invitedUser.getPostId());
@@ -64,6 +67,7 @@ public class ChatRoomRepository {
             chatRoomResponseDto.setPostUrl(post.get().getPostUrls().get(0));
             chatRoomResponseDto.setLetter(post.get().getIsLetter());
             chatRoomResponseDto.setPostId(post.get().getId());
+            chatRoomResponseDto.setOwner(user.getIsOwner());
             chatRoomResponseDtoList.add(chatRoomResponseDto);
         }
         return chatRoomResponseDtoList;

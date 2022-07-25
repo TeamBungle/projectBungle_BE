@@ -19,7 +19,7 @@ public class EmailController {
     @GetMapping("/user/confirmEmail")
     public String viewConfirmEmail(@Valid @RequestParam String token){
         userService.confirmEmail(token);
-        return "redirect:http://localhost:3000/";
+        return "redirect:https://localhost:3000/";
     }
 
     @GetMapping("/user/confirmEmail2")

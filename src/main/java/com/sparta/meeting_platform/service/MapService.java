@@ -32,7 +32,7 @@ public class MapService {
     //지도탭 입장
     @Transactional(readOnly = true)
     public ResponseEntity<MapResponseDto<?>> readMap(Double latitude, Double longitude, Long userId) {
-        checkUser(userId);
+        User user = checkUser(userId);
         Double distance = 400.0;
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
 
@@ -43,9 +43,9 @@ public class MapService {
         if (posts.size() < 1) {
             throw new MapApiException(distance + "km 내에 모임이 존재하지 않습니다.");
         }
-        List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId,longitude,latitude);
+        List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId, longitude, latitude);
         Collections.sort(mapListDtos, new MapListComparator());
-        return new ResponseEntity<>(new MapResponseDto<>(true, "50km 내에 위치한 모임", mapListDtos), HttpStatus.OK);
+        return new ResponseEntity<>(new MapResponseDto<>(true, "50km 내에 위치한 모임", mapListDtos, user.getIsOwner()), HttpStatus.OK);
     }
     // 순서는 어떻게?
     // 화면에 몇개? 밑 슬라이스에 몇개?
@@ -54,7 +54,7 @@ public class MapService {
     // 주소 검색 결과
     @Transactional(readOnly = true)
     public ResponseEntity<MapResponseDto<?>> searchMap(String address, Long userId) throws IOException, ParseException {
-        checkUser(userId);
+        User user = checkUser(userId);
         SearchMapDto searchMapDto = mapSearchService.findLatAndLong(address);
         Double distance = 400.0;
         String pointFormat
@@ -68,10 +68,10 @@ public class MapService {
             throw new MapApiException(distance + "km 내에 모임이 존재하지 않습니다.");
         }
         List<MapListDto> mapListDtos
-                = postSearchService.searchMapPostList(posts, userId,searchMapDto.getLongitude(),searchMapDto.getLatitude());
+                = postSearchService.searchMapPostList(posts, userId, searchMapDto.getLongitude(), searchMapDto.getLatitude());
         Collections.sort(mapListDtos, new MapListComparator());
 
-        return new ResponseEntity<>(new MapResponseDto<>(true, "50km 내에 위치한 모임", mapListDtos), HttpStatus.OK);
+        return new ResponseEntity<>(new MapResponseDto<>(true, "50km 내에 위치한 모임", mapListDtos, user.getIsOwner()), HttpStatus.OK);
     }//거리순
 
 
@@ -82,7 +82,7 @@ public class MapService {
 //        if (distance == null) {
 //            distance = 10.0;
 //        }
-        checkUser(userId);
+        User user = checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
         String mergeList = postSearchService.categoryOrTagListMergeString(categories);
 
@@ -92,9 +92,9 @@ public class MapService {
                 + " WHERE u.category in (" + mergeList + "))", Post.class);
         List<Post> posts = query.getResultList();
 
-        List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId,longitude,latitude);
+        List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId, longitude, latitude);
         Collections.sort(mapListDtos, new MapListComparator());
-        return new ResponseEntity<>(new MapResponseDto<>(true, "세부 조회 성공!!", mapListDtos), HttpStatus.OK);
+        return new ResponseEntity<>(new MapResponseDto<>(true, "세부 조회 성공!!", mapListDtos, user.getIsOwner()), HttpStatus.OK);
     }//거리순
     //디폴트 10km
     //
