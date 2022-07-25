@@ -428,7 +428,7 @@ public class PostService {
     }
 
     public ResponseEntity<FinalResponseDto<?>> morePostListInfiniteScroll(Long lastId, Long userId, String status, Double latitude, Double longitude, int size) {
-        checkUser(userId);
+        User user = checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
         List<Post> posts = new ArrayList<>();
         LocalDateTime localDateTime = LocalDateTime.now();
@@ -470,7 +470,7 @@ public class PostService {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다"), HttpStatus.OK);
         }
         List<PostResponseDto> postList = postSearchService.searchTimeOrMannerPostList(posts, userId);
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList, user.getIsOwner()), HttpStatus.OK);
     }
 
 
