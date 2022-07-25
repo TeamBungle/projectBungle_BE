@@ -2,7 +2,6 @@ package com.sparta.meeting_platform.security;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sparta.meeting_platform.exception.UserApiException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;

@@ -1,12 +1,7 @@
 package com.sparta.meeting_platform.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.meeting_platform.chat.dto.UserDto;
-import com.sparta.meeting_platform.chat.model.ChatMessage;
-import com.sparta.meeting_platform.chat.model.ChatRoom;
-import com.sparta.meeting_platform.chat.model.ResignChatMessage;
-import com.sparta.meeting_platform.chat.model.ResignChatRoom;
+import com.sparta.meeting_platform.chat.model.*;
 import com.sparta.meeting_platform.chat.repository.*;
 import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
@@ -26,7 +21,6 @@ import com.sparta.meeting_platform.repository.mapping.PostMapping;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.util.FileExtFilter;
 import com.sparta.meeting_platform.util.PostListComparator;
-import io.lettuce.core.ScriptOutputType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Point;
@@ -210,12 +204,27 @@ public class PostService {
 
 
     //게시글 상세 조회
-    @Transactional(readOnly = true)
+    @Transactional
     public ResponseEntity<FinalResponseDto<?>> getPostsDetails(Long postId, Long userId) {
         User user = checkUser(userId);
         Post post = checkPost(postId);
         Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
         PostDetailsResponseDto postDetailsResponseDto = postSearchService.detailPost(like, post);
+        Optional<List<InvitedUsers>> invitedUsers = Optional.ofNullable((invitedUsersRepository.findAllByUserId(userId)));
+
+        if (!invitedUsers.isPresent()) {
+            return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postDetailsResponseDto, user.getIsOwner()), HttpStatus.OK);
+
+        }
+
+        for (InvitedUsers users : invitedUsers.get()) {
+            if (users.getPostId().equals(postId)) {
+                if (users.getReadCheck()) {
+                    users.setReadCheck(false);
+                    users.setReadCheckTime(LocalDateTime.now());
+                }
+            }
+        }
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postDetailsResponseDto, user.getIsOwner()), HttpStatus.OK);
     }
 
@@ -378,7 +387,7 @@ public class PostService {
     // 찜한 게시글 전체 조회
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getLikedPosts(Long userId) {
-       User user = checkUser(userId);
+        User user = checkUser(userId);
         List<PostMapping> posts = likeRepository.findAllByUserIdAndIsLikeTrueOrderByPost_Id(userId);
         List<PostResponseDto> postList = postSearchService.searchLikePostList(posts, userId);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "좋아요한 게시글 조회 성공", postList, user.getIsOwner()), HttpStatus.OK);

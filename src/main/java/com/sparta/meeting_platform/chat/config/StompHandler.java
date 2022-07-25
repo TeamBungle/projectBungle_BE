@@ -39,7 +39,6 @@ public class StompHandler implements ChannelInterceptor {
         if (StompCommand.CONNECT == accessor.getCommand()) {
             log.info("CONNECT : {}", sessionId);
             jwtTokenProvider.validateToken(accessor.getFirstNativeHeader("token"));
-
             // 구독 요청시 유저의 카운트수를 저장하고 최대인원수를 관리하며 , 세션정보를 저장한다.
         } else if (StompCommand.SUBSCRIBE == accessor.getCommand()) {
             log.info("SUBSCRIBE : {}", sessionId);

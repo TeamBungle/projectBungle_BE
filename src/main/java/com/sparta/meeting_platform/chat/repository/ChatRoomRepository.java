@@ -18,6 +18,8 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -53,6 +55,10 @@ public class ChatRoomRepository {
         List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByUserId(user.getId());
         List<ChatRoomResponseDto> chatRoomResponseDtoList = new ArrayList<>();
         for (InvitedUsers invitedUser : invitedUsers) {
+            if(invitedUser.getReadCheck()){
+                invitedUser.setReadCheck(false);
+                invitedUser.setReadCheckTime(LocalDateTime.now());
+            }
             Optional<Post> post = postRepository.findById(invitedUser.getPostId());
             ChatMessage chatMessage = chatMessageJpaRepository.findTop1ByRoomIdOrderByCreatedAtDesc(invitedUser.getPostId().toString());
             ChatRoomResponseDto chatRoomResponseDto = new ChatRoomResponseDto();
@@ -61,7 +67,14 @@ public class ChatRoomRepository {
             }else {
                 chatRoomResponseDto.setLastMessage(chatMessage.getMessage());
             }
-            chatRoomResponseDto.setLastMessageTime(chatMessage.getCreatedAt());
+
+//            Date from = chatMessage.getCreatedAt();
+//            SimpleDateFormat transFormat = new SimpleDateFormat("dd,MM,yyyy,HH,mm,ss", Locale.KOREA);
+//            String date = transFormat.format(from);
+            LocalDateTime createdAt = chatMessage.getCreatedAt();
+            String createdAtString = createdAt.format(DateTimeFormatter.ofPattern("dd,MM,yyyy,HH,mm,ss", Locale.KOREA));
+
+            chatRoomResponseDto.setLastMessageTime(createdAtString);
             chatRoomResponseDto.setPostTime(post.get().getTime());
             chatRoomResponseDto.setPostTitle(post.get().getTitle());
             chatRoomResponseDto.setPostUrl(post.get().getPostUrls().get(0));
@@ -69,6 +82,7 @@ public class ChatRoomRepository {
             chatRoomResponseDto.setPostId(post.get().getId());
             chatRoomResponseDto.setOwner(user.getIsOwner());
             chatRoomResponseDtoList.add(chatRoomResponseDto);
+
         }
         return chatRoomResponseDtoList;
     }

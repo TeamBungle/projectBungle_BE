@@ -29,8 +29,6 @@ public class ChatController {
      */
     @MessageMapping({"/chat/message"})
     public void message(ChatMessageDto message, @Header("PK") Long BearerToken) {
-        log.info("PK 값 : " +BearerToken);
-        log.info("요청 메서드 [message] /chat/message");
         chatService.save(message, BearerToken);
     }
 

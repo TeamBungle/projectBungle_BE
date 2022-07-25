@@ -14,8 +14,11 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -84,7 +87,9 @@ public class ChatMessageRepository {
             List<FindChatMessageDto> chatMessages = chatMessageJpaRepository.findAllByRoomId(roomId);
 
             for (FindChatMessageDto chatMessage : chatMessages) {
-                ChatMessageDto chatMessageDto = new ChatMessageDto(chatMessage);
+                LocalDateTime createdAt = chatMessage.getCreatedAt();
+                String createdAtString = createdAt.format(DateTimeFormatter.ofPattern("dd,MM,yyyy,HH,mm,ss", Locale.KOREA));
+                ChatMessageDto chatMessageDto = new ChatMessageDto(chatMessage,createdAtString);
                 chatMessageDtoList.add(chatMessageDto);
             }
             //redis에 정보가 없으니, 다음부터 조회할때는 redis를 사용하기 위하여 넣어준다.
