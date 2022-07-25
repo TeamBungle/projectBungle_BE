@@ -57,28 +57,38 @@ public class PostSearchService {
         List<String> joinPeopleUrl = new ArrayList<>();
         List<String>  joinPeopleNickName =  new ArrayList<>();
         List<String> joinPeopleIntro = new ArrayList<>();
-        int temp = 0;
-        int joinCount = 0;
-        for (InvitedUsers invitedUser : invitedUsers) {
-            temp += invitedUser.getUser().getMannerTemp();
-            joinCount += 1;
-           joinPeopleUrl.add(invitedUser.getUser().getProfileUrl());
-           joinPeopleNickName.add(invitedUser.getUser().getNickName());
-           joinPeopleIntro.add(invitedUser.getUser().getIntro());
+        try {
+            int temp = 0;
+            int joinCount = 0;
+            for (InvitedUsers invitedUser : invitedUsers) {
+                temp += invitedUser.getUser().getMannerTemp();
+                joinCount += 1;
+                joinPeopleUrl.add(invitedUser.getUser().getProfileUrl());
+                joinPeopleNickName.add(invitedUser.getUser().getNickName());
+                joinPeopleIntro.add(invitedUser.getUser().getIntro());
 
+            }
+            int avgTemp = temp/joinCount;
+            return new TempAndJoinCountSearchDto(joinPeopleUrl,joinPeopleNickName,joinPeopleIntro,avgTemp,joinCount);
+        } catch (ArithmeticException e){
+            return new TempAndJoinCountSearchDto(joinPeopleUrl,joinPeopleNickName,joinPeopleIntro,0,0);
         }
-        int avgTemp = temp/joinCount;
-        return new TempAndJoinCountSearchDto(joinPeopleUrl,joinPeopleNickName,joinPeopleIntro,avgTemp,joinCount);
+
+
     }
 
     //카페고리및태그 리스트->스트링 변환
     public String categoryOrTagListMergeString (List<String> categoryOrTagList){
         String mergeList = "";
-        for (String string : categoryOrTagList) {
-            mergeList += "'" + string + "',";
+        try{
+            for (String string : categoryOrTagList) {
+                mergeList += "'" + string + "',";
+            }
+            mergeList = mergeList.substring(0, mergeList.length() - 1);
+            return mergeList;
+        } catch (StringIndexOutOfBoundsException e){
+          return mergeList = "'맛집','카페','노래방','운동','친목','전시','여행','쇼핑','스터디','게임'";
         }
-        mergeList = mergeList.substring(0, mergeList.length() - 1);
-        return mergeList;
     }
 
     //postlist 찾기 - 거리순

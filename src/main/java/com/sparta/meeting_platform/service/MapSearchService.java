@@ -68,21 +68,15 @@ public class MapSearchService {
             response.append(inputLine);
         }
 
-        System.out.println(response);
         try {
             JSONParser jsonParser = new JSONParser();
             JSONObject jsonObject = (JSONObject) jsonParser.parse(response.toString());
-            System.out.println("-----------------------------------------------");
             JSONArray documents = (JSONArray) jsonObject.get("documents");
-            System.out.println(documents);
             JSONObject thisAddress = (JSONObject) documents.get(0);
             String longitude = (String) thisAddress.get("x");
             String latitude = (String) thisAddress.get("y");
             double longi = Double.parseDouble(longitude);
             double lati = Double.parseDouble(latitude);
-
-            System.out.println(longi);
-            System.out.println(lati);
             return new SearchMapDto(longi,lati);
         } catch (IndexOutOfBoundsException e){
             throw new MapApiException("잘못된 주소값입니다.");
