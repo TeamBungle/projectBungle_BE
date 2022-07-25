@@ -102,7 +102,7 @@ public class SocialNaverService {
             String sb = "grant_type=authorization_code" +  // TODO grant_type 입력
                     "&client_id=fNINb0JLOoWHKPO8p2HO" + // TODO client-id 입력
                     "&client_secret=5PzjffB3yr" + // TODO client_secret 입력
-                    "&redirect_uri=https://localhost:3000/" + // TODO 인가코드 받은 redirect_uri 입력
+                    "&redirect_uri=https://localhost:3000/oauth" + // TODO 인가코드 받은 redirect_uri 입력
                     "&code=" + code +
                     "&state=" + state;
             bw.write(sb);

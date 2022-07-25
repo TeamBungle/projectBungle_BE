@@ -74,12 +74,17 @@ public class PostSearchService {
     //카페고리및태그 리스트->스트링 변환
     public String categoryOrTagListMergeString (List<String> categoryOrTagList){
         String mergeList = "";
-        for (String string : categoryOrTagList) {
-            mergeList += "'" + string + "',";
+        try{
+            for (String string : categoryOrTagList) {
+                mergeList += "'" + string + "',";
+            }
+            mergeList = mergeList.substring(0, mergeList.length() - 1);
+            return mergeList;
+        } catch (StringIndexOutOfBoundsException e){
+            return mergeList = "'맛집','카페','노래방','운동','친목','전시','여행','쇼핑','스터디','게임'";
         }
-        mergeList = mergeList.substring(0, mergeList.length() - 1);
-        return mergeList;
     }
+
 
     //postlist 찾기 - 거리순
     public List<PostResponseDto> searchPostList(List<Post> posts, Long userId, Double longitude,Double latitude){
@@ -116,6 +121,8 @@ public class PostSearchService {
                     .isLetter(post.getIsLetter())
                     .isLike(isLike)
                     .distance(dist)
+                    .latitude(post.getLatitude())
+                    .longitude(post.getLongitude())
                     .build();
             postList.add(postResponseDto);
         }
@@ -150,6 +157,8 @@ public class PostSearchService {
                     .avgTemp(tempAndJoinCountSearchDto.getAveTemp())
                     .isLetter(post.getIsLetter())
                     .isLike(isLike)
+                    .latitude(post.getLatitude())
+                    .longitude(post.getLongitude())
                     .build();
             postList.add(postResponseDto);
         }

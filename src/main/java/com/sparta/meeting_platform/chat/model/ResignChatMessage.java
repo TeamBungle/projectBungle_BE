@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -34,7 +35,7 @@ public class ResignChatMessage {
     @Column
     private Long userId;
     @Column
-    private String createdAt;
+    private LocalDateTime createdAt;
     @Column
     private String fileUrl;
     @JoinColumn(name = "CHAT_ROOM_ID")

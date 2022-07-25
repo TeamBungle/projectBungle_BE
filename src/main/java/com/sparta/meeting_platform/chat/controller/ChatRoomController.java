@@ -2,6 +2,7 @@ package com.sparta.meeting_platform.chat.controller;
 
 import com.sparta.meeting_platform.chat.dto.ChatRoomResponseDto;
 import com.sparta.meeting_platform.chat.repository.ChatRoomRepository;
+import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,8 +20,8 @@ public class ChatRoomController {
     @GetMapping("/rooms")
     @ResponseBody
     public List<ChatRoomResponseDto> room(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        Long userid = userDetails.getUser().getId();
-        return chatRoomRepository.findAllRoom(userid);
+        User user = userDetails.getUser();
+        return chatRoomRepository.findAllRoom(user);
     }
     // 특정 채팅방 입장
     @PostMapping("/room/{postId}")

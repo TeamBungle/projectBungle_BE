@@ -63,16 +63,18 @@ public class FinalResponseDto<T> {
 
 
 
-    public FinalResponseDto(boolean response, String message, PostDetailsResponseDto postDetailsResponseDto) {
+    public FinalResponseDto(boolean response, String message, PostDetailsResponseDto postDetailsResponseDto, boolean isOwner) {
         this.response = response;
         this.message = message;
         this.postDetailsResponseDto = postDetailsResponseDto;
+        this.isOwner = isOwner;
     }
 
-    public FinalResponseDto(boolean response, String message, MyPageDto myPageDto) {
+    public FinalResponseDto(boolean response, String message, MyPageDto myPageDto, boolean isOwner) {
         this.response = response;
         this.message = message;
         this.myPageDto = myPageDto;
+        this.isOwner = isOwner;
     }
 
     public FinalResponseDto(boolean response, String message) {
@@ -80,16 +82,18 @@ public class FinalResponseDto<T> {
         this.message = message;
     }
 
-    public FinalResponseDto(boolean response, String message, List<T> List) {
+    public FinalResponseDto(boolean response, String message, List<T> List, boolean isOwner) {
         this.response = response;
         this.message = message;
         this.List = List;
+        this.isOwner = isOwner;
     }
 
-    public FinalResponseDto(boolean response, String message, PostResponseDto postResponseDto) {
+    public FinalResponseDto(boolean response, String message, PostResponseDto postResponseDto, boolean isOwner) {
         this.response = response;
         this.message = message;
         this.postResponseDto = postResponseDto;
+        this.isOwner = isOwner;
     }
 
     public FinalResponseDto(boolean response, String message, String nickname, int mannerTemp, Long userId) {
@@ -100,10 +104,11 @@ public class FinalResponseDto<T> {
         this.userId = userId;
     }
 
-    public FinalResponseDto(boolean response, String message, ProfileResponseDto profileResponseDto) {
+    public FinalResponseDto(boolean response, String message, ProfileResponseDto profileResponseDto, boolean isOwner) {
         this.response = response;
         this.message = message;
         this.profileResponseDto = profileResponseDto;
+        this.isOwner = isOwner;
     }
 
     public FinalResponseDto(boolean response, String message, Boolean isOwner) {

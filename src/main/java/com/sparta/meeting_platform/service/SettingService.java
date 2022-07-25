@@ -47,7 +47,7 @@ public class SettingService {
             noticeResponseDtoList.add(noticeResponseDto);
         }
 
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "공지사항 조회 성공", noticeResponseDtoList), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "공지사항 조회 성공", noticeResponseDtoList, user.get().getIsOwner()), HttpStatus.OK);
     }
 
     //의견 보내기

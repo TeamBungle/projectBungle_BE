@@ -56,7 +56,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests()
                 // 회원 관리 처리 API 전부를 login 없이 허용
                 .antMatchers("/user/**").permitAll()
-                .antMatchers("/ws/chat/**").permitAll()
+                .antMatchers("/wss/chat/**").permitAll()
                 .anyRequest().authenticated()
                 // 그 외 어떤 요청이든 '인증'
                 .and()
@@ -69,8 +69,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         CorsConfiguration configuration = new CorsConfiguration();
 //        configuration.addAllowedOriginPattern("http://localhost:3000");
         configuration.addAllowedOriginPattern("https://localhost:3000");
-//        configuration.addAllowedOriginPattern("http://jeju.project.s3-website.ap-northeast-2.amazonaws.com/");
-//        configuration.addAllowedOriginPattern("http://jeju.project.s3-website.ap-northeast-2.amazonaws.com/:3000/");
+        configuration.addAllowedOriginPattern("https://authex-d42a5.web.app/");
+        configuration.addAllowedOriginPattern("https://auth-6eb37.web.app");
+        configuration.addAllowedOriginPattern("https://test-react-basic.web.app");
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
         configuration.addExposedHeader("Authorization");

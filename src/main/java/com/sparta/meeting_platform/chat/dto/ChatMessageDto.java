@@ -25,7 +25,7 @@ public class ChatMessageDto {
     private Boolean quitOwner;
 
 
-    public ChatMessageDto(FindChatMessageDto chatMessage) {
+    public ChatMessageDto(FindChatMessageDto chatMessage,String createdAt) {
         this.type = chatMessage.getType();
         this.roomId = chatMessage.getRoomId();
         this.message =chatMessage.getMessage();
@@ -33,7 +33,7 @@ public class ChatMessageDto {
         this.profileUrl = chatMessage.getProfileUrl();
         this.enterUserCnt = chatMessage.getEnterUserCnt();
         this.userId = chatMessage.getUserId();
-        this.createdAt = chatMessage.getCreatedAt();
+        this.createdAt = createdAt;
         this.fileUrl = chatMessage.getFileUrl();
         this.quitOwner = chatMessage.getQuitOwner();
     }
