@@ -415,19 +415,21 @@ public class PostService {
             case "endTime":
                 Query query = em.createNativeQuery("SELECT * FROM post AS p "
                                 + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                                + "AND p.time > :convertedDate1"
+                                + "AND p.time > :convertedDate1 "
+                                + "AND p.id > :lastId "
                                 + " ORDER BY p.time ", Post.class)
-                        .setParameter("convertedDate1", convertedDate1);
+                        .setParameter("convertedDate1", convertedDate1)
+                        .setParameter("lastId", lastId)
+                        .setParameter("pageSize",size);
                 posts = query.getResultList();
                 break;
             case "realTime":
                 Query query1 = em.createNativeQuery("SELECT * FROM post AS p "
                                 + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                                + "AND p.time < :convertedDate1"
-                                + "AND p.id < :lastId"
-                                + " ORDER BY p.time desc"
+                                + "AND p.time < (SELECT post.time FROM post WHERE id = :lastId) "
+                                + "ORDER BY p.time desc "
                                 + "LIMIT :pageSize", Post.class)
-                        .setParameter("convertedDate1", convertedDate1)
+//                        .setParameter("convertedDate1", convertedDate1)
                         .setParameter("lastId", lastId)
                         .setParameter("pageSize",size);
                 posts = query1.getResultList();
