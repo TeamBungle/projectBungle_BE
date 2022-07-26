@@ -31,7 +31,7 @@ public class MapSearchService {
     @Value("${geocoding}")
     private String geocoding;
     public Point makePoint(Double longitude, Double latitude) throws org.locationtech.jts.io.ParseException {
-        String pointWKT = String.format("POINT(%s %s)",latitude,longitude);
+        String pointWKT = String.format("POINT(%s %s)",longitude,latitude);
         // WKTReader를 통해 WKT를 실제 타입으로 변환합니다.
         return (Point) new WKTReader().read(pointWKT);
     }
