@@ -8,7 +8,6 @@ import java.util.List;
 public interface ReportRepository extends JpaRepository<Report, Long> {
 
     List<Report> findAllByReporterIdOrderByIdDesc(Long id);
-
     Boolean existsByReporterIdAndBadMannerId(Long reporterId, Long badMannerId);
 
 }

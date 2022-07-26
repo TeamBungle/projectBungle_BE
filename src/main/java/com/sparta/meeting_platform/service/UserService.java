@@ -51,11 +51,9 @@ public class UserService {
     private final UserRoleCheckService userRoleCheckService;
     private final EmailConfirmTokenRepository emailConfirmTokenRepository;
     private final RedisService redisService;
-
     private final FileExtFilter fileExtFilter;
-
     private final InvitedUsersRepository invitedUsersRepository;
-//    private final RedisService redisService;
+
 
     // 아이디(이메일) 중복 확인
     @Transactional(readOnly = true)
@@ -64,7 +62,8 @@ public class UserService {
         if (userRepository.existsByUsername(requestDto.getUsername())) {
             throw new UserApiException("중복된 이메일이 존재합니다.");
         }
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "사용 가능한 이메일입니다."), HttpStatus.OK);
+        return new ResponseEntity<>(
+                new FinalResponseDto<>(true, "사용 가능한 이메일입니다."), HttpStatus.OK);
     }
 
     // 회원 가입
@@ -92,7 +91,7 @@ public class UserService {
 
     // 로그인
     @Transactional
-    public ResponseEntity<FinalResponseDto<?>> login(LoginRequestDto requestDto){
+    public ResponseEntity<FinalResponseDto<?>> login(LoginRequestDto requestDto) {
         User user = userRepository.findByUsername(requestDto.getUsername()).orElseThrow(
                 () -> new UserApiException("해당 유저를 찾을 수 없습니다.")
         );
@@ -106,8 +105,9 @@ public class UserService {
         //
         accessAndRefreshTokenProcess(user.getUsername());
 
-        return new ResponseEntity<>(new FinalResponseDto<>
-                (true, "로그인 성공!!", user.getNickName(), user.getMannerTemp(), user.getId()), HttpStatus.OK);
+        return new ResponseEntity<>(
+                new FinalResponseDto<>(true, "로그인 성공!!",
+                        user.getNickName(), user.getMannerTemp(), user.getId()), HttpStatus.OK);
     }
 
     // 이메일 인증 토큰 확인
@@ -136,25 +136,29 @@ public class UserService {
 
     // 프로필 수정
     @Transactional
-    public ResponseEntity<FinalResponseDto<?>> setProfile(Long userId, ProfileRequestDto requestDto, MultipartFile file) {
+    public ResponseEntity<FinalResponseDto<?>> setProfile(Long userId,
+                                                          ProfileRequestDto requestDto,
+                                                          MultipartFile file) {
         Optional<User> user = userRepository.findById(userId);
 
-        if (!fileExtFilter.badFileExt(file)) {
-            throw new PostApiException("이미지가 아닙니다.");
-        }
         if (!user.isPresent()) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "프로필 설정 실패"), HttpStatus.OK);
+            throw new UserApiException("프로필 설정 실패");
         }
         String profileUrl;
 
         if (file != null) {
+            if (!fileExtFilter.badFileExt(file)) {
+                throw new PostApiException("이미지가 아닙니다.");
+            }
             profileUrl = s3Service.upload(file);
         } else {
             profileUrl = user.get().getProfileUrl();
         }
         user.get().updateProfile(requestDto, profileUrl);
 
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "프로필 조회 성공", new ProfileResponseDto(user.get()), user.get().getIsOwner()), HttpStatus.OK);
+        return new ResponseEntity<>(
+                new FinalResponseDto<>(true, "프로필 수정 성공",
+                        new ProfileResponseDto(user.get()), user.get().getIsOwner()), HttpStatus.OK);
     }
 
     // 회원 탈퇴
@@ -163,7 +167,7 @@ public class UserService {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
-            return new ResponseEntity<>(new FinalResponseDto<>(false, "회원 탈퇴 실패"), HttpStatus.OK);
+            throw new UserApiException("회원 탈퇴 실패");
         }
         // 탈퇴 회원 테이블에 저장(이메일, 시간, 매너온도)
         ResignUser resignUser = new ResignUser(user.get());
@@ -186,8 +190,9 @@ public class UserService {
                 () -> new UserApiException("프로필 조회 실패")
         );
 
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "프로필 조회 성공", new ProfileResponseDto(user), user.getIsOwner()), HttpStatus.OK);
-
+        return new ResponseEntity<>(
+                new FinalResponseDto<>(true, "프로필 조회 성공",
+                        new ProfileResponseDto(user), user.getIsOwner()), HttpStatus.OK);
     }
 
     // 만료된 access token 재 발급
@@ -206,7 +211,7 @@ public class UserService {
 
         // Redis에서 refreshToken 유저 정보 꺼내기
         String username = redisService.getValues(token);
-        if(username == null){
+        if (username == null) {
             throw new UserApiException("토큰 정보가 없습니다.");
         }
 
@@ -219,10 +224,10 @@ public class UserService {
                 (true, "access token 갱신 완료"), HttpStatus.OK);
     }
 
-    public void accessAndRefreshTokenProcess(String username){
+    public void accessAndRefreshTokenProcess(String username) {
         String refreshToken = jwtTokenProvider.createRefreshToken();
         redisService.setValues(refreshToken, username);
-        redisService.setExpire(refreshToken, 7*24*60*60*1000L, TimeUnit.MILLISECONDS);
+        redisService.setExpire(refreshToken, 7 * 24 * 60 * 60 * 1000L, TimeUnit.MILLISECONDS);
         jwtTokenProvider.createToken(username);
     }
 

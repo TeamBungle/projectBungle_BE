@@ -35,7 +35,7 @@ public class PostController {
     @GetMapping("")
     public ResponseEntity<FinalResponseDto<?>> getPosts(@RequestParam(value = "latitude") Double latitude,
                                                         @RequestParam(value = "longitude") Double longitude,
-                                                        @AuthenticationPrincipal UserDetailsImpl userDetails){
+                                                        @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
         Long userId = userDetails.getUser().getId();
         return postService.getPosts(userId,latitude,longitude);
     }
@@ -46,7 +46,7 @@ public class PostController {
             @RequestParam(value = "categories",required = false, defaultValue = "") List<String> categories,
             @RequestParam(value = "latitude") Double latitude,
             @RequestParam(value = "longitude") Double longitude,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
         Long userId = getUserId(userDetails);
         return postService.getPostsByCategories(userId,categories,latitude,longitude);
     }
@@ -70,9 +70,22 @@ public class PostController {
             @RequestParam(value = "tags",required = false,defaultValue = "") List<String> tags,
             @RequestParam(value = "latitude") Double latitude,
             @RequestParam(value = "longitude") Double longitude,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
         Long userId = getUserId(userDetails);
         return postService.getPostsByTags(userId,tags,latitude,longitude);
+    }
+
+    //태그별 게시글 무한 스크롤
+    @GetMapping("/tags/{lastId}")
+    public ResponseEntity<FinalResponseDto<?>> getTagsInfiniteScroll(
+            @PathVariable Long lastId,
+            @RequestParam(value = "tags",required = false, defaultValue = "") List<String> tags,
+            @RequestParam(value = "latitude") Double latitude,
+            @RequestParam(value = "longitude") Double longitude,
+            @RequestParam(value = "size") int size,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
+        Long userId = getUserId(userDetails);
+        return postService.gettagsInfiniteScroll(lastId, tags, latitude, longitude, userId, size);
     }
 
     //게시글 더보기 조회
@@ -174,14 +187,14 @@ public class PostController {
     }
 
 
-    //게시글 검색(제목에포함된단어로)
-    @GetMapping("/search")
-    public ResponseEntity<FinalResponseDto<?>> getSearch(@RequestParam(value = "keyword") String keyword,
-                                                         @RequestParam(value = "latitude") Double latitude,
-                                                         @RequestParam(value = "longitude") Double longitude,
-                                                         @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        Long userId = getUserId(userDetails);
-        return postService.getSearch(keyword,userId,longitude,latitude);
-    }
+//    //게시글 검색(제목에포함된단어로)
+//    @GetMapping("/search")
+//    public ResponseEntity<FinalResponseDto<?>> getSearch(@RequestParam(value = "keyword") String keyword,
+//                                                         @RequestParam(value = "latitude") Double latitude,
+//                                                         @RequestParam(value = "longitude") Double longitude,
+//                                                         @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
+//        Long userId = getUserId(userDetails);
+//        return postService.getSearch(keyword,userId,longitude,latitude);
+//    }
 
 }

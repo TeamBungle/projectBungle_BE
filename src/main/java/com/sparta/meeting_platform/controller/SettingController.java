@@ -26,23 +26,24 @@ public class SettingController {
 
     //공지사항 조회
     @GetMapping("/notice")
-    public ResponseEntity<FinalResponseDto<?>> getNotice(@AuthenticationPrincipal UserDetailsImpl userDetails){
+    public ResponseEntity<FinalResponseDto<?>> getNotice(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         Long userId = getUserId(userDetails);
-         return SettingService.getNotice(userId);
+        return SettingService.getNotice(userId);
     }
+
     //공지사항 작성
     @PostMapping("/notice")
     public ResponseEntity<FinalResponseDto<?>> createNotice(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                                            @RequestBody NoticeRequestDto requestDto){
+                                                            @RequestBody NoticeRequestDto requestDto) {
         Long userId = getUserId(userDetails);
-        return SettingService.createNotice(userId,requestDto);
+        return SettingService.createNotice(userId, requestDto);
     }
+
     //의견 보내기
     @PostMapping("/opinion")
     public ResponseEntity<FinalResponseDto<?>> createOpinion
-            (@RequestBody OpinionRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails){
-        Long userId =getUserId(userDetails);
-        return SettingService.creatOpinion(requestDto,userId);
+    (@RequestBody OpinionRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        Long userId = getUserId(userDetails);
+        return SettingService.creatOpinion(requestDto, userId);
     }
-
 }

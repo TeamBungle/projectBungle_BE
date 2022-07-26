@@ -25,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -132,7 +131,7 @@ public class SocialGoogleService {
         userService.accessAndRefreshTokenProcess(user.getUsername());
 
         return new ResponseEntity<>(new FinalResponseDto<>
-                (true, "로그인 성공!!", user.getNickName(), user.getMannerTemp(),user.getId() ), HttpStatus.OK);
+                (true, "로그인 성공!!", user.getNickName(), user.getMannerTemp(), user.getId()), HttpStatus.OK);
     }
 
 }

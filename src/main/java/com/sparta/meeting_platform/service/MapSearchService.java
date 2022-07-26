@@ -1,11 +1,8 @@
 package com.sparta.meeting_platform.service;
 
 
-import com.sparta.meeting_platform.util.Location;
 import com.sparta.meeting_platform.dto.SearchMapDto;
 import com.sparta.meeting_platform.exception.MapApiException;
-import com.sparta.meeting_platform.util.Direction;
-import com.sparta.meeting_platform.util.GeometryUtil;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -30,12 +27,13 @@ public class MapSearchService {
 
     @Value("${geocoding}")
     private String geocoding;
+
+    // point 구하기
     public Point makePoint(Double longitude, Double latitude) throws org.locationtech.jts.io.ParseException {
-        String pointWKT = String.format("POINT(%s %s)",longitude,latitude);
+        String pointWKT = String.format("POINT(%s %s)", longitude, latitude);
         // WKTReader를 통해 WKT를 실제 타입으로 변환합니다.
         return (Point) new WKTReader().read(pointWKT);
     }
-
 
     //위도 경도 찾아 오기 함수
     public SearchMapDto findLatAndLong(String location) throws IOException, ParseException {
@@ -78,24 +76,10 @@ public class MapSearchService {
             double longi = Double.parseDouble(longitude);
             double lati = Double.parseDouble(latitude);
 
-            return new SearchMapDto(longi,lati);
-        } catch (IndexOutOfBoundsException e){
+            return new SearchMapDto(longi, lati);
+        } catch (IndexOutOfBoundsException e) {
             throw new MapApiException("잘못된 주소값입니다.");
         }
 
-    }
-
-    //pointFormat 구하기
-    public String searchPointFormat(Double distance, Double latitude, Double longitude){
-        Location northEast = GeometryUtil
-                .calculate(latitude, longitude, distance, Direction.NORTHEAST.getBearing());
-        Location southWest = GeometryUtil
-                .calculate(latitude, longitude, distance, Direction.SOUTHWEST.getBearing());
-
-        double x1 = northEast.getLatitude();
-        double y1 = northEast.getLongitude();
-        double x2 = southWest.getLatitude();
-        double y2 = southWest.getLongitude();
-        return String.format("'LINESTRING(%f %f, %f %f)')", x1, y1, x2, y2);
     }
 }

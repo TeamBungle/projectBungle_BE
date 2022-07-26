@@ -24,7 +24,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -68,8 +67,9 @@ public class SocialKakaoService {
         int mannerTemp = kakaoUser.getMannerTemp();
 
         return new ResponseEntity<>(new FinalResponseDto<>
-                (true, "로그인 성공", nickname, mannerTemp,kakaoUser.getId() ), HttpStatus.OK);
+                (true, "로그인 성공", nickname, mannerTemp, kakaoUser.getId()), HttpStatus.OK);
     }
+
     //header 에 Content-type 지정
     //1번
     public String getAccessToken(String code) throws JsonProcessingException {
@@ -102,7 +102,7 @@ public class SocialKakaoService {
         return jsonNode.get("access_token").asText();
     }
 
-        //2번
+    //2번
     public KakaoUserInfoDto getKakaoUserInfo(String accessToken) throws JsonProcessingException {
         // HTTP Header 생성
         HttpHeaders headers = new HttpHeaders();
@@ -179,5 +179,4 @@ public class SocialKakaoService {
         log.info("강제 로그인 {}", authentication);
         return authentication;
     }
-
 }

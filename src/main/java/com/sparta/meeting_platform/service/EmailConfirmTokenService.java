@@ -42,7 +42,6 @@ public class EmailConfirmTokenService {
         }
     }
 
-
         // 만료된 기존 token 삭제
         @Async("mailExecutor")
         public void deleteExpiredDateToken (String id){
