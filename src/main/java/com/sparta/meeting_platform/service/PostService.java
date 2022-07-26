@@ -377,7 +377,7 @@ public class PostService {
                 ResignChatMessage resignChatMessage = new ResignChatMessage(message, resignChatRoom);
                 resignChatMessageJpaRepository.save(resignChatMessage);
             }
-            chatMessageJpaRepository.deleteByRoomId(String.valueOf(postId));
+            chatMessageJpaRepository.deleteByChatRoom(chatRoom);
             chatRoomJpaRepository.deleteByRoomId(String.valueOf(postId));
             return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공", user.getIsOwner()), HttpStatus.OK);
         }

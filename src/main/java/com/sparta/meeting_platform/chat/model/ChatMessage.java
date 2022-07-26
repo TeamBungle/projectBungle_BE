@@ -20,22 +20,22 @@ public class ChatMessage {
     @Id
     @GeneratedValue(strategy =GenerationType.IDENTITY)
     private Long id;
-    @Column
-    private String roomId; // 방번호 (postId)
+    @Column(nullable = false)
+    private String roomId;
     @Enumerated(EnumType.STRING)
-    @Column
-    private MessageType type; // 메시지 타입
-    @Column
-    private String sender; // nickname
-    @Column
-    private String message; // 메시지
-    @Column
+    @Column(nullable = false)
+    private MessageType type;
+    @Column(nullable = false)
+    private String sender;
+    @Column(nullable = false)
+    private String message;
+    @Column(nullable = false)
     private String profileUrl;
     @Column
     private Long enterUserCnt;
-    @Column
+    @Column(nullable = false)
     private Long userId ;
-    @Column
+    @Column(nullable = false)
     private LocalDateTime createdAt;
     @Column
     private String fileUrl;
@@ -43,7 +43,7 @@ public class ChatMessage {
     private Boolean quitOwner = false;
 
     @JoinColumn(name = "CHAT_ROOM_ID")
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private ChatRoom chatRoom;
 
     public ChatMessage(ChatMessageDto chatMessageDto, ChatRoom chatRoom, LocalDateTime createdAt) {

@@ -8,7 +8,6 @@ import com.sparta.meeting_platform.chat.dto.UserinfoDto;
 import com.sparta.meeting_platform.chat.service.ChatService;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -16,9 +15,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 
-@Slf4j
+
 @Controller
 @RequiredArgsConstructor
 public class ChatController {
@@ -28,15 +28,14 @@ public class ChatController {
      * websocket "/pub/chat/message"로 들어오는 메시징을 처리한다.
      */
     @MessageMapping({"/chat/message"})
-    public void message(ChatMessageDto message, @Header("PK") Long BearerToken) {
-        chatService.save(message, BearerToken);
+    public void message(ChatMessageDto message, @Header("PK") Long pk) {
+        chatService.save(message, pk);
     }
 
     //이전 채팅 기록 조회
     @GetMapping("/chat/message/{roomId}")
     @ResponseBody
     public List<ChatMessageDto> getMessage(@PathVariable String roomId) {
-        log.info("요청 메서드 [GET] /chat/message/{roomId}");
         return chatService.getMessages(roomId);
     }
 
@@ -45,7 +44,6 @@ public class ChatController {
     @ResponseBody
     public String getMessage(@RequestPart(value = "file") MultipartFile file,
                              @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        log.info("요청 메서드 [POST] /chat/message/file");
         return chatService.getFileUrl(file, userDetails);
     }
 
@@ -55,7 +53,6 @@ public class ChatController {
     public List<UserinfoDto> getUserInfo(
             @PathVariable String roomId,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        log.info("요청 메서드 [GET] /chat/message/userinfo");
         return chatService.getUserinfo(userDetails, roomId);
     }
     //햄버거 버튼 눌렀을때, fileUrl들을 보낸다
@@ -64,7 +61,6 @@ public class ChatController {
     public List<FilesDto> getFiles(
             @PathVariable String roomId,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        log.info("요청 메서드 [GET] /chat/message/userinfo");
         return chatService.getFiles(userDetails, roomId);
     }
 

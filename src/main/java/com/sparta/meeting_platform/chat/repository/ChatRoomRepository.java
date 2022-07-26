@@ -23,8 +23,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import static javax.swing.text.html.HTML.Tag.U;
-
 @RequiredArgsConstructor
 @Repository
 public class ChatRoomRepository {
@@ -36,11 +34,10 @@ public class ChatRoomRepository {
     private final PostRepository postRepository;
     private final InvitedUsersRepository invitedUsersRepository;
     private final ChatMessageJpaRepository chatMessageJpaRepository;
-    // Redis
+
     private static final String CHAT_ROOMS = "CHAT_ROOM";
     private final RedisTemplate<String, Object> redisTemplate;
     private HashOperations<String, String, ChatRoom> opsHashChatRoom;
-    // 채팅방의 대화 메시지를 발행하기 위한 redis topic 정보. 서버별로 채팅방에 매치되는 topic정보를 Map에 넣어 roomId로 찾을수 있도록 한다.
     private static Map<String, ChannelTopic> topics;
 
     @PostConstruct
@@ -67,10 +64,6 @@ public class ChatRoomRepository {
             }else {
                 chatRoomResponseDto.setLastMessage(chatMessage.getMessage());
             }
-
-//            Date from = chatMessage.getCreatedAt();
-//            SimpleDateFormat transFormat = new SimpleDateFormat("dd,MM,yyyy,HH,mm,ss", Locale.KOREA);
-//            String date = transFormat.format(from);
             LocalDateTime createdAt = chatMessage.getCreatedAt();
             String createdAtString = createdAt.format(DateTimeFormatter.ofPattern("dd,MM,yyyy,HH,mm,ss", Locale.KOREA));
 
