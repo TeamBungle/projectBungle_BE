@@ -72,7 +72,7 @@ public class ChatRoomRepository {
 //            SimpleDateFormat transFormat = new SimpleDateFormat("dd,MM,yyyy,HH,mm,ss", Locale.KOREA);
 //            String date = transFormat.format(from);
             LocalDateTime createdAt = chatMessage.getCreatedAt();
-            String createdAtString = createdAt.format(DateTimeFormatter.ofPattern("dd,MM,yyyy,HH,mm,ss", Locale.KOREA));
+            String createdAtString = createdAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.KOREA));
 
             chatRoomResponseDto.setLastMessageTime(createdAtString);
             chatRoomResponseDto.setPostTime(post.get().getTime());

@@ -9,12 +9,12 @@ import com.sparta.meeting_platform.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.LocalDateTime;
+import org.locationtech.jts.io.ParseException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import javax.validation.Valid;
-import java.text.ParseException;
 import java.util.List;
 
 @Slf4j
@@ -67,7 +67,7 @@ public class PostController {
     public ResponseEntity<FinalResponseDto<?>> morePostList(@RequestParam(value = "latitude") Double latitude,
                                                             @RequestParam(value = "longitude") Double longitude,
                                                             @RequestParam(value = "status") String status,
-                                                            @AuthenticationPrincipal UserDetailsImpl userDetails){
+                                                            @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
         Long userId = getUserId(userDetails);
         return postService.morePostList(userId,status,latitude,longitude);
     }
@@ -80,7 +80,7 @@ public class PostController {
             @RequestParam(value = "longitude") Double longitude,
             @RequestParam(value = "status") String status,
             @RequestParam(value = "size") int size,
-            @AuthenticationPrincipal UserDetailsImpl userDetails){
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
         Long userId = getUserId(userDetails);
         return postService.morePostListInfiniteScroll(lastId, userId,status,latitude,longitude,size);
     }

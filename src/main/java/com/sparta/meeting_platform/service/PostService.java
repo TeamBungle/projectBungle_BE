@@ -24,6 +24,7 @@ import com.sparta.meeting_platform.util.PostListComparator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.io.ParseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -162,7 +163,7 @@ public class PostService {
 
     //게시글 더 보기 조회 추가 해야함
     @Transactional(readOnly = true)
-    public ResponseEntity<FinalResponseDto<?>> morePostList(Long userId, String status, Double latitude, Double longitude) {
+    public ResponseEntity<FinalResponseDto<?>> morePostList(Long userId, String status, Double latitude, Double longitude) throws ParseException {
         User user = checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
         List<Post> posts = new ArrayList<>();
@@ -186,14 +187,16 @@ public class PostService {
                 posts = query1.getResultList();
                 break;
             case "manner":
-                Query query2 = em.createNativeQuery("SELECT *, q.manner_avg FROM post AS p "
-                                + "INNER JOIN ( SELECT user_id, AVG(u.manner_temp) AS manner_avg FROM invited_users AS i "
-                                + "INNER JOIN ( SELECT id, manner_temp FROM userinfo AS u "
-                                + ") ON i.user_id = u.id "
-                                + "GROUP BY post_id "
-                                + ") ON p.id = i.post_id "
+                Query query2 = em.createNativeQuery("SELECT * FROM post AS p "
+                                + "INNER JOIN ( "
+                                        + "SELECT post_id, AVG(u.manner_temp) AS manner_avg FROM invited_users AS i "
+                                        + "INNER JOIN userinfo AS u "
+                                        + "ON i.user_id = u.id "
+                                        + "GROUP BY post_id ) AS s "
+                                + "ON p.id = s.post_id "
                                 + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location) "
-                                + "AND p.time > :convertedDate1 "
+                                + "AND p.time < :convertedDate1 "
+                                + "ORDER BY manner_avg DESC"
                                 , Post.class)
 //                        + "AND p.id in (select i.post_id from invited_users i "
 //                                + "GROUP BY post_id "
@@ -202,11 +205,20 @@ public class PostService {
                 posts = query2.getResultList();
                 break;
             case "manner2":
-                Query query3 = em.createNativeQuery("SELECT *, AVG(manner_temp) FROM invited_users AS i "
-                            + "INNER JOIN userinfo u ON i.user_id = u.id "
-                            + "WHERE i.post_id "
-                            + "GROUP BY i.post_id", Post.class);
-                  posts = query3.getResultList();
+                Query query3 = em.createNativeQuery("SELECT p.* FROM post AS p "
+                                + "INNER JOIN (SELECT AVG(u.manner_temp) AS avg_temp, i.post_id AS id FROM invited_users AS i "
+                                + "INNER JOIN userinfo AS u "
+                                + "ON i.user_id = u.id "
+                                + "GROUP BY i.post_id) AS s "
+                                + "ON p.id = s.id "
+                                + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) < :distance "
+                                + "AND p.time < :convertedDate1 "
+                                + "GROUP BY id "
+                                + "ORDER BY avg_temp DESC", Post.class)
+                        .setParameter("convertedDate1", convertedDate1)
+                        .setParameter("myPoint", mapSearchService.makePoint(longitude, latitude))
+                        .setParameter("distance", 400000.0);
+                posts = query3.getResultList();
                 break;
         }
         if (posts.size() < 1) {
@@ -248,55 +260,49 @@ public class PostService {
         User user = checkUser(userId);
         Boolean isOwner = user.getIsOwner();
 
-//        if (files.size() > 3) {
-//            throw new PostApiException("게시글 사진은 3개 이하 입니다.");
-//        }
-
-        if (requestDto.getTags().size() > 3) {
-            throw new PostApiException("최대 태그 갯수는 3개 입니다.");
-//                return new ResponseEntity<>(new FinalResponseDto<>(false, "최대 태그 갯수는 3개 입니다."), HttpStatus.OK);
-        }
-        for (String tag : requestDto.getTags()) {
-            if (tag.length() > 10) {
-                throw new PostApiException("10자 이하로 태그를 입력해주세요");
-//                    return new ResponseEntity<>(new FinalResponseDto<>(false, "10자 이하로 태그를 입력해주세요"), HttpStatus.OK);
-            }
-        }
-
+        // isOwner 값 확인
         if (isOwner) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글 개설 실패"), HttpStatus.BAD_REQUEST);
         } else {
             user.setIsOwner(true);
         }
 
-//        Date date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(requestDto.getTime());
-//        LocalDateTime localDateTime = LocalDateTime.now();
-//        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-
-
+        //약속시간 예외처리
         DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime PromiseDateTime = LocalDateTime.parse(requestDto.getTime(), inputFormat);
         LocalDateTime now = LocalDateTime.now();
-        if (!PromiseDateTime.isAfter(now) || PromiseDateTime.isAfter(now.plusDays(1))) {
+        if (!PromiseDateTime.isAfter(now.minusMinutes(10)) || PromiseDateTime.isAfter(now.plusDays(1))) {
             throw new PostApiException("약속시간은 현재시간 이후 부터 24시간 이내에 가능합니다.");
         }
 
-//        String[] categoryList = new String[]{"맛집","카페","노래방","운동","친목","전시","여행","쇼핑","스터디","게임"};
-
+        //카테고리,태그,인원수 예외처리
         List<String> categoryList
                 = new ArrayList<>(Arrays.asList("맛집", "카페", "노래방", "운동", "친목", "전시", "여행", "쇼핑", "스터디", "게임"));
+
         for (String categroy : requestDto.getCategories()) {
             if (!categoryList.contains(categroy)) {
                 throw new PostApiException("잘못된 카테고리 입니다.");
             }
         }
+        if (requestDto.getTags().size() > 3) {
+            throw new PostApiException("최대 태그 갯수는 3개 입니다.");
+        }
+        for (String tag : requestDto.getTags()) {
+            if (tag.length() > 10) {
+                throw new PostApiException("10자 이하로 태그를 입력해주세요");
+            }
+        }
         if (requestDto.getPersonnel() > 50 || requestDto.getPersonnel() < 2) {
             throw new PostApiException("참여인원은 50명 이하 입니다");
         }
+
+        //이미지 s3저장 및 예외처리
         if (files == null) {
-            requestDto.setPostUrls(null);
-            // 기본 이미지로 변경 필요
+            requestDto.setPostUrls(null); // 기본 이미지로 변경 필요
         } else {
+            if (files.size() > 3) {
+                throw new PostApiException("게시글 사진은 3개 이하 입니다.");
+            }
             List<String> postUrls = new ArrayList<>();
             for (MultipartFile file : files) {
                 if (!fileExtFilter.badFileExt(file)) {
@@ -438,7 +444,7 @@ public class PostService {
         return post;
     }
 
-    public ResponseEntity<FinalResponseDto<?>> morePostListInfiniteScroll(Long lastId, Long userId, String status, Double latitude, Double longitude, int size) {
+    public ResponseEntity<FinalResponseDto<?>> morePostListInfiniteScroll(Long lastId, Long userId, String status, Double latitude, Double longitude, int size) throws ParseException {
         User user = checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
         List<Post> posts = new ArrayList<>();
@@ -468,12 +474,23 @@ public class PostService {
                 posts = query1.getResultList();
                 break;
             case "manner":
-                Query query2 = em.createNativeQuery("SELECT * FROM post AS p "
-                                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location) "
-                                + "AND p.id in (select i.post_id, AVG(u.manner_temp) from invited_users i "
-                                + "GROUP BY post_id "
-                                + "WHERE i.user_id in (select u.id FROM userinfo u ))", Post.class)
-                        .setParameter("convertedDate1", convertedDate1);
+                Query query2 = em.createNativeQuery("SELECT p.* FROM post AS p "
+                                + "INNER JOIN (SELECT AVG(u.manner_temp) AS avg_temp, i.post_id AS id FROM invited_users AS i "
+                                + "INNER JOIN userinfo AS u "
+                                + "ON i.user_id = u.id "
+                                + "GROUP BY i.post_id) AS s "
+                                + "ON p.id = s.id "
+                                + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) < :distance "
+                                + "AND p.time > :convertedDate1 "
+                                + "AND avg_temp < (SELECT avg_temp FROM s WHERE id = :lastId) "
+                                + "GROUP BY id "
+                                + "ORDER BY avg_temp DESC "
+                                + "LIMIT :pageSize", Post.class)
+                        .setParameter("lastId", lastId)
+                        .setParameter("convertedDate1", convertedDate1)
+                        .setParameter("myPoint", mapSearchService.makePoint(longitude, latitude))
+                        .setParameter("distance", 400000.0)
+                        .setParameter("pageSize",size);
                 posts = query2.getResultList();
                 break;
         }

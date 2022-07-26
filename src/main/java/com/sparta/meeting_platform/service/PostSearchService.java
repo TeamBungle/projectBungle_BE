@@ -324,7 +324,7 @@ public class PostSearchService {
             if(duration.getSeconds() < 60 * 60){
                 return duration.getSeconds() / 60 + "분 경과";
             } else {
-                return duration.getSeconds() / 60 / 60 + "시 경과";
+                return duration.getSeconds() / 60 / 60 + "시간 경과";
             }
 
         }else{
