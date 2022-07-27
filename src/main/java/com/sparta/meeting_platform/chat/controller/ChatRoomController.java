@@ -23,6 +23,7 @@ public class ChatRoomController {
         User user = userDetails.getUser();
         return chatRoomRepository.findAllRoom(user);
     }
+
     // 특정 채팅방 입장
     @PostMapping("/room/{postId}")
     @ResponseBody
