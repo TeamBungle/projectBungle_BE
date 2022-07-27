@@ -42,11 +42,8 @@ public class ChatMessage {
     @Column
     private Boolean quitOwner = false;
 
-    @JoinColumn(name = "CHAT_ROOM_ID")
-    @ManyToOne(fetch = FetchType.LAZY)
-    private ChatRoom chatRoom;
 
-    public ChatMessage(ChatMessageDto chatMessageDto, ChatRoom chatRoom, LocalDateTime createdAt) {
+    public ChatMessage(ChatMessageDto chatMessageDto, LocalDateTime createdAt) {
         this.type = chatMessageDto.getType();
         this.roomId = chatMessageDto.getRoomId();
         this.message = chatMessageDto.getMessage();
@@ -56,6 +53,5 @@ public class ChatMessage {
         this.userId = chatMessageDto.getUserId();
         this.createdAt = createdAt;
         this.fileUrl = chatMessageDto.getFileUrl();
-        this.chatRoom = chatRoom;
     }
 }

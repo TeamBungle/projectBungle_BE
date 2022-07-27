@@ -34,7 +34,7 @@ public class Scheduler {
         System.out.println("삭제실행");
         List<Post> postList = postRepository.findAll();
         for (Post post : postList) {
-            if (post.getCreatedAt().plusMinutes(5).isBefore(LocalDateTime.now())) {
+            if (post.getCreatedAt().plusMinutes(30).isBefore(LocalDateTime.now())) {
                 User user = post.getUser();
                 user.setIsOwner(true);
                 ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(String.valueOf(post.getId()));
@@ -43,9 +43,10 @@ public class Scheduler {
                 resignChatRoomJpaRepository.save(resignChatRoom);
 
                 for (ChatMessage message : chatMessage) {
-                    ResignChatMessage resignChatMessage = new ResignChatMessage(message, resignChatRoom);
+                    ResignChatMessage resignChatMessage = new ResignChatMessage(message);
                     resignChatMessageJpaRepository.save(resignChatMessage);
                 }
+//                chatMessageJpaRepository.deleteByRoomId(String.valueOf(post.getId()));
                 chatMessageJpaRepository.deleteByChatRoom(chatRoom);
                 chatRoomJpaRepository.deleteByRoomId(String.valueOf(post.getId()));
                 likeRepository.deleteByPostId(post.getId());

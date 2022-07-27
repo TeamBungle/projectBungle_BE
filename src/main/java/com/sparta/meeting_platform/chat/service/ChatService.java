@@ -85,10 +85,8 @@ public class ChatService {
                         "더 이상 대화를 할 수 없으며 채팅방을 나가면 다시 입장할 수 없습니다.");
             }
         }
-
-        ChatRoom chatRoom = chatRoomJpaRepository.findByUsername(user.getUsername());
         chatMessageRepository.save(messageDto); // 캐시에 저장 했다.
-        ChatMessage chatMessage = new ChatMessage(messageDto,chatRoom,createdAt);
+        ChatMessage chatMessage = new ChatMessage(messageDto,createdAt);
         chatMessageJpaRepository.save(chatMessage); // DB 저장
         // Websocket 에 발행된 메시지를 redis 로 발행한다(publish)
         redisPublisher.publish(ChatRoomRepository.getTopic(messageDto.getRoomId()), messageDto);
