@@ -2,9 +2,9 @@ package com.sparta.meeting_platform.service;
 
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.domain.User;
-import com.sparta.meeting_platform.dto.MapListDto;
-import com.sparta.meeting_platform.dto.MapResponseDto;
-import com.sparta.meeting_platform.dto.SearchMapDto;
+import com.sparta.meeting_platform.dto.MapDto.MapListDto;
+import com.sparta.meeting_platform.dto.MapDto.MapResponseDto;
+import com.sparta.meeting_platform.dto.MapDto.SearchMapDto;
 import com.sparta.meeting_platform.exception.UserApiException;
 import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.exception.MapApiException;

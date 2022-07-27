@@ -64,7 +64,7 @@ public class ChatMessageRepository {
         //redis 의 hashes 자료구조
         //key : CHAT_MESSAGE , filed : roomId, value : chatMessageList
         opsHashChatMessage.put(CHAT_MESSAGE, roomId, chatMessageList);
-        redisTemplate.expire(CHAT_MESSAGE,30, TimeUnit.MINUTES);
+        redisTemplate.expire(CHAT_MESSAGE,24, TimeUnit.HOURS);
         return chatMessageDto;
     }
 
@@ -104,11 +104,6 @@ public class ChatMessageRepository {
     // unsubscribe 시 유저 카운트 감소
     public void minusUserCnt(String roomId) {
         Optional.ofNullable(valueOps.decrement(USER_COUNT + "_" + roomId)).filter(count -> count > 0);
-    }
-
-    //sessionId 로 roomId 가져오기
-    public String getRoomsId(String sessionId) {
-        return hashOpsEnterInfo.get(ENTER_INFO, sessionId);
     }
 
     public void removeUserEnterInfo(String sessionId, String roomId) {

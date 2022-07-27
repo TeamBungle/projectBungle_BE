@@ -35,7 +35,11 @@ public class NotificationService {
                 if (Objects.equals(String.valueOf(invitedUser.getPostId()), findChatMessageDto.getRoomId())) {
                     if (invitedUser.getReadCheckTime().isBefore(findChatMessageDto.getCreatedAt())) {
                         NotificationDto notificationDto = new NotificationDto();
-                        notificationDto.setMessage(findChatMessageDto.getMessage());
+                        if(findChatMessageDto.getMessage().isEmpty()){
+                            notificationDto.setMessage("파일이 왔어요😲");
+                        }else {
+                            notificationDto.setMessage(findChatMessageDto.getMessage());
+                        }
                         notificationDto.setNickname(findChatMessageDto.getSender());
                         notificationDto.setCreatedAt(findChatMessageDto.getCreatedAt());
                         notificationDto.setRoomId(findChatMessageDto.getRoomId());

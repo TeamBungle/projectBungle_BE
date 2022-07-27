@@ -2,7 +2,7 @@ package com.sparta.meeting_platform.controller;
 
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
-import com.sparta.meeting_platform.dto.NoticeRequestDto;
+import com.sparta.meeting_platform.dto.SettingDto.NoticeRequestDto;
 import com.sparta.meeting_platform.dto.SettingDto.OpinionRequestDto;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.service.SettingService;

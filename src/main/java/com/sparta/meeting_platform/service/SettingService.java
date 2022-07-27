@@ -4,7 +4,7 @@ import com.sparta.meeting_platform.domain.Notice;
 import com.sparta.meeting_platform.domain.Opinion;
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
-import com.sparta.meeting_platform.dto.NoticeRequestDto;
+import com.sparta.meeting_platform.dto.SettingDto.NoticeRequestDto;
 import com.sparta.meeting_platform.dto.SettingDto.NoticeResponseDto;
 import com.sparta.meeting_platform.dto.SettingDto.OpinionRequestDto;
 import com.sparta.meeting_platform.exception.SettingApiException;

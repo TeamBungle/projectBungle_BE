@@ -1,6 +1,6 @@
 package com.sparta.meeting_platform.controller;
 
-import com.sparta.meeting_platform.dto.MapResponseDto;
+import com.sparta.meeting_platform.dto.MapDto.MapResponseDto;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.service.MapService;
 import lombok.RequiredArgsConstructor;

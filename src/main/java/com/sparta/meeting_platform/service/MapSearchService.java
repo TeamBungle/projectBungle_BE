@@ -1,7 +1,7 @@
 package com.sparta.meeting_platform.service;
 
 
-import com.sparta.meeting_platform.dto.SearchMapDto;
+import com.sparta.meeting_platform.dto.MapDto.SearchMapDto;
 import com.sparta.meeting_platform.exception.MapApiException;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.JSONArray;

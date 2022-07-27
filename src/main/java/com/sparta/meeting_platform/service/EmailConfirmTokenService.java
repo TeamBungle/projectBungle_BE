@@ -34,7 +34,7 @@ public class EmailConfirmTokenService {
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
             helper.setTo(receiverEmail); //받는사람
             helper.setSubject("벙글! 회원가입 이메일 인증"); //메일제목
-            helper.setText(emailToken.getId(), true);
+            helper.setText(emailForm.getEmailBody(emailToken.getId()), true);
 
             javaMailSender.send(mimeMessage);
 

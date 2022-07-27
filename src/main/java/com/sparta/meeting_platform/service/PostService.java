@@ -10,7 +10,7 @@ import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
-import com.sparta.meeting_platform.dto.SearchMapDto;
+import com.sparta.meeting_platform.dto.MapDto.SearchMapDto;
 import com.sparta.meeting_platform.dto.UserDto.MyPageDto;
 import com.sparta.meeting_platform.exception.PostApiException;
 import com.sparta.meeting_platform.exception.UserApiException;
@@ -20,10 +20,11 @@ import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.repository.mapping.PostMapping;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.util.FileExtFilter;
-import com.sparta.meeting_platform.util.PostListComparator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.StaleStateException;
 import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.io.ParseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -234,6 +235,13 @@ public class PostService {
         User user = checkUser(userId);
         Boolean isOwner = user.getIsOwner();
 
+        System.out.println(requestDto.getContent());
+        System.out.println(requestDto.getContent().length());
+        System.out.println(requestDto.getContent().replaceAll("(\r\n|\r|\n|\n\r)","").length());
+        if(requestDto.getContent().replaceAll("(\r\n|\r|\n|\n\r)","").length() > 500){
+            throw new PostApiException("게시글 내용은 500자 이내");
+        }
+
         // isOwner 값 확인
         if (isOwner) {
             throw new PostApiException("게시글 개설 실패");
@@ -302,6 +310,14 @@ public class PostService {
     // 게시글 수정
     @Transactional
     public ResponseEntity<FinalResponseDto<?>> updatePost(Long postId, Long userId, PostRequestDto requestDto, List<MultipartFile> files) throws Exception {
+
+        System.out.println(requestDto.getContent());
+        System.out.println(requestDto.getContent().length());
+        System.out.println(requestDto.getContent().replaceAll("(\r\n|\r|\n|\n\r)","").length());
+        if(requestDto.getContent().replaceAll("(\r\n|\r|\n|\n\r)","").length() > 500){
+            throw new PostApiException("게시글 내용은 500자 이내");
+        }
+
         checkUser(userId);
         Post post = checkPost(postId);
         if (files == null) {
@@ -356,11 +372,9 @@ public class PostService {
         if (!post.getUser().getId().equals(userId)) {
             throw new PostApiException("본인 게시글이 아닙니다.");
         } else {
-            invitedUsersRepository.deleteAllByPostIdAndUser(post.getId(),user);
             likeRepository.deleteByPostId(postId);
             postRepository.deleteById(postId);
             user.setIsOwner(false);
-//            invitedUsersRepository.deleteByUser(user);
             ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(String.valueOf(postId));
             List<ChatMessage> chatMessage = chatMessageJpaRepository.findAllByRoomId(String.valueOf(postId));
             ResignChatRoom resignChatRoom = new ResignChatRoom(chatRoom);

@@ -101,7 +101,7 @@ public class ChatRoomRepository {
     public void createChatRoom(Post post, UserDto userDto) {
         ChatRoom chatRoom = ChatRoom.create(post, userDto);
         opsHashChatRoom.put(CHAT_ROOMS, chatRoom.getRoomId(), chatRoom); // redis 저장
-        redisTemplate.expire(CHAT_ROOMS, 30, TimeUnit.MINUTES);
+        redisTemplate.expire(CHAT_ROOMS, 24, TimeUnit.HOURS);
         chatRoomJpaRepository.save(chatRoom); // DB 저장
     }
 

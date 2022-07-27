@@ -1,6 +1,6 @@
 package com.sparta.meeting_platform.util;
 
-import com.sparta.meeting_platform.dto.MapListDto;
+import com.sparta.meeting_platform.dto.MapDto.MapListDto;
 
 import java.util.Comparator;
 

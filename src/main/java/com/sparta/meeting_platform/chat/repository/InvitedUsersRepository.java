@@ -18,4 +18,5 @@ public interface InvitedUsersRepository extends JpaRepository<InvitedUsers, Long
     List<InvitedUsers> findAllByUserIdAndReadCheck(Long userId, Boolean readCheck);
     int countByPostId(Long postId);
     void deleteAllByPostIdAndUser(Long id, User user);
+    boolean existsByPostId(Long id);
 }
