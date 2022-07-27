@@ -13,14 +13,9 @@ import com.sparta.meeting_platform.exception.PostApiException;
 import com.sparta.meeting_platform.exception.UserApiException;
 import com.sparta.meeting_platform.repository.*;
 import com.sparta.meeting_platform.security.JwtTokenProvider;
-
-import com.sparta.meeting_platform.util.FileExtFilter;
-import io.jsonwebtoken.Jwts;
-import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.security.redis.RedisService;
-import io.jsonwebtoken.Jwts;
+import com.sparta.meeting_platform.util.FileExtFilter;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,10 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.mail.MessagingException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -145,7 +136,6 @@ public class UserService {
             throw new UserApiException("프로필 설정 실패");
         }
         String profileUrl;
-
         if (file != null) {
             if (!fileExtFilter.badFileExt(file)) {
                 throw new PostApiException("이미지가 아닙니다.");

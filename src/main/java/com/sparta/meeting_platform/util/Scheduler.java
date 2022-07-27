@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -35,13 +34,11 @@ public class Scheduler {
         System.out.println("삭제실행");
         List<Post> postList = postRepository.findAll();
         for (Post post : postList) {
-            DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            LocalDateTime postLocalDateTime = LocalDateTime.parse(post.getTime(), inputFormat);
-            if (postLocalDateTime.plusMinutes(10).isBefore(LocalDateTime.now())) {
+            if (post.getCreatedAt().plusMinutes(30).isBefore(LocalDateTime.now())) {
                 User user = post.getUser();
                 user.setIsOwner(true);
                 ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(String.valueOf(post.getId()));
-                List<ChatMessage> chatMessage = chatMessageJpaRepository.findAllByChatRoom(chatRoom);
+                List<ChatMessage> chatMessage = chatMessageJpaRepository.findAllByRoomId(String.valueOf(post.getId()));
                 ResignChatRoom resignChatRoom = new ResignChatRoom(chatRoom);
                 resignChatRoomJpaRepository.save(resignChatRoom);
 
@@ -49,7 +46,6 @@ public class Scheduler {
                     ResignChatMessage resignChatMessage = new ResignChatMessage(message);
                     resignChatMessageJpaRepository.save(resignChatMessage);
                 }
-//                chatMessageJpaRepository.deleteByRoomId(String.valueOf(post.getId()));
                 chatMessageJpaRepository.deleteByRoomId(String.valueOf(post.getId()));
                 chatRoomJpaRepository.deleteByRoomId(String.valueOf(post.getId()));
                 likeRepository.deleteByPostId(post.getId());

@@ -17,7 +17,8 @@ public class UserDetailDto {
     private Boolean response;
     private String message;
 
-    public UserDetailDto(Boolean response, String message, User user) {
+    private Boolean chatOwner;
+    public UserDetailDto(Boolean response, String message, User user, Boolean chatOwner) {
         this.response = response;
         this.message = message;
         this.nickname = user.getNickName();
@@ -25,5 +26,6 @@ public class UserDetailDto {
         this.bungCount = user.getBungCount();
         this.mannerTemp = user.getMannerTemp();
         this.intro = user.getIntro();
+        this.chatOwner =chatOwner;
     }
 }

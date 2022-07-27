@@ -6,8 +6,9 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class ChatRoomService {
-
-    // destination 에서 roomId 가져오기
+    /*
+    * destination 에서 roomid 가져오기
+    */
     public String getRoomId(String destination) {
         int lastIndex = destination.lastIndexOf('/');
         if (lastIndex != -1) {

@@ -347,14 +347,14 @@ public class PostService {
             user.setIsOwner(false);
 //            invitedUsersRepository.deleteByUser(user);
             ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(String.valueOf(postId));
-            List<ChatMessage> chatMessage = chatMessageJpaRepository.findAllByChatRoom(chatRoom);
+            List<ChatMessage> chatMessage = chatMessageJpaRepository.findAllByRoomId(String.valueOf(postId));
             ResignChatRoom resignChatRoom = new ResignChatRoom(chatRoom);
             resignChatRoomJpaRepository.save(resignChatRoom);
             for (ChatMessage message : chatMessage) {
                 ResignChatMessage resignChatMessage = new ResignChatMessage(message);
                 resignChatMessageJpaRepository.save(resignChatMessage);
             }
-            chatMessageJpaRepository.deleteByRoomId(String.valueOf(postId));
+            chatMessageJpaRepository.deleteByRoomId(String.valueOf(post.getId()));
             chatRoomJpaRepository.deleteByRoomId(String.valueOf(postId));
             return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공", user.getIsOwner()), HttpStatus.OK);
         }

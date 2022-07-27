@@ -3,6 +3,7 @@ package com.sparta.meeting_platform.chat.model;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
@@ -11,30 +12,25 @@ import java.time.LocalDateTime;
 @Entity
 @NoArgsConstructor
 public class ResignChatMessage {
-
-    public enum MessageType {
-        ENTER, TALK, QUIT
-    }
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column
-    private String roomId;
+    @Column(nullable = false)
+    private String roomId; // 방번호 (postId)
     @Enumerated(EnumType.STRING)
-    @Column
-    private ChatMessage.MessageType type;
-    @Column
-    private String sender;
-    @Column
-    private String message;
-    @Column
+    @Column(nullable = false)
+    private ChatMessage.MessageType type; // 메시지 타입
+    @Column(nullable = false)
+    private String sender; // nickname
+    @Column(nullable = false)
+    private String message; // 메시지
+    @Column(nullable = false)
     private String profileUrl;
     @Column
     private Long enterUserCnt;
-    @Column
+    @Column(nullable = false)
     private Long userId;
-    @Column
+    @Column(nullable = false)
     private LocalDateTime createdAt;
     @Column
     private String fileUrl;

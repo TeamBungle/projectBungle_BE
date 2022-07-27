@@ -8,22 +8,23 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-// Websocket 관련 설정들을 모아놓은 Class
+/*
+ * Websocket 관련 설정들을 모아놓은 Class
+ * */
 @Configuration
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private final StompHandler stompHandler;
 
-    // Websocket HandShake 를 위한 EndPoint 를 지정하고 CORS 설정 및 SockJS 사용 설정
+    /*
+     * Websocket HandShake 를 위한 EndPoint를 지정하고 CORS 설정 및 SockJS 사용 설정
+     */
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry
                 .addEndpoint("/wss/chat")
-                .setAllowedOriginPatterns("https://localhost:3000",
-                                          "https://authex-d42a5.web.app/",
-                                          "https://auth-6eb37.web.app",
-                                          "https://test-react-basic.web.app")
+                .setAllowedOriginPatterns("https://localhost:3000", "https://authex-d42a5.web.app/", "https://auth-6eb37.web.app", "https://test-react-basic.web.app")
                 .withSockJS();
     }
 
@@ -31,11 +32,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
      * Stomp 사용을 위한 Message Broker 설정을 해주는 메소드이다.
      * 1.enableSimpleBroker
      * 메세지를 받을때, 경로를 설정해준다
-     * "/sub"이 API 에 prefix 로 붙은경우, messageBroker 가 해당 경로를 가로챈다
+     * "/sub"이 api에 prefix로 붙은경우, messagebroker가 해당 경로를 가로챈다
      * 2.setApplicationDestinationPrefixes
      * - 메세지를 보낼때 관련 경로를 설정해주는 함수.
-     * - 클라이언트가 메세지를 보낼때, API 에 prefix 로 "/pub"이 붙어있으면 broker 로 메세지가 보내진다.
-     */
+     * - 클라이언트가 메세지를 보낼때, api에 prefix로 "/pub"이 붙어있으면 broker로 메세지가 보내진다.
+     *  */
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry
@@ -43,7 +44,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .enableSimpleBroker("/sub");
     }
 
-    // interceptors 설정
+    /*
+     * interceptors 설정
+     */
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration

@@ -4,6 +4,7 @@ import com.sparta.meeting_platform.chat.dto.ChatMessageDto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
@@ -12,35 +13,35 @@ import java.time.LocalDateTime;
 @Entity
 @NoArgsConstructor
 public class ChatMessage {
-
+    // 메시지 타입 : 입장, 채팅, 나가기
     public enum MessageType {
         ENTER, TALK, QUIT
     }
-
     @Id
     @GeneratedValue(strategy =GenerationType.IDENTITY)
     private Long id;
-    @Column
+    @Column(nullable = false)
     private String roomId;
     @Enumerated(EnumType.STRING)
-    @Column
+    @Column(nullable = false)
     private MessageType type;
-    @Column
+    @Column(nullable = false)
     private String sender;
-    @Column
+    @Column(nullable = false)
     private String message;
-    @Column
+    @Column(nullable = false)
     private String profileUrl;
     @Column
     private Long enterUserCnt;
-    @Column
+    @Column(nullable = false)
     private Long userId ;
-    @Column
+    @Column(nullable = false)
     private LocalDateTime createdAt;
     @Column
     private String fileUrl;
     @Column
     private Boolean quitOwner = false;
+
 
     public ChatMessage(ChatMessageDto chatMessageDto, LocalDateTime createdAt) {
         this.type = chatMessageDto.getType();
