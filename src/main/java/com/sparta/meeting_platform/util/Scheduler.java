@@ -38,7 +38,7 @@ public class Scheduler {
                 User user = post.getUser();
                 user.setIsOwner(true);
                 ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(String.valueOf(post.getId()));
-                List<ChatMessage> chatMessage = chatMessageJpaRepository.findAllByChatRoom(chatRoom);
+                List<ChatMessage> chatMessage = chatMessageJpaRepository.findAllByRoomId(String.valueOf(post.getId()));
                 ResignChatRoom resignChatRoom = new ResignChatRoom(chatRoom);
                 resignChatRoomJpaRepository.save(resignChatRoom);
 
@@ -46,8 +46,7 @@ public class Scheduler {
                     ResignChatMessage resignChatMessage = new ResignChatMessage(message);
                     resignChatMessageJpaRepository.save(resignChatMessage);
                 }
-//                chatMessageJpaRepository.deleteByRoomId(String.valueOf(post.getId()));
-                chatMessageJpaRepository.deleteByChatRoom(chatRoom);
+                chatMessageJpaRepository.deleteByRoomId(String.valueOf(post.getId()));
                 chatRoomJpaRepository.deleteByRoomId(String.valueOf(post.getId()));
                 likeRepository.deleteByPostId(post.getId());
                 invitedUsersRepository.deleteAllByPostId(post.getId());

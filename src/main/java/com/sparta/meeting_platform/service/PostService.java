@@ -389,7 +389,7 @@ public class PostService {
             user.setIsOwner(false);
             invitedUsersRepository.deleteByUser(user);
             ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(String.valueOf(postId));
-            List<ChatMessage> chatMessage = chatMessageJpaRepository.findAllByChatRoom(chatRoom);
+            List<ChatMessage> chatMessage = chatMessageJpaRepository.findAllByRoomId(String.valueOf(postId));
             ResignChatRoom resignChatRoom = new ResignChatRoom(chatRoom);
             resignChatRoomJpaRepository.save(resignChatRoom);
             for (ChatMessage message : chatMessage) {

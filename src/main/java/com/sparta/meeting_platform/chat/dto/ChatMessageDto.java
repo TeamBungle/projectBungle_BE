@@ -24,7 +24,7 @@ public class ChatMessageDto {
     private Boolean quitOwner;
 
 
-    public ChatMessageDto(FindChatMessageDto chatMessage, String createdAt) {
+    public ChatMessageDto(ChatMessage chatMessage, String createdAt) {
         this.type = chatMessage.getType();
         this.roomId = chatMessage.getRoomId();
         this.message = chatMessage.getMessage();

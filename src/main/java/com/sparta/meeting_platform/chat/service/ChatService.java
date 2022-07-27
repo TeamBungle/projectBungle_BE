@@ -124,10 +124,10 @@ public class ChatService {
         userRepository.findById(userDetails.getUser().getId()).orElseThrow(
                 () -> new UserApiException("존재하지 않는 사용자 입니다.")
         );
-        List<FindChatMessageDto> chatMessages = chatMessageJpaRepository.findAllByRoomId(roomId);
+        List<ChatMessage> chatMessages = chatMessageJpaRepository.findAllByRoomId(roomId);
         List<FilesDto> filesDtoList = new ArrayList<>();
 
-        for (FindChatMessageDto chatMessage : chatMessages) {
+        for (ChatMessage chatMessage : chatMessages) {
 
             if(chatMessage.getFileUrl() != null){
                 filesDtoList.add(new FilesDto(chatMessage.getFileUrl()));
@@ -137,11 +137,20 @@ public class ChatService {
     }
 
     //유저 정보 상세조회 (채팅방 안에서)
-    public ResponseEntity<UserDetailDto> getUserDetails(Long userId) {
+    public ResponseEntity<UserDetailDto> getUserDetails(String roomId,Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new UserApiException("존재하지 않는 사용자 입니다!")
         );
-        return new ResponseEntity<>(new UserDetailDto(true, "게시글 조회 성공", user), HttpStatus.OK);
+        ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(roomId);
+        UserDetailDto userDetailDto = new UserDetailDto();
+
+        if(chatRoom.getUsername().equals(user.getUsername())){
+            userDetailDto.setChatOwner(true);
+        }else {
+            userDetailDto.setChatOwner(false);
+        }
+
+        return new ResponseEntity<>(new UserDetailDto(true, "유저 정보 조회 성공", user), HttpStatus.OK);
     }
 }
 

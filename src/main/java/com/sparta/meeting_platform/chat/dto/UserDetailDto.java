@@ -17,6 +17,7 @@ public class UserDetailDto {
     private Boolean response;
     private String message;
 
+    private Boolean chatOwner;
     public UserDetailDto(Boolean response, String message, User user) {
         this.response = response;
         this.message = message;

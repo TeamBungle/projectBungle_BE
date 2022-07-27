@@ -1,7 +1,7 @@
 package com.sparta.meeting_platform.chat.service;
 
-import com.sparta.meeting_platform.chat.dto.FindChatMessageDto;
 import com.sparta.meeting_platform.chat.dto.NotificationDto;
+import com.sparta.meeting_platform.chat.model.ChatMessage;
 import com.sparta.meeting_platform.chat.model.InvitedUsers;
 import com.sparta.meeting_platform.chat.repository.ChatMessageJpaRepository;
 import com.sparta.meeting_platform.chat.repository.InvitedUsersRepository;
@@ -10,6 +10,7 @@ import com.sparta.meeting_platform.util.NotificationComparator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -29,8 +30,8 @@ public class NotificationService {
         List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByUserIdAndReadCheck(userId, readCheck);
 
         for (InvitedUsers invitedUser : invitedUsers) {
-            List<FindChatMessageDto> findChatMessageDtoList = chatMessageJpaRepository.findAllByRoomId(String.valueOf(invitedUser.getPostId()));
-            for (FindChatMessageDto findChatMessageDto : findChatMessageDtoList) {
+            List<ChatMessage> findChatMessageDtoList = chatMessageJpaRepository.findAllByRoomId(String.valueOf(invitedUser.getPostId()));
+            for (ChatMessage findChatMessageDto : findChatMessageDtoList) {
                 if (Objects.equals(String.valueOf(invitedUser.getPostId()), findChatMessageDto.getRoomId())) {
                     if (invitedUser.getReadCheckTime().isBefore(findChatMessageDto.getCreatedAt())) {
                         NotificationDto notificationDto = new NotificationDto();

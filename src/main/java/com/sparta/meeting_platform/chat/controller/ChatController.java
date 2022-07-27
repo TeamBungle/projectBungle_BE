@@ -65,10 +65,10 @@ public class ChatController {
     }
 
     //유저 정보 상세 조회 (채팅방 안에서)
-    @GetMapping("/chat/details/{userId}")
+    @GetMapping("/chat/details/{roomId}/{userId}")
     @ResponseBody
-    public ResponseEntity<UserDetailDto> getUserDetails(@PathVariable Long userId) {
-        return chatService.getUserDetails(userId);
+    public ResponseEntity<UserDetailDto> getUserDetails(@PathVariable String roomId, @PathVariable Long userId) {
+        return chatService.getUserDetails(roomId,userId);
     }
 }
 

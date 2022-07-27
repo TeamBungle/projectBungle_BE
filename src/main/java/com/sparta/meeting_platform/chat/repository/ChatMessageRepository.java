@@ -1,7 +1,6 @@
 package com.sparta.meeting_platform.chat.repository;
 
 import com.sparta.meeting_platform.chat.dto.ChatMessageDto;
-import com.sparta.meeting_platform.chat.dto.FindChatMessageDto;
 import com.sparta.meeting_platform.chat.model.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.HashOperations;
@@ -78,9 +77,9 @@ public class ChatMessageRepository {
         if (opsHashChatMessage.size(CHAT_MESSAGE) > 0) {
             return (opsHashChatMessage.get(CHAT_MESSAGE, roomId));
         } else { // redis 에서 가져온 메세지 리스트의 사이즈가 0보다 작다 == redis에 정보가 없다.
-            List<FindChatMessageDto> chatMessages = chatMessageJpaRepository.findAllByRoomId(roomId);
+            List<ChatMessage> chatMessages = chatMessageJpaRepository.findAllByRoomId(roomId);
 
-            for (FindChatMessageDto chatMessage : chatMessages) {
+            for (ChatMessage chatMessage : chatMessages) {
                 LocalDateTime createdAt = chatMessage.getCreatedAt();
                 String createdAtString = createdAt.format(DateTimeFormatter.ofPattern("dd,MM,yyyy,HH,mm,ss", Locale.KOREA));
                 ChatMessageDto chatMessageDto = new ChatMessageDto(chatMessage,createdAtString);
