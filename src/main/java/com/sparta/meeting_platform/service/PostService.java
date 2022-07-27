@@ -220,11 +220,11 @@ public class PostService {
         Boolean isOwner = user.getIsOwner();
 
         // isOwner 값 확인
-        if (isOwner) {
-            throw new PostApiException("게시글 개설 실패");
-        } else {
-            user.setIsOwner(true);
-        }
+//        if (isOwner) {
+//            throw new PostApiException("게시글 개설 실패");
+//        } else {
+//            user.setIsOwner(true);
+//        }
 
         //약속시간 예외처리
         DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -339,11 +339,11 @@ public class PostService {
         if (!post.getUser().getId().equals(userId)) {
             throw new PostApiException("본인 게시글이 아닙니다.");
         } else {
-            invitedUsersRepository.deleteAllByPostId(post.getId());
+            invitedUsersRepository.deleteAllByPostIdAndUser(post.getId(),user);
             likeRepository.deleteByPostId(postId);
             postRepository.deleteById(postId);
             user.setIsOwner(false);
-            invitedUsersRepository.deleteByUser(user);
+//            invitedUsersRepository.deleteByUser(user);
             ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(String.valueOf(postId));
             List<ChatMessage> chatMessage = chatMessageJpaRepository.findAllByChatRoom(chatRoom);
             ResignChatRoom resignChatRoom = new ResignChatRoom(chatRoom);
@@ -352,7 +352,7 @@ public class PostService {
                 ResignChatMessage resignChatMessage = new ResignChatMessage(message, resignChatRoom);
                 resignChatMessageJpaRepository.save(resignChatMessage);
             }
-            chatMessageJpaRepository.deleteByRoomId(String.valueOf(postId));
+            chatMessageJpaRepository.deleteByChatRoom(chatRoom);
             chatRoomJpaRepository.deleteByRoomId(String.valueOf(postId));
             return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공", user.getIsOwner()), HttpStatus.OK);
         }

@@ -17,8 +17,8 @@ public class NotificationController {
     private final NotificationService notificationService;
 
 
-    @GetMapping("/noti")
-    public List<NotificationDto> getNoti(@AuthenticationPrincipal UserDetailsImpl userDetails){
-        return notificationService.getNoti(userDetails);
+    @GetMapping("/notification")
+    public List<NotificationDto> getNotification(@AuthenticationPrincipal UserDetailsImpl userDetails){
+        return notificationService.getNotification(userDetails);
     }
 }

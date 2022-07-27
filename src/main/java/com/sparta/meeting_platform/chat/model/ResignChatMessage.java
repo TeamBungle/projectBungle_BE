@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @Entity
 @NoArgsConstructor
 public class ResignChatMessage {
+
     // 메시지 타입 : 입장, 채팅, 나가기
     public enum MessageType {
         ENTER, TALK, QUIT

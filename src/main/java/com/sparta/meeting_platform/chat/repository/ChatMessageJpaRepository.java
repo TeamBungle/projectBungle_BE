@@ -15,4 +15,5 @@ public interface ChatMessageJpaRepository extends JpaRepository<ChatMessage, Lon
 
     void deleteByRoomId(String RoomId);
 
+    void deleteByChatRoom(ChatRoom chatRoom);
 }

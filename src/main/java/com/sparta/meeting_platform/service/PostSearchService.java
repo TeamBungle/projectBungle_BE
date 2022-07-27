@@ -183,7 +183,7 @@ public class PostSearchService {
                     .joinCount(tempAndJoinCountSearchDto.getJoinCount())
                     .place(post.getPlace())
                     .postUrl(post.getPostUrls().get(0))
-                    .time(post.getTime())
+                    .time(timeCheck(post.getTime()))
                     .avgTemp(tempAndJoinCountSearchDto.getAveTemp())
                     .isLetter(post.getIsLetter())
                     .isLike(isLike)

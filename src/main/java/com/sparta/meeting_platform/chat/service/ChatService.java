@@ -90,12 +90,6 @@ public class ChatService {
             List<InvitedUsers> invitedUsersList = invitedUsersRepository.findAllByPostId(Long.parseLong(roomId));
             log.info("invitedUserlist size : {}", invitedUsersList.size());
             for (InvitedUsers invitedUsers : invitedUsersList) {
-                if (invitedUsersList.size() >= postRepository.findById(Long.parseLong(roomId)).get().getPersonnel() && (!invitedUsers.getUser().getId().equals(user.getId()))) {
-                    log.info("persoonel size : {}", postRepository.findById(Long.parseLong(roomId)).get().getPersonnel());
-                    log.info("inviteduserId: {}", invitedUsers.getUser().getId());
-                    log.info("user.getid: {}", user.getId());
-                    messageDto.setMessage("[알림] 채팅방 정원을 초과하였습니다!");
-                }
                 if(invitedUsers.getUser().equals(user)){
                     invitedUsers.setReadCheck(true);
                 }
