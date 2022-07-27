@@ -142,15 +142,14 @@ public class ChatService {
                 () -> new UserApiException("존재하지 않는 사용자 입니다!")
         );
         ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(roomId);
-        UserDetailDto userDetailDto = new UserDetailDto();
+
 
         if(chatRoom.getUsername().equals(user.getUsername())){
-            userDetailDto.setChatOwner(true);
+            return new ResponseEntity<>(new UserDetailDto(true, "유저 정보 조회 성공", user,true), HttpStatus.OK);
         }else {
-            userDetailDto.setChatOwner(false);
+            return new ResponseEntity<>(new UserDetailDto(true, "유저 정보 조회 성공", user,false), HttpStatus.OK);
         }
 
-        return new ResponseEntity<>(new UserDetailDto(true, "유저 정보 조회 성공", user), HttpStatus.OK);
     }
 }
 
