@@ -23,6 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+
 @RequiredArgsConstructor
 @Repository
 public class ChatRoomRepository {
@@ -52,16 +53,17 @@ public class ChatRoomRepository {
         List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByUserId(user.getId());
         List<ChatRoomResponseDto> chatRoomResponseDtoList = new ArrayList<>();
         for (InvitedUsers invitedUser : invitedUsers) {
-            if(invitedUser.getReadCheck()){
+            if (invitedUser.getReadCheck()) {
                 invitedUser.setReadCheck(false);
                 invitedUser.setReadCheckTime(LocalDateTime.now());
             }
             Optional<Post> post = postRepository.findById(invitedUser.getPostId());
             ChatMessage chatMessage = chatMessageJpaRepository.findTop1ByRoomIdOrderByCreatedAtDesc(invitedUser.getPostId().toString());
             ChatRoomResponseDto chatRoomResponseDto = new ChatRoomResponseDto();
-            if(chatMessage.getMessage().isEmpty()){
+            System.out.println(chatMessage.getMessage());
+            if (chatMessage.getMessage().isEmpty()) {
                 chatRoomResponseDto.setLastMessage("파일 전송이 완료되었습니다.");
-            }else {
+            } else {
                 chatRoomResponseDto.setLastMessage(chatMessage.getMessage());
             }
             LocalDateTime createdAt = chatMessage.getCreatedAt();
@@ -79,6 +81,7 @@ public class ChatRoomRepository {
         }
         return chatRoomResponseDtoList;
     }
+
     /**
      * 채팅방 입장 : redis에 topic을 만들고 pub/sub 통신을 하기 위해 리스너를 설정한다.
      */
@@ -90,6 +93,7 @@ public class ChatRoomRepository {
             topics.put(roomId, topic);
         }
     }
+
     /*
      * 채팅방 생성 , 게시글 생성시 만들어진 postid를 받아와서 게시글 id로 사용한다.
      */
@@ -97,7 +101,7 @@ public class ChatRoomRepository {
     public void createChatRoom(Post post, UserDto userDto) {
         ChatRoom chatRoom = ChatRoom.create(post, userDto);
         opsHashChatRoom.put(CHAT_ROOMS, chatRoom.getRoomId(), chatRoom); // redis 저장
-        redisTemplate.expire(CHAT_ROOMS,30, TimeUnit.MINUTES);
+        redisTemplate.expire(CHAT_ROOMS, 30, TimeUnit.MINUTES);
         chatRoomJpaRepository.save(chatRoom); // DB 저장
     }
 

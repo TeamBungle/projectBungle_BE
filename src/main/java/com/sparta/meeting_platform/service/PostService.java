@@ -85,9 +85,25 @@ public class PostService {
                 .setParameter("distance", distance)
                 .setMaxResults(4);
         List<Post> endTimePosts = endTimeQuery.getResultList();
+//        Query mannerQuery = em.createNativeQuery("SELECT * FROM post AS p "
+//                        + "INNER JOIN (SELECT AVG(u.manner_temp) AS avg_temp, i.post_id AS id FROM invited_users AS i "
+//                        + "INNER JOIN userinfo AS u "
+//                        + "ON i.user_id = u.id "
+//                        + "GROUP BY i.post_id) AS s "
+//                        + "ON p.id = s.id "
+//                        + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) < :distance "
+//                        + "AND p.time < :convertedDateReal "
+//                        + "GROUP BY id "
+//                        + "ORDER BY avg_temp DESC", Post.class)
+//                .setParameter("convertedDateReal", formatDateTime())
+//                .setParameter("myPoint", mapSearchService.makePoint(longitude, latitude))
+//                .setParameter("distance", distance)
+//                .setMaxResults(4);
+//        List<Post> mannerPosts = mannerQuery.getResultList();
 
         List<PostResponseDto> postListRealTime = postSearchService.searchTimeOrMannerPostList(realTimePosts, userId);
         List<PostResponseDto> postListEndTime = postSearchService.searchTimeOrMannerPostList(endTimePosts, userId);
+//        List<PostResponseDto> postListmanner = postSearchService.searchTimeOrMannerPostList(mannerPosts, userId);
 
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", user.getIsOwner(), postListRealTime, postListEndTime), HttpStatus.OK);
     }
@@ -191,7 +207,7 @@ public class PostService {
     }
 
     //게시글 상세 조회
-    @Transactional(readOnly = true)
+    @Transactional
     public ResponseEntity<FinalResponseDto<?>> getPostsDetails(Long postId, Long userId) {
         User user = checkUser(userId);
         Post post = checkPost(postId);

@@ -25,8 +25,8 @@ public class QrcodeController {
 
     //qr코드 제작
     @GetMapping("/qrcode")
-    public Object createQr(@RequestParam Long postId) throws WriterException, IOException {
-        String url = "https://localhost:3000/user/qrcode?postId=" + postId;
+    public Object createQr(@RequestParam String roomId) throws WriterException, IOException {
+        String url = "https://localhost:3000/user/qrcode?roomId=" + roomId;
         int width = 200;
         int height = 200;
         BitMatrix matrix = new MultiFormatWriter().encode(url, BarcodeFormat.QR_CODE, width, height);
