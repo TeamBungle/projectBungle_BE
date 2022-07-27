@@ -24,6 +24,7 @@ import com.sparta.meeting_platform.util.PostListComparator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.io.ParseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -162,7 +163,7 @@ public class PostService {
 
     //게시글 더 보기 조회 추가 해야함
     @Transactional(readOnly = true)
-    public ResponseEntity<FinalResponseDto<?>> morePostList(Long userId, String status, Double latitude, Double longitude) {
+    public ResponseEntity<FinalResponseDto<?>> morePostList(Long userId, String status, Double latitude, Double longitude) throws ParseException {
         User user = checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
         List<Post> posts = new ArrayList<>();
@@ -185,15 +186,33 @@ public class PostService {
                         .setParameter("convertedDate1", convertedDate1);
                 posts = query1.getResultList();
                 break;
+//            case "manner":
+//                Query query2 = em.createNativeQuery("SELECT * FROM post AS p "
+//                                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location) "
+//                                + "AND p.id in (select i.post_id, AVG(manner_temp) from invited_users i "
+//                                + "GROUP BY post_id "
+//                                + "WHERE i.user_id in (select u.id FROM userinfo u ))", Post.class)
+//                        .setParameter("convertedDate1", convertedDate1);
+//                posts = query2.getResultList();
+//                break;
+
             case "manner":
-                Query query2 = em.createNativeQuery("SELECT * FROM post AS p "
-                                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location) "
-                                + "AND p.id in (select i.post_id, AVG(manner_temp) from invited_users i "
-                                + "GROUP BY post_id "
-                                + "WHERE i.user_id in (select u.id FROM userinfo u ))", Post.class)
-                        .setParameter("convertedDate1", convertedDate1);
+                Query query2 = em.createNativeQuery("SELECT p.* FROM post AS p "
+                                + "INNER JOIN (SELECT AVG(u.manner_temp) AS avg_temp, i.post_id AS id FROM invited_users AS i "
+                                                + "INNER JOIN userinfo AS u "
+                                                + "ON i.user_id = u.id "
+                                                + "GROUP BY i.post_id) AS s "
+                                + "ON p.id = s.id "
+                                + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) < :distance "
+                                + "AND p.time > :convertedDate1 "
+                                + "GROUP BY id "
+                                + "ORDER BY avg_temp DESC", Post.class)
+                        .setParameter("convertedDate1", convertedDate1)
+                        .setParameter("myPoint", mapSearchService.makePoint(longitude, latitude))
+                        .setParameter("distance", 400000.0);
                 posts = query2.getResultList();
                 break;
+
         }
         if (posts.size() < 1) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다"), HttpStatus.OK);
@@ -427,7 +446,9 @@ public class PostService {
         return post;
     }
 
-    public ResponseEntity<FinalResponseDto<?>> morePostListInfiniteScroll(Long lastId, Long userId, String status, Double latitude, Double longitude, int size) {
+    // 더보기 무한 스크롤 적용
+    @Transactional
+    public ResponseEntity<FinalResponseDto<?>> morePostListInfiniteScroll(Long lastPoint, Long userId, String status, Double latitude, Double longitude, int size) throws ParseException {
         User user = checkUser(userId);
         String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
         List<Post> posts = new ArrayList<>();
@@ -437,11 +458,10 @@ public class PostService {
             case "endTime":
                 Query query = em.createNativeQuery("SELECT * FROM post AS p "
                                 + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location)"
-                                + "AND p.time > :convertedDate1 "
-                                + "AND p.id > :lastId "
-                                + " ORDER BY p.time ", Post.class)
-                        .setParameter("convertedDate1", convertedDate1)
-                        .setParameter("lastId", lastId)
+                                + "AND p.time > (SELECT post.time FROM post WHERE id = :lastId) "
+                                + "ORDER BY p.time "
+                                + "LIMIT :pageSize", Post.class)
+                        .setParameter("lastId", lastPoint)
                         .setParameter("pageSize",size);
                 posts = query.getResultList();
                 break;
@@ -451,25 +471,85 @@ public class PostService {
                                 + "AND p.time < (SELECT post.time FROM post WHERE id = :lastId) "
                                 + "ORDER BY p.time desc "
                                 + "LIMIT :pageSize", Post.class)
-//                        .setParameter("convertedDate1", convertedDate1)
-                        .setParameter("lastId", lastId)
+                        .setParameter("lastId", lastPoint)
                         .setParameter("pageSize",size);
                 posts = query1.getResultList();
                 break;
             case "manner":
-                Query query2 = em.createNativeQuery("SELECT * FROM post AS p "
-                                + "WHERE MBRContains(ST_LINESTRINGFROMTEXT(" + pointFormat + ", p.location) "
-                                + "AND p.id in (select i.post_id, AVG(manner_temp) from invited_users i "
-                                + "GROUP BY post_id "
-                                + "WHERE i.user_id in (select u.id FROM userinfo u ))", Post.class)
-                        .setParameter("convertedDate1", convertedDate1);
+                Query query2 = em.createNativeQuery("SELECT p.* FROM post AS p "
+                                + "INNER JOIN (SELECT AVG(u.manner_temp) AS avg_temp, i.post_id AS id FROM invited_users AS i "
+                                + "INNER JOIN userinfo AS u "
+                                + "ON i.user_id = u.id "
+                                + "GROUP BY i.post_id) AS s "
+                                + "ON p.id = s.id "
+                                + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) < :distance "
+                                + "AND p.time > :convertedDate1 "
+                                + "AND avg_temp < :lastId "
+                                + "GROUP BY id "
+                                + "ORDER BY avg_temp DESC "
+                                + "LIMIT :pageSize", Post.class)
+                        .setParameter("lastId", lastPoint)
+                        .setParameter("convertedDate1", convertedDate1)
+                        .setParameter("myPoint", mapSearchService.makePoint(longitude, latitude))
+                        .setParameter("distance", 400000.0)
+                        .setParameter("pageSize",size);
                 posts = query2.getResultList();
                 break;
+                /*
+                 * SELECT *, AVG(mannser_temp) AS avg_temp
+                 * FROM post, (
+                 *      SELECT *
+                 *      FROM invited_users AS i
+                 *      JOIN userinfo AS u
+                 *      ON i.user_id = u.id
+                 * WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(longitude, latitude)) < :distance
+                 * AND p.time > :convertedDate1
+                 * GROUP BY post_id
+                 * ORDER BY avg_temp DESC
+                 */
+
+
+
         }
         if (posts.size() < 1) {
             return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다"), HttpStatus.OK);
         }
         List<PostResponseDto> postList = postSearchService.searchTimeOrMannerPostList(posts, userId);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList, user.getIsOwner()), HttpStatus.OK);
+    }
+
+    // 카테고리 검색 무한 스크롤 적용
+    public ResponseEntity<FinalResponseDto<?>> getCategoriesInfiniteScroll(Long lastId, List<String> categories, Double latitude, Double longitude, Long userId, int size) throws ParseException {
+        User user = checkUser(userId);
+        String pointFormat = mapSearchService.searchPointFormat(distance, latitude, longitude);
+        String mergeList = postSearchService.categoryOrTagListMergeString(categories);
+        LocalDateTime localDateTime = LocalDateTime.now();
+        String convertedDate1 = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        Double distance = 400000.0;
+
+        Query query = em.createNativeQuery(
+                "SELECT *, ST_DISTANCE_SPHERE(:myPoint, POINT(longitude, latitude)) AS distance  FROM post AS p "
+                        + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(longitude, latitude)) > " +
+                            "(SELECT ST_DISTANCE_SPHERE(:myPoint, POINT(longitude, latitude)) FROM post " +
+                            "WHERE id = :lastId) "
+                        + "AND ST_DISTANCE_SPHERE(:myPoint, POINT(longitude, latitude)) < :distance "
+                        + "AND p.time > :convertedDate1 "
+                        + "AND p.id in (select u.post_id from post_categories u "
+                        + "WHERE u.category in (" + mergeList + ")) "
+                        + "ORDER BY distance "
+                        + "LIMIT :pageSize", Post.class)
+                .setParameter("lastId", lastId)
+                .setParameter("convertedDate1", convertedDate1)
+                .setParameter("myPoint", mapSearchService.makePoint(longitude, latitude))
+                .setParameter("distance", distance)
+                .setParameter("pageSize", size);
+
+        List<Post> posts = query.getResultList();
+        if (posts.size() < 1) {
+            return new ResponseEntity<>(new FinalResponseDto<>(false, "게시글이 없습니다, 다른 카테고리로 조회해주세요"), HttpStatus.OK);
+        }
+
+        List<PostResponseDto> postList = postSearchService.searchPostList(posts, userId, longitude, latitude);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", postList, user.getIsOwner()), HttpStatus.OK);
     }
 
