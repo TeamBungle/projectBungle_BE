@@ -1,7 +1,6 @@
 package com.sparta.meeting_platform.chat.dto;
 
 import com.sparta.meeting_platform.chat.model.ChatMessage;
-
 import java.time.LocalDateTime;
 
 public interface FindChatMessageDto {

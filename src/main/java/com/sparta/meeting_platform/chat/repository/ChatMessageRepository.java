@@ -1,10 +1,8 @@
 package com.sparta.meeting_platform.chat.repository;
 
 import com.sparta.meeting_platform.chat.dto.ChatMessageDto;
-import com.sparta.meeting_platform.chat.dto.FindChatMessageDto;
 import com.sparta.meeting_platform.chat.model.ChatMessage;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -23,7 +21,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
-@Slf4j
 @Repository
 public class ChatMessageRepository {
 
@@ -48,15 +45,12 @@ public class ChatMessageRepository {
 
     //유저 카운트 받아오기
     public Long getUserCnt(String roomId) {
-        log.info("getUserCnt : {}", Long.valueOf(Optional.ofNullable(valueOps.get(USER_COUNT + "_" + roomId)).orElse("0")));
         return Long.valueOf(Optional.ofNullable(valueOps.get(USER_COUNT + "_" + roomId)).orElse("0"));
     }
 
     //redis 에 메세지 저장하기
     @Transactional
     public ChatMessageDto save(ChatMessageDto chatMessageDto) {
-        log.info("chatMessage : {}", chatMessageDto.getMessage());
-        log.info("type: {}", chatMessageDto.getType());
         //chatMessageDto 를 redis 에 저장하기 위하여 직렬화 한다.
         redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(ChatMessage.class));
         String roomId = chatMessageDto.getRoomId();
@@ -70,23 +64,22 @@ public class ChatMessageRepository {
         //redis 의 hashes 자료구조
         //key : CHAT_MESSAGE , filed : roomId, value : chatMessageList
         opsHashChatMessage.put(CHAT_MESSAGE, roomId, chatMessageList);
-        redisTemplate.expire(CHAT_MESSAGE,30, TimeUnit.MINUTES);
+        redisTemplate.expire(CHAT_MESSAGE,24, TimeUnit.HOURS);
         return chatMessageDto;
     }
 
     //채팅 리스트 가져오기
     @Transactional
     public List<ChatMessageDto> findAllMessage(String roomId) {
-        log.info("findAllMessage");
         List<ChatMessageDto> chatMessageDtoList = new ArrayList<>();
         //chatMessage 리스트를 불러올때, 리스트의 사이즈가 0보다 크면 redis 정보를 가져온다
         //redis 에서 가져온 리스트의 사이즈가  0보다 크다 == 저장된 정보가 있다.
         if (opsHashChatMessage.size(CHAT_MESSAGE) > 0) {
             return (opsHashChatMessage.get(CHAT_MESSAGE, roomId));
         } else { // redis 에서 가져온 메세지 리스트의 사이즈가 0보다 작다 == redis에 정보가 없다.
-            List<FindChatMessageDto> chatMessages = chatMessageJpaRepository.findAllByRoomId(roomId);
+            List<ChatMessage> chatMessages = chatMessageJpaRepository.findAllByRoomId(roomId);
 
-            for (FindChatMessageDto chatMessage : chatMessages) {
+            for (ChatMessage chatMessage : chatMessages) {
                 LocalDateTime createdAt = chatMessage.getCreatedAt();
                 String createdAtString = createdAt.format(DateTimeFormatter.ofPattern("dd,MM,yyyy,HH,mm,ss", Locale.KOREA));
                 ChatMessageDto chatMessageDto = new ChatMessageDto(chatMessage,createdAtString);
@@ -101,7 +94,6 @@ public class ChatMessageRepository {
     // 구독 요청시
     public void setUserEnterInfo(String roomId, String sessionId) {
         hashOpsEnterInfo.put(ENTER_INFO, sessionId, roomId);
-        log.info("hashPosEnterInfo.put : {}", hashOpsEnterInfo.get(ENTER_INFO, sessionId));
     }
 
     // 구독시 유저 카운트 증가
@@ -114,15 +106,8 @@ public class ChatMessageRepository {
         Optional.ofNullable(valueOps.decrement(USER_COUNT + "_" + roomId)).filter(count -> count > 0);
     }
 
-    //sessionId 로 roomId 가져오기
-    public String getRoomsId(String sessionId) {
-        log.info("세션당 채팅방 :" + sessionId);
-        return hashOpsEnterInfo.get(ENTER_INFO, sessionId);
-    }
-
     public void removeUserEnterInfo(String sessionId, String roomId) {
         hashOpsEnterInfo.delete(ENTER_INFO, sessionId, roomId);
-        log.info("hashPosEnterInfo.put : {}", hashOpsEnterInfo.get(ENTER_INFO, sessionId));
     }
 
 }

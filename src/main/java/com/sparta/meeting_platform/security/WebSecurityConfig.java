@@ -72,6 +72,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         configuration.addAllowedOriginPattern("https://authex-d42a5.web.app/");
         configuration.addAllowedOriginPattern("https://auth-6eb37.web.app");
         configuration.addAllowedOriginPattern("https://test-react-basic.web.app");
+        configuration.addAllowedOriginPattern("https://authex-d42a5.web.app");
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
         configuration.addExposedHeader("Authorization");

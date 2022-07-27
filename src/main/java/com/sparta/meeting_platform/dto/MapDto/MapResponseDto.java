@@ -1,16 +1,13 @@
-package com.sparta.meeting_platform.dto;
+package com.sparta.meeting_platform.dto.MapDto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-import javax.persistence.Column;
 import java.util.List;
 
 @NoArgsConstructor
 @Getter
-@Slf4j
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MapResponseDto<T> {
     private boolean response;

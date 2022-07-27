@@ -21,14 +21,13 @@ public class ChatMessageDto {
     private Long userId;
     private String createdAt;
     private String fileUrl;
-
     private Boolean quitOwner;
 
 
-    public ChatMessageDto(FindChatMessageDto chatMessage,String createdAt) {
+    public ChatMessageDto(ChatMessage chatMessage, String createdAt) {
         this.type = chatMessage.getType();
         this.roomId = chatMessage.getRoomId();
-        this.message =chatMessage.getMessage();
+        this.message = chatMessage.getMessage();
         this.sender = chatMessage.getSender();
         this.profileUrl = chatMessage.getProfileUrl();
         this.enterUserCnt = chatMessage.getEnterUserCnt();

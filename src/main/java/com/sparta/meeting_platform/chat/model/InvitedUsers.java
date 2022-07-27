@@ -4,7 +4,6 @@ import com.sparta.meeting_platform.domain.User;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
@@ -19,7 +18,7 @@ public class InvitedUsers {
     @Column
     private Long postId;
     @JoinColumn(name="USER_ID")
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private User user;
     @Column
     private Boolean qrCheck;
@@ -27,6 +26,7 @@ public class InvitedUsers {
     private Boolean readCheck;
     @Column
     private LocalDateTime readCheckTime;
+
     public InvitedUsers(Long postId, User user) {
         this.postId = postId;
         this.user = user;

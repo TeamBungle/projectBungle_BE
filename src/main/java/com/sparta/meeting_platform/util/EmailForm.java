@@ -65,6 +65,9 @@ public class EmailForm {
                 "        }\n" +
                 "        .email-content-wrap{\n" +
                 "            width: 86%;\n" +
+                "            display: flex;\n" +
+                "            flex-direction: column;\n" +
+                "            justify-content: center;\n" +
                 "            margin: auto;\n" +
                 "        }\n" +
                 "\n" +
@@ -99,7 +102,7 @@ public class EmailForm {
                 "        }\n" +
                 "        .email-confirm-complete{\n" +
                 "            display: flex;\n" +
-                "            width: 281px;\n" +
+                "            /*width: 281px;*/\n" +
                 "            height: 53px;\n" +
                 "            /* maincolor */\n" +
                 "            background-color: #FFC632;\n" +
@@ -133,11 +136,13 @@ public class EmailForm {
                 "            <div class=\"email-content-title\">안녕하세요</div>\n" +
                 "            <div class=\"email-content\">벙글의 새로운 회원이 되신 것을 환영합니다.<br/>안전한 서비스를 위하여 인증 제한시간인 <span style=\"color: red\">15</span>분 이내에 <br/>이메일 인증을 완료하여 주시기 바랍니다.</div>\n" +
                 "            <div class=\"email-content-sub\">본 메일은 발신 전용으로 회신되지 않습니다.</div>\n" +
-                "            <div class=\"email-confirm-complete\"><a class=\"email-redirection\" href='https://fifaonline4-bk.shop/user/confirmEmail?token=" + emailToken  +"'>메일 인증 완료하기</a></div>\n" +
+                "            <div class=\"email-confirm-complete\"><a class=\"email-redirection\" href='https://fifaonline4-bk.shop/user/confirmEmail?token=" + emailToken +"'>메일 인증 완료하기</a></div>\n" +
                 "        </div>\n" +
                 "    </div>\n" +
+                "</div>\n" +
                 "</body>\n" +
                 "</html>";
     }
+
 
 }

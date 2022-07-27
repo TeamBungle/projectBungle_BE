@@ -12,37 +12,30 @@ import java.time.LocalDateTime;
 @Entity
 @NoArgsConstructor
 public class ResignChatMessage {
-    // 메시지 타입 : 입장, 채팅, 나가기
-    public enum MessageType {
-        ENTER, TALK, QUIT
-    }
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column
+    @Column(nullable = false)
     private String roomId; // 방번호 (postId)
     @Enumerated(EnumType.STRING)
-    @Column
+    @Column(nullable = false)
     private ChatMessage.MessageType type; // 메시지 타입
-    @Column
+    @Column(nullable = false)
     private String sender; // nickname
-    @Column
+    @Column(nullable = false)
     private String message; // 메시지
-    @Column
+    @Column(nullable = false)
     private String profileUrl;
     @Column
     private Long enterUserCnt;
-    @Column
+    @Column(nullable = false)
     private Long userId;
-    @Column
+    @Column(nullable = false)
     private LocalDateTime createdAt;
     @Column
     private String fileUrl;
-    @JoinColumn(name = "CHAT_ROOM_ID")
-    @ManyToOne
-    private ResignChatRoom chatRoom;
 
-    public ResignChatMessage(ChatMessage chatMessage, ResignChatRoom chatRoom) {
+    public ResignChatMessage(ChatMessage chatMessage) {
         this.roomId = chatMessage.getRoomId();
         this.type = chatMessage.getType();
         this.sender = chatMessage.getSender();
@@ -52,6 +45,5 @@ public class ResignChatMessage {
         this.userId = chatMessage.getUserId();
         this.createdAt = chatMessage.getCreatedAt();
         this.fileUrl = chatMessage.getFileUrl();
-        this.chatRoom = chatRoom;
     }
 }

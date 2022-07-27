@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.mail.MessagingException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -23,12 +22,13 @@ public class UserRoleCheckService {
     private final EmailConfirmTokenRepository emailConfirmTokenRepository;
     private final EmailConfirmTokenService emailConfirmTokenService;
 
+    //유저 권한 체크
     @Transactional
-    public void userRoleCheck(User user){
-        switch (user.getRole()){
+    public void userRoleCheck(User user) {
+        switch (user.getRole()) {
             case NEW_USER:
                 EmailToken checkEmailToken = emailConfirmTokenRepository.findByUserEmail(user.getUsername());
-                if(checkEmailToken.getExpirationDate().isAfter(LocalDateTime.now())){
+                if (checkEmailToken.getExpirationDate().isAfter(LocalDateTime.now())) {
                     throw new UserApiException("이메일 인증이 필요합니다.");
                 } else {
                     // 새 인증 token 전송
@@ -39,23 +39,24 @@ public class UserRoleCheckService {
                 }
 
             case STOP_USER:
-                if (user.getCheckTime().plusDays(2).isAfter(LocalDateTime.now())){
+                if (user.getCheckTime().plusDays(2).isAfter(LocalDateTime.now())) {
                     throw new UserApiException("이용 정지된 회원 입니다.");
                 } else {
                     user.setRole(UserRoleEnum.USER);
-                    user.setMannerTemp(user.getMannerTemp()+25);
+                    user.setMannerTemp(user.getMannerTemp() + 25);
                     break;
                 }
         }
     }
 
+    //탈퇴한 유저 기간 체크
     @Transactional
-    public int userResignCheck(String username){
+    public int userResignCheck(String username) {
         Optional<ResignUser> resignUser = resignUserRepository.findByUsername(username);
         int mannerTemp = 50;
-        if(resignUser.isPresent()){
+        if (resignUser.isPresent()) {
             LocalDateTime timeCheck = resignUser.get().getCheckTime().plusDays(2);
-            if(timeCheck.isAfter(LocalDateTime.now())){
+            if (timeCheck.isAfter(LocalDateTime.now())) {
                 throw new UserApiException("탈퇴 후 2일 이내에는 재 가입이 불가합니다.");
             } else {
                 mannerTemp = resignUser.get().getMannerTemp() + 25;

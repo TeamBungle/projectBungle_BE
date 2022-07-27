@@ -19,8 +19,9 @@ public class ChatRoom implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long Id;
-    @Column
+    @Column(nullable = false)
     private String roomId;
+    @Column(nullable = false)
     private String username;
 
     //채팅방 생성

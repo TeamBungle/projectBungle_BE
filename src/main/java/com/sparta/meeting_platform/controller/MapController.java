@@ -1,6 +1,6 @@
 package com.sparta.meeting_platform.controller;
 
-import com.sparta.meeting_platform.dto.MapResponseDto;
+import com.sparta.meeting_platform.dto.MapDto.MapResponseDto;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.service.MapService;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,8 @@ public class MapController {
     @GetMapping("")
     public ResponseEntity<MapResponseDto<?>> readMap(@RequestParam(value = "latitude") Double latitude,
                                                      @RequestParam(value = "longitude") Double longitude,
-                                                     @AuthenticationPrincipal UserDetailsImpl userDetails) {
+                                                     @AuthenticationPrincipal UserDetailsImpl userDetails)
+            throws org.locationtech.jts.io.ParseException {
         Long userId = userDetails.getUser().getId();
        return mapService.readMap(latitude,longitude,userId);
     }
@@ -36,7 +37,7 @@ public class MapController {
     @GetMapping("/search")
     public ResponseEntity<MapResponseDto<?>> searchMap(@RequestParam(value = "address") String address,
                           @AuthenticationPrincipal UserDetailsImpl userDetails)
-            throws IOException, ParseException {
+            throws IOException, ParseException, org.locationtech.jts.io.ParseException {
         System.out.println("controller" + address);
         Long userId = userDetails.getUser().getId();
         return mapService.searchMap(address,userId);
@@ -49,7 +50,8 @@ public class MapController {
                            @RequestParam(value = "distance",defaultValue = "400") Integer distance,
                            @RequestParam(value = "latitude") Double latitude,
                            @RequestParam(value = "longitude") Double longitude,
-                           @AuthenticationPrincipal UserDetailsImpl userDetails) {
+                           @AuthenticationPrincipal UserDetailsImpl userDetails)
+            throws org.locationtech.jts.io.ParseException {
         Long userId = userDetails.getUser().getId();
        return mapService.detailsMap(categories,personnel,(double)distance,latitude,longitude,userId);
     }

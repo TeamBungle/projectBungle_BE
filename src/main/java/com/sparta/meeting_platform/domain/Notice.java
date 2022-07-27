@@ -1,6 +1,6 @@
 package com.sparta.meeting_platform.domain;
 
-import com.sparta.meeting_platform.dto.NoticeRequestDto;
+import com.sparta.meeting_platform.dto.SettingDto.NoticeRequestDto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

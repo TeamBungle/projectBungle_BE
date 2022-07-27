@@ -1,4 +1,4 @@
-package com.sparta.meeting_platform.dto;
+package com.sparta.meeting_platform.dto.SettingDto;
 
 import lombok.Getter;
 
