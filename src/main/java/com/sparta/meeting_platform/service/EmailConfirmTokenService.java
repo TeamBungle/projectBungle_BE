@@ -3,6 +3,7 @@ package com.sparta.meeting_platform.service;
 import com.sparta.meeting_platform.domain.EmailToken;
 import com.sparta.meeting_platform.exception.EmailApiException;
 import com.sparta.meeting_platform.repository.EmailConfirmTokenRepository;
+import com.sparta.meeting_platform.util.EmailForm;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -18,6 +19,7 @@ public class EmailConfirmTokenService {
 
     private final EmailConfirmTokenRepository emailConfirmTokenRepository;
     private final JavaMailSender javaMailSender;
+    private final EmailForm emailForm;
 
     // 이메일로 token 전송
     @Async("mailExecutor")
@@ -32,8 +34,7 @@ public class EmailConfirmTokenService {
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
             helper.setTo(receiverEmail); //받는사람
             helper.setSubject("벙글! 회원가입 이메일 인증"); //메일제목
-            helper.setText("인증 링크 배포서버 : " + "<a href=" + "'https://gutner.shop/user/confirmEmail?token=" + emailToken.getId() + "'>" + "인증 하기" + "</a><br>" +
-                    "인증 링크 로컬8080 : " + "<a href=" + "'http://localhost:8080/user/confirmEmail2?token=" + emailToken.getId() + "'>" + "인증 하기" + "</a>", true); //ture넣을경우 html
+            helper.setText(emailToken.getId(), true);
 
             javaMailSender.send(mimeMessage);
 
