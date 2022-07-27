@@ -220,11 +220,11 @@ public class PostService {
         Boolean isOwner = user.getIsOwner();
 
         // isOwner 값 확인
-//        if (isOwner) {
-//            throw new PostApiException("게시글 개설 실패");
-//        } else {
-//            user.setIsOwner(true);
-//        }
+        if (isOwner) {
+            throw new PostApiException("게시글 개설 실패");
+        } else {
+            user.setIsOwner(true);
+        }
 
         //약속시간 예외처리
         DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -257,7 +257,9 @@ public class PostService {
 
         //이미지 s3저장 및 예외처리
         if (files == null) {
-            requestDto.setPostUrls(null); // 기본 이미지로 변경 필요
+            ArrayList<String> postUrls = new ArrayList<>();
+            postUrls.add("https://meeting-project.s3.ap-northeast-2.amazonaws.com/fb80e2d1-32d5-42f6-891d-5f7df69ad509.jpg");
+            requestDto.setPostUrls(postUrls);
         } else {
             if (files.size() > 3) {
                 throw new PostApiException("게시글 사진은 3개 이하 입니다.");
@@ -349,10 +351,10 @@ public class PostService {
             ResignChatRoom resignChatRoom = new ResignChatRoom(chatRoom);
             resignChatRoomJpaRepository.save(resignChatRoom);
             for (ChatMessage message : chatMessage) {
-                ResignChatMessage resignChatMessage = new ResignChatMessage(message, resignChatRoom);
+                ResignChatMessage resignChatMessage = new ResignChatMessage(message);
                 resignChatMessageJpaRepository.save(resignChatMessage);
             }
-            chatMessageJpaRepository.deleteByChatRoom(chatRoom);
+            chatMessageJpaRepository.deleteByRoomId(String.valueOf(postId));
             chatRoomJpaRepository.deleteByRoomId(String.valueOf(postId));
             return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공", user.getIsOwner()), HttpStatus.OK);
         }

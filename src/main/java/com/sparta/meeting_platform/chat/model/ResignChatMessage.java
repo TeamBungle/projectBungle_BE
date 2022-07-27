@@ -38,11 +38,8 @@ public class ResignChatMessage {
     private LocalDateTime createdAt;
     @Column
     private String fileUrl;
-    @JoinColumn(name = "CHAT_ROOM_ID")
-    @ManyToOne(fetch = FetchType.LAZY)
-    private ResignChatRoom chatRoom;
 
-    public ResignChatMessage(ChatMessage chatMessage, ResignChatRoom chatRoom) {
+    public ResignChatMessage(ChatMessage chatMessage) {
         this.roomId = chatMessage.getRoomId();
         this.type = chatMessage.getType();
         this.sender = chatMessage.getSender();
@@ -52,6 +49,5 @@ public class ResignChatMessage {
         this.userId = chatMessage.getUserId();
         this.createdAt = chatMessage.getCreatedAt();
         this.fileUrl = chatMessage.getFileUrl();
-        this.chatRoom = chatRoom;
     }
 }

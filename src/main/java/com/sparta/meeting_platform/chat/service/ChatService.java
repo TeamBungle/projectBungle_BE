@@ -82,9 +82,8 @@ public class ChatService {
             }
         }
 
-        ChatRoom chatRoom = chatRoomJpaRepository.findByUsername(user.getUsername());
         chatMessageRepository.save(messageDto);
-        ChatMessage chatMessage = new ChatMessage(messageDto, chatRoom, createdAt);
+        ChatMessage chatMessage = new ChatMessage(messageDto, createdAt);
         chatMessageJpaRepository.save(chatMessage);
 
         redisPublisher.publish(ChatRoomRepository.getTopic(messageDto.getRoomId()), messageDto);
