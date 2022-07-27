@@ -37,5 +37,3 @@ public class SessionController {
     }
 
 }
-
-//https://github.com/hanghae99-6/Back-End/blob/da400758aac35fd055772d7172f5ac6df7e8e175/src/main/java/com/sparta/demo/service/SessionService.java#L210
