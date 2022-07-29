@@ -38,7 +38,6 @@ public class MapController {
     public ResponseEntity<MapResponseDto<?>> searchMap(@RequestParam(value = "address") String address,
                           @AuthenticationPrincipal UserDetailsImpl userDetails)
             throws IOException, ParseException, org.locationtech.jts.io.ParseException {
-        System.out.println("controller" + address);
         Long userId = userDetails.getUser().getId();
         return mapService.searchMap(address,userId);
     }
@@ -46,8 +45,8 @@ public class MapController {
     //번개지도 화면 세부 설정 조회
     @GetMapping("/details")
     public ResponseEntity<MapResponseDto<?>> detailsMap(@RequestParam(value = "categories",defaultValue = "") List<String> categories,
-                           @RequestParam(value = "personnel",defaultValue = "50") Integer personnel,
-                           @RequestParam(value = "distance",defaultValue = "400") Integer distance,
+                           @RequestParam(value = "personnel",defaultValue = "25") Integer personnel,
+                           @RequestParam(value = "distance",defaultValue = "100") Integer distance,
                            @RequestParam(value = "latitude") Double latitude,
                            @RequestParam(value = "longitude") Double longitude,
                            @AuthenticationPrincipal UserDetailsImpl userDetails)
