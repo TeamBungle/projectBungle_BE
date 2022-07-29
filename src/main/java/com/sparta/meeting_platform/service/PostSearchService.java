@@ -154,7 +154,7 @@ public class PostSearchService {
     }
     //
     //지도에서 post리스트 찾기
-    public List<MapListDto> searchMapPostList(List<com.sparta.meeting_platform.domain.Post> posts, Long userId, Double longitude, Double latitude) {
+    public List<MapListDto> searchMapPostList(List<com.sparta.meeting_platform.domain.Post> posts, Long userId) {
         List<MapListDto> mapListDtos = new ArrayList<>();
         for (com.sparta.meeting_platform.domain.Post post : posts) {
             Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);

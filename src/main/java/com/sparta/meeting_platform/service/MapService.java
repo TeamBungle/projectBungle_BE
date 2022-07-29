@@ -50,7 +50,7 @@ public class MapService {
         if (posts.size() < 1) {
             throw new MapApiException(distance + "km 내에 모임이 존재하지 않습니다.");
         }
-        List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId, longitude, latitude);
+        List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId);
 
         return new ResponseEntity<>(
                 new MapResponseDto<>(
@@ -77,7 +77,7 @@ public class MapService {
             throw new MapApiException(distance + "km 내에 모임이 존재하지 않습니다.");
         }
         List<MapListDto> mapListDtos
-                = postSearchService.searchMapPostList(posts, userId, searchMapDto.getLongitude(), searchMapDto.getLatitude());
+                = postSearchService.searchMapPostList(posts, userId);
 
         return new ResponseEntity<>(
                 new MapResponseDto<>(
@@ -106,7 +106,7 @@ public class MapService {
                 .setParameter("distance", distanceKm);
         List<Post> posts = query.getResultList();
 
-        List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId, longitude, latitude);
+        List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId);
 
         return new ResponseEntity<>(
                 new MapResponseDto<>(
