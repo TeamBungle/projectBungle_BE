@@ -1,15 +1,20 @@
 package com.sparta.meeting_platform.chat.service;
 
 
-import com.sparta.meeting_platform.chat.dto.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.sparta.meeting_platform.chat.dto.ChatMessageDto;
+import com.sparta.meeting_platform.chat.dto.FilesDto;
+import com.sparta.meeting_platform.chat.dto.UserDetailDto;
+import com.sparta.meeting_platform.chat.dto.UserinfoDto;
 import com.sparta.meeting_platform.chat.model.ChatMessage;
 import com.sparta.meeting_platform.chat.model.ChatRoom;
 import com.sparta.meeting_platform.chat.model.InvitedUsers;
+import com.sparta.meeting_platform.chat.model.ResignChatRoom;
 import com.sparta.meeting_platform.chat.repository.*;
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.exception.UserApiException;
+import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.repository.UserRepository;
-import com.sparta.meeting_platform.security.JwtTokenProvider;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.service.S3Service;
 import lombok.RequiredArgsConstructor;
@@ -32,16 +37,17 @@ public class ChatService {
     private final RedisPublisher redisPublisher;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
-    private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
     private final ChatMessageJpaRepository chatMessageJpaRepository;
     private final S3Service s3Service;
     private final InvitedUsersRepository invitedUsersRepository;
     private final ChatRoomJpaRepository chatRoomJpaRepository;
+    private final ResignChatRoomJpaRepository resignChatRoomJpaRepository;
+    private final PostRepository postRepository;
 
 
     @Transactional
-    public void save(ChatMessageDto messageDto, Long pk) {
+    public void save(ChatMessageDto messageDto, Long pk) throws JsonProcessingException {
         // 토큰에서 유저 아이디 가져오기
         User user = userRepository.findById(pk).orElseThrow(
                 () -> new NullPointerException("존재하지 않는 사용자 입니다!")
@@ -65,28 +71,33 @@ public class ChatService {
 
             List<InvitedUsers> invitedUsersList = invitedUsersRepository.findAllByPostId(Long.parseLong(roomId));
             for (InvitedUsers invitedUsers : invitedUsersList) {
-                if(invitedUsers.getUser().equals(user)){
+                if (invitedUsers.getUser().equals(user)) {
                     invitedUsers.setReadCheck(true);
                 }
             }
             // 이미 그방에 초대되어 있다면 중복으로 저장을 하지 않게 한다.
-            if (!invitedUsersRepository.existsByUserIdAndPostId(user.getId(),Long.parseLong(roomId))) {
+            if (!invitedUsersRepository.existsByUserIdAndPostId(user.getId(), Long.parseLong(roomId))) {
                 InvitedUsers invitedUsers = new InvitedUsers(Long.parseLong(roomId), user);
                 invitedUsersRepository.save(invitedUsers);
             }
             //받아온 메세지 타입이 QUIT 일때
-        }else if (ChatMessage.MessageType.QUIT.equals(messageDto.getType())) {
+        } else if (ChatMessage.MessageType.QUIT.equals(messageDto.getType())) {
             messageDto.setMessage("[알림] " + messageDto.getSender() + "님이 나가셨습니다.");
-            invitedUsersRepository.deleteByUserIdAndPostId(user.getId(),Long.parseLong(messageDto.getRoomId()));
-            ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(messageDto.getRoomId());
-            if(chatRoom.getUsername().equals(user.getUsername())){
-                messageDto.setQuitOwner(true);
-                messageDto.setMessage("[알림] " + "(방장) " + messageDto.getSender() + "님이 나가셨습니다. " +
-                        "더 이상 대화를 할 수 없으며 채팅방을 나가면 다시 입장할 수 없습니다.");
+            if (invitedUsersRepository.existsByUserIdAndPostId(user.getId(), Long.parseLong(messageDto.getRoomId()))) {
+                invitedUsersRepository.deleteByUserIdAndPostId(user.getId(), Long.parseLong(messageDto.getRoomId()));
             }
+            if (!postRepository.existsById(Long.parseLong(messageDto.getRoomId()))) {
+                ResignChatRoom chatRoom = resignChatRoomJpaRepository.findByRoomId(messageDto.getRoomId());
+                if (chatRoom.getUsername().equals(user.getUsername())) {
+                    messageDto.setQuitOwner(true);
+                    messageDto.setMessage("[알림] " + "(방장) " + messageDto.getSender() + "님이 나가셨습니다. " +
+                            "더 이상 대화를 할 수 없으며 채팅방을 나가면 다시 입장할 수 없습니다.");
+                }
+            }
+            chatMessageJpaRepository.deleteByRoomId(messageDto.getRoomId());
         }
         chatMessageRepository.save(messageDto); // 캐시에 저장 했다.
-        ChatMessage chatMessage = new ChatMessage(messageDto,createdAt);
+        ChatMessage chatMessage = new ChatMessage(messageDto, createdAt);
         chatMessageJpaRepository.save(chatMessage); // DB 저장
         // Websocket 에 발행된 메시지를 redis 로 발행한다(publish)
         redisPublisher.publish(ChatRoomRepository.getTopic(messageDto.getRoomId()), messageDto);
@@ -106,15 +117,15 @@ public class ChatService {
     }
 
     //채팅방에 참여한 사용자 정보 조회
-    public List<UserinfoDto> getUserinfo(UserDetailsImpl userDetails,String roomId) {
+    public List<UserinfoDto> getUserinfo(UserDetailsImpl userDetails, String roomId) {
         userRepository.findById(userDetails.getUser().getId()).orElseThrow(
                 () -> new UserApiException("존재하지 않는 사용자 입니다.")
         );
         List<InvitedUsers> invitedUsers = invitedUsersRepository.findAllByPostId(Long.parseLong(roomId));
         List<UserinfoDto> users = new ArrayList<>();
         for (InvitedUsers invitedUser : invitedUsers) {
-           User user = invitedUser.getUser();
-            users.add(new UserinfoDto(user.getNickName(),user.getProfileUrl(),user.getId()));
+            User user = invitedUser.getUser();
+            users.add(new UserinfoDto(user.getNickName(), user.getProfileUrl(), user.getId()));
         }
         return users;
     }
@@ -129,7 +140,7 @@ public class ChatService {
 
         for (ChatMessage chatMessage : chatMessages) {
 
-            if(chatMessage.getFileUrl() != null){
+            if (chatMessage.getFileUrl() != null) {
                 filesDtoList.add(new FilesDto(chatMessage.getFileUrl()));
             }
         }
@@ -137,17 +148,16 @@ public class ChatService {
     }
 
     //유저 정보 상세조회 (채팅방 안에서)
-    public ResponseEntity<UserDetailDto> getUserDetails(String roomId,Long userId) {
+    public ResponseEntity<UserDetailDto> getUserDetails(String roomId, Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new UserApiException("존재하지 않는 사용자 입니다!")
         );
         ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(roomId);
 
-
-        if(chatRoom.getUsername().equals(user.getUsername())){
-            return new ResponseEntity<>(new UserDetailDto(true, "유저 정보 조회 성공", user,true), HttpStatus.OK);
-        }else {
-            return new ResponseEntity<>(new UserDetailDto(true, "유저 정보 조회 성공", user,false), HttpStatus.OK);
+        if (chatRoom.getUsername().equals(user.getUsername())) {
+            return new ResponseEntity<>(new UserDetailDto(true, "유저 정보 조회 성공", user, true), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(new UserDetailDto(true, "유저 정보 조회 성공", user, false), HttpStatus.OK);
         }
 
     }

@@ -24,7 +24,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry
                 .addEndpoint("/wss/chat")
-                .setAllowedOriginPatterns("https://localhost:3000", "https://authex-d42a5.web.app/", "https://auth-6eb37.web.app", "https://test-react-basic.web.app")
+                .setAllowedOriginPatterns("https://localhost:3000", "https://bungle.life")
                 .withSockJS();
     }
 
