@@ -1,6 +1,7 @@
 package com.sparta.meeting_platform.chat.controller;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sparta.meeting_platform.chat.dto.ChatMessageDto;
 import com.sparta.meeting_platform.chat.dto.FilesDto;
 import com.sparta.meeting_platform.chat.dto.UserDetailDto;
@@ -28,7 +29,7 @@ public class ChatController {
      * websocket "/pub/chat/message"로 들어오는 메시징을 처리한다.
      */
     @MessageMapping({"/chat/message"})
-    public void message(ChatMessageDto message, @Header("PK") Long pk) {
+    public void message(ChatMessageDto message, @Header("PK") Long pk) throws JsonProcessingException {
         chatService.save(message, pk);
     }
 

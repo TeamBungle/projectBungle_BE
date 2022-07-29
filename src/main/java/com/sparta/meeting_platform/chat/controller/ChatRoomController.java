@@ -1,5 +1,6 @@
 package com.sparta.meeting_platform.chat.controller;
 
+import com.sparta.meeting_platform.chat.dto.ChatListMessageDto;
 import com.sparta.meeting_platform.chat.dto.ChatRoomResponseDto;
 import com.sparta.meeting_platform.chat.repository.ChatRoomRepository;
 import com.sparta.meeting_platform.domain.User;
@@ -19,7 +20,7 @@ public class ChatRoomController {
     // 내 채팅방 목록 반환
     @GetMapping("/rooms")
     @ResponseBody
-    public List<ChatRoomResponseDto> room(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ChatListMessageDto room(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = userDetails.getUser();
         return chatRoomRepository.findAllRoom(user);
     }
