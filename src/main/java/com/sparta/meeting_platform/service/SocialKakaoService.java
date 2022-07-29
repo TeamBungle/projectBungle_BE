@@ -28,7 +28,6 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class SocialKakaoService {
 
@@ -98,7 +97,6 @@ public class SocialKakaoService {
         String responseBody = response.getBody();
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(responseBody);
-        log.info("인가코드로 액세스 토큰 요청 {}", jsonNode.get("access_token").asText());
         return jsonNode.get("access_token").asText();
     }
 
@@ -129,7 +127,6 @@ public class SocialKakaoService {
                 .get("email").asText();
         String profileUrl = jsonNode.get("properties")
                 .get("profile_image").asText();
-        log.info("카카오 사용자 정보 id: {},{},{},{}", id, nickname, email, profileUrl);
         return new KakaoUserInfoDto(id, nickname, email, profileUrl);
     }
 
@@ -162,11 +159,10 @@ public class SocialKakaoService {
                     .role(UserRoleEnum.USER)
                     .build();
             userRepository.save(kakaoUser);
-            log.info("카카오 아이디로 회원가입 {}", kakaoUser);
+
 
             return kakaoUser;
         }
-        log.info("카카오 아이디가 있는 경우 {}", findKakao);
         return findKakao;
     }
 
@@ -176,7 +172,6 @@ public class SocialKakaoService {
         Authentication authentication =
                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        log.info("강제 로그인 {}", authentication);
         return authentication;
     }
 }
