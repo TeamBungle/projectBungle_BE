@@ -1,19 +1,17 @@
 package com.sparta.meeting_platform.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sparta.meeting_platform.chat.dto.ChatMessageDto;
 import com.sparta.meeting_platform.chat.dto.UserDto;
 import com.sparta.meeting_platform.chat.model.*;
 import com.sparta.meeting_platform.chat.repository.*;
-import com.sparta.meeting_platform.chat.service.RedisPublisher;
 import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
+import com.sparta.meeting_platform.dto.MapDto.SearchMapDto;
 import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
-import com.sparta.meeting_platform.dto.MapDto.SearchMapDto;
 import com.sparta.meeting_platform.dto.UserDto.MyPageDto;
 import com.sparta.meeting_platform.exception.PostApiException;
 import com.sparta.meeting_platform.exception.UserApiException;
@@ -25,13 +23,11 @@ import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.util.FileExtFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.StaleStateException;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.ParseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,7 +35,10 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -60,8 +59,6 @@ public class PostService {
     private final ChatMessageJpaRepository chatMessageJpaRepository;
     private final ResignChatMessageJpaRepository resignChatMessageJpaRepository;
     private final ResignChatRoomJpaRepository resignChatRoomJpaRepository;
-
-    private final RedisPublisher redisPublisher;
 
     private Double distance = 400000.0;
 
@@ -120,12 +117,14 @@ public class PostService {
         User user = checkUser(userId);
         String mergeList = postSearchService.categoryOrTagListMergeString(categories);
         Query query = em.createNativeQuery(
-                        "SELECT *,ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) AS distance FROM post AS p "
+                        "SELECT id, content, created_at, is_letter, latitude, location, longitude,"
+                                + "modified_at, personnel, place, time, title, user_id , "
+                                + "ROUND(ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude))) AS 'distance' "
+                                + "FROM post AS p "
                                 + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) < :distance"
-                                + " AND p.time > :convertedDate1 AND p.id in (select u.post_id from post_categories u"
+                                + " AND p.id in (select u.post_id from post_categories u"
                                 + " WHERE u.category in (" + mergeList + "))"
                                 + "ORDER BY distance", Post.class)
-                .setParameter("convertedDate1", formatDateTime())
                 .setParameter("myPoint", mapSearchService.makePoint(longitude, latitude))
                 .setParameter("distance", distance);
         List<Post> posts = query.getResultList();
@@ -143,12 +142,14 @@ public class PostService {
         User user = checkUser(userId);
         String mergeList = postSearchService.categoryOrTagListMergeString(tags);
         Query query = em.createNativeQuery(
-                        "SELECT * , ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) AS distance FROM post AS p "
+                        "SELECT id, content, created_at, is_letter, latitude, location, longitude,"
+                                + "modified_at, personnel, place, time, title, user_id , "
+                                + "ROUND(ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude))) AS 'distance' "
+                                + "FROM post AS p "
                                 + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) < :distance "
-                                + "AND p.time > :convertedDate1 AND p.id in (select u.post_id from post_tags u"
+                                + "AND p.id in (select u.post_id from post_tags u"
                                 + " WHERE u.tag in (" + mergeList + ")) "
                                 + "ORDER BY distance", Post.class)
-                .setParameter("convertedDate1", formatDateTime())
                 .setParameter("myPoint", mapSearchService.makePoint(longitude, latitude))
                 .setParameter("distance", distance);
         List<Post> posts = query.getResultList();
@@ -355,13 +356,15 @@ public class PostService {
                 .isLetter(post.getIsLetter())
                 .build();
 
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 수정 페이지 이동 성공", postResponseDto, user.getIsOwner()), HttpStatus.OK);
+        return new ResponseEntity<>(
+                new FinalResponseDto<>(
+                        true, "게시글 수정 페이지 이동 성공",
+                        postResponseDto, user.getIsOwner()), HttpStatus.OK);
     }
 
     //게시글 삭제
-//    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Transactional
-    public ResponseEntity<FinalResponseDto<?>> deletePost(Long postId, Long userId) throws JsonProcessingException {
+    public ResponseEntity<FinalResponseDto<?>> deletePost(Long postId, Long userId) {
         Post post = checkPost(postId);
         User user = checkUser(userId);
         if (!post.getUser().getId().equals(userId)) {
@@ -504,18 +507,19 @@ public class PostService {
         User user = checkUser(userId);
         String mergeList = postSearchService.categoryOrTagListMergeString(categories);
         Query query = em.createNativeQuery(
-                        "SELECT *, ST_DISTANCE_SPHERE(:myPoint, POINT(longitude, latitude)) AS distance  FROM post AS p "
-                                + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(longitude, latitude)) > " +
-                                "(SELECT ST_DISTANCE_SPHERE(:myPoint, POINT(longitude, latitude)) FROM post " +
-                                "WHERE id = :lastId) "
+                        "SELECT id, content, created_at, is_letter, latitude, location, longitude,"
+                                + "modified_at, personnel, place, time, title, user_id , "
+                                + "ROUND(ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude))) AS 'distance' "
+                                + "FROM post AS p "
+                                + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(longitude, latitude)) > "
+                                + "(SELECT ST_DISTANCE_SPHERE(:myPoint, POINT(longitude, latitude)) FROM post "
+                                + "WHERE id = :lastId) "
                                 + "AND ST_DISTANCE_SPHERE(:myPoint, POINT(longitude, latitude)) < :distance "
-                                + "AND p.time > :convertedDate1 "
                                 + "AND p.id in (select u.post_id from post_categories u "
                                 + "WHERE u.category in (" + mergeList + ")) "
                                 + "ORDER BY distance "
                                 + "LIMIT :pageSize", Post.class)
                 .setParameter("lastId", lastId)
-                .setParameter("convertedDate1", formatDateTime())
                 .setParameter("myPoint", mapSearchService.makePoint(longitude, latitude))
                 .setParameter("distance", distance)
                 .setParameter("pageSize", size);
@@ -536,18 +540,19 @@ public class PostService {
         User user = checkUser(userId);
         String mergeList = postSearchService.categoryOrTagListMergeString(tags);
         Query query = em.createNativeQuery(
-                        "SELECT *, ST_DISTANCE_SPHERE(:myPoint, POINT(longitude, latitude)) AS distance  FROM post AS p "
-                                + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(longitude, latitude)) > " +
-                                "(SELECT ST_DISTANCE_SPHERE(:myPoint, POINT(longitude, latitude)) FROM post " +
-                                "WHERE id = :lastId) "
+                        "SELECT id, content, created_at, is_letter, latitude, location, longitude,"
+                                + "modified_at, personnel, place, time, title, user_id , "
+                                + "ROUND(ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude))) AS 'distance' "
+                                + "FROM post AS p "
+                                + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(longitude, latitude)) > "
+                                + "(SELECT ST_DISTANCE_SPHERE(:myPoint, POINT(longitude, latitude)) FROM post "
+                                + "WHERE id = :lastId) "
                                 + "AND ST_DISTANCE_SPHERE(:myPoint, POINT(longitude, latitude)) < :distance "
-                                + "AND p.time > :convertedDate1 "
                                 + "AND p.id in (select u.post_id from post_tags u "
                                 + "WHERE u.tag in (" + mergeList + ")) "
                                 + "ORDER BY distance "
                                 + "LIMIT :pageSize", Post.class)
                 .setParameter("lastId", lastId)
-                .setParameter("convertedDate1", formatDateTime())
                 .setParameter("myPoint", mapSearchService.makePoint(longitude, latitude))
                 .setParameter("distance", distance)
                 .setParameter("pageSize", size);
