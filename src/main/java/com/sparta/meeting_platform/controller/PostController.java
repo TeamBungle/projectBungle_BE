@@ -52,6 +52,19 @@ public class PostController {
         return postService.getPostsByCategories(userId,categories,latitude,longitude);
     }
 
+    //카테고리별 게시글 무한 스크롤
+    @GetMapping("/categories/{lastId}")
+    public ResponseEntity<FinalResponseDto<?>> getCategoriesInfiniteScroll(
+            @PathVariable Long lastId,
+            @RequestParam(value = "categories",required = false, defaultValue = "") List<String> categories,
+            @RequestParam(value = "latitude") Double latitude,
+            @RequestParam(value = "longitude") Double longitude,
+            @RequestParam(value = "size") int size,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws org.locationtech.jts.io.ParseException {
+        Long userId = getUserId(userDetails);
+        return postService.getCategoriesInfiniteScroll(lastId, categories, latitude, longitude, userId, size);
+    }
+
     //태그별 게시글 조회
     @GetMapping("/tags")
     public ResponseEntity<FinalResponseDto<?>> getPostsByTags(

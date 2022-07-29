@@ -65,7 +65,7 @@ public class ChatService {
         //받아온 메세지의 타입이 ENTER 일때
         if (ChatMessage.MessageType.ENTER.equals(messageDto.getType())) {
             chatRoomRepository.enterChatRoom(messageDto.getRoomId());
-            messageDto.setMessage("[알림] " + messageDto.getSender() + "님이 입장하셨습니다.");
+            messageDto.setMessage( messageDto.getSender() + "님이 입장하셨습니다.");
             String roomId = messageDto.getRoomId();
 
 
@@ -82,7 +82,7 @@ public class ChatService {
             }
             //받아온 메세지 타입이 QUIT 일때
         } else if (ChatMessage.MessageType.QUIT.equals(messageDto.getType())) {
-            messageDto.setMessage("[알림] " + messageDto.getSender() + "님이 나가셨습니다.");
+            messageDto.setMessage(messageDto.getSender() + "님이 나가셨습니다.");
             if (invitedUsersRepository.existsByUserIdAndPostId(user.getId(), Long.parseLong(messageDto.getRoomId()))) {
                 invitedUsersRepository.deleteByUserIdAndPostId(user.getId(), Long.parseLong(messageDto.getRoomId()));
             }
@@ -90,7 +90,7 @@ public class ChatService {
                 ResignChatRoom chatRoom = resignChatRoomJpaRepository.findByRoomId(messageDto.getRoomId());
                 if (chatRoom.getUsername().equals(user.getUsername())) {
                     messageDto.setQuitOwner(true);
-                    messageDto.setMessage("[알림] " + "(방장) " + messageDto.getSender() + "님이 나가셨습니다. " +
+                    messageDto.setMessage("(방장) " + messageDto.getSender() + "님이 나가셨습니다. " +
                             "더 이상 대화를 할 수 없으며 채팅방을 나가면 다시 입장할 수 없습니다.");
                 }
             }

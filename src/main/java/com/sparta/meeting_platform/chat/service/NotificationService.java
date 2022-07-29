@@ -5,6 +5,9 @@ import com.sparta.meeting_platform.chat.model.ChatMessage;
 import com.sparta.meeting_platform.chat.model.InvitedUsers;
 import com.sparta.meeting_platform.chat.repository.ChatMessageJpaRepository;
 import com.sparta.meeting_platform.chat.repository.InvitedUsersRepository;
+import com.sparta.meeting_platform.domain.Post;
+import com.sparta.meeting_platform.exception.PostApiException;
+import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.util.NotificationComparator;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +24,8 @@ public class NotificationService {
     private final InvitedUsersRepository invitedUsersRepository;
     private final ChatMessageJpaRepository chatMessageJpaRepository;
 
+    private final PostRepository postRepository;
+
     @Transactional
     public List<NotificationDto> getNotification(UserDetailsImpl userDetails) {
         Long userId = userDetails.getUser().getId();
@@ -34,6 +39,9 @@ public class NotificationService {
             for (ChatMessage findChatMessageDto : findChatMessageDtoList) {
                 if (Objects.equals(String.valueOf(invitedUser.getPostId()), findChatMessageDto.getRoomId())) {
                     if (invitedUser.getReadCheckTime().isBefore(findChatMessageDto.getCreatedAt())) {
+                        Post post = postRepository.findById(Long.valueOf(findChatMessageDto.getRoomId())).orElseThrow(
+                                () -> new PostApiException("존재하지 않는 게시물 입니다.")
+                        );
                         NotificationDto notificationDto = new NotificationDto();
                         if(findChatMessageDto.getMessage().isEmpty()){
                             notificationDto.setMessage("파일이 왔어요😲");
@@ -43,6 +51,7 @@ public class NotificationService {
                         notificationDto.setNickname(findChatMessageDto.getSender());
                         notificationDto.setCreatedAt(findChatMessageDto.getCreatedAt());
                         notificationDto.setRoomId(findChatMessageDto.getRoomId());
+                        notificationDto.setTitle(post.getTitle());
                         notificationDtoList.add(notificationDto);
                     }
                 }

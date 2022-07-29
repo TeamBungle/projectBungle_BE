@@ -63,17 +63,11 @@ public class User {
     @Enumerated(value = EnumType.STRING)
     private  UserRoleEnum role;
 
-//    @OneToMany(cascade = CascadeType.REMOVE)
-//    private List<Opinion> opinionList;
-//
-//    @OneToMany
-//    private List<Like> likeList;
-//
-//    @OneToMany(cascade = CascadeType.REMOVE)
-//    private List<Post> postList;
-//
-//    @OneToMany(cascade = CascadeType.REMOVE)
-//    private List<InvitedUsers> invitedUsersList;
+    @Column
+    private Boolean checkedOnboard;
+
+    @Column
+    private Boolean agreedLbs;
 
     public User(SignupRequestDto requestDto, int mannerTemp) {
         this.username = requestDto.getUsername();
@@ -83,6 +77,8 @@ public class User {
         this.nickName = "벙글" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("hhmmss"));
         this.profileUrl = "https://user-images.githubusercontent.com/87007109/178628349-839deab9-5c31-49e5-beb5-3d6b868df343.jpg";
         this.role = UserRoleEnum.NEW_USER;
+        this.checkedOnboard = false;
+        this.agreedLbs = false;
     }
 
     @Builder
@@ -121,5 +117,10 @@ public class User {
     public void updateMannerTempAndBungCount() {
         this.mannerTemp += 5;
         this.bungCount += 1;
+    }
+
+    public void checkOnboardAndLbs() {
+        this.checkedOnboard = true;
+        this.agreedLbs = true;
     }
 }

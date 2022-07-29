@@ -41,8 +41,7 @@ public class QrcodeCheckService {
         userRoleCheckService.userRoleCheck(user);
         userService.accessAndRefreshTokenProcess(user.getUsername());
         qrcodeConfirm(post, user);
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "만남 성공!!",
-                user.getNickName(), user.getMannerTemp(), user.getId()), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "만남 성공!!", user), HttpStatus.OK);
     }
 
     //qr코드 인증처리
@@ -76,8 +75,7 @@ public class QrcodeCheckService {
         Post post = postRepository.findById(postId).orElseThrow(
                 () -> new PostApiException("존재하지 않는 게시물 입니다."));
         qrcodeConfirm(post, user);
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "만남 성공!!",
-                user.getNickName(), user.getMannerTemp(), user.getId()), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "만남 성공!!", user), HttpStatus.OK);
     }
 
     //qr코드 카카오로그인 유저 인증처리
@@ -93,8 +91,7 @@ public class QrcodeCheckService {
                 () -> new PostApiException("존재하지 않는 게시물 입니다."));
 
         qrcodeConfirm(post, user);
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "만남 성공!!",
-                user.getNickName(), user.getMannerTemp(), user.getId()), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "만남 성공!!", user), HttpStatus.OK);
     }
 
     //qr코드 네이버로그인 유저 인증처리
@@ -110,7 +107,6 @@ public class QrcodeCheckService {
                 () -> new PostApiException("존재하지 않는 게시물 입니다."));
 
         qrcodeConfirm(post, user);
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "만남 성공!!"
-                , user.getNickName(), user.getMannerTemp(), user.getId()), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "만남 성공!!", user), HttpStatus.OK);
     }
 }

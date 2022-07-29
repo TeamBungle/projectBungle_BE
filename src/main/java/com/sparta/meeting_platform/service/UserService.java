@@ -98,7 +98,7 @@ public class UserService {
 
         return new ResponseEntity<>(
                 new FinalResponseDto<>(true, "로그인 성공!!",
-                        user.getNickName(), user.getMannerTemp(), user.getId()), HttpStatus.OK);
+                        user),  HttpStatus.OK);
     }
 
     // 이메일 인증 토큰 확인
@@ -222,4 +222,24 @@ public class UserService {
     }
 
 
+    // 온보딩 및 이용약관 체크
+    @Transactional
+    public ResponseEntity<FinalResponseDto<?>> checkOnboardAndLbs(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new UserApiException("동의 실패")
+        );
+        user.checkOnboardAndLbs();
+        return new ResponseEntity<>(new FinalResponseDto<>
+                (true, "위치기반 서비스 이용약관 동의"), HttpStatus.OK);
+    }
+
+    //로그아웃
+    public ResponseEntity<FinalResponseDto<?>> logout(Long userId, String refreshToken) {
+        userRepository.findById(userId).orElseThrow(
+                () -> new UserApiException("로그아웃 실패")
+        );
+        redisService.deleteValues(refreshToken);
+        return new ResponseEntity<>(new FinalResponseDto<>
+                (true, "로그아웃 완료!!!!!"), HttpStatus.OK);
+    }
 }

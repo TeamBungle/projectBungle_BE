@@ -110,6 +110,7 @@ public class PostSearchService {
                     .isLike(isLike)
                     .latitude(post.getLatitude())
                     .longitude(post.getLongitude())
+                    .distance(post.getDistance() / 1000)
                     .build();
             postList.add(postResponseDto);
         }

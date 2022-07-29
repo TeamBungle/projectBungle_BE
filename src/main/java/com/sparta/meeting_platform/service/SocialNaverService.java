@@ -76,7 +76,7 @@ public class SocialNaverService {
             userService.accessAndRefreshTokenProcess(user.getUsername());
 
             return new ResponseEntity<>(new FinalResponseDto<>
-                    (true, "로그인 성공!!", user.getNickName(), user.getMannerTemp(), user.getId()), HttpStatus.OK);
+                    (true, "로그인 성공!!", user), HttpStatus.OK);
         } catch (IOException e) {
             return new ResponseEntity<>(new FinalResponseDto<>
                     (false, "로그인 실패"), HttpStatus.OK);
