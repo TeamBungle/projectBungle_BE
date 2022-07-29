@@ -70,7 +70,7 @@ public class Scheduler {
                 chatMessageDto.setSender(user.getNickName());
                 chatMessageDto.setProfileUrl(user.getProfileUrl());
                 chatMessageDto.setCreatedAt(createdAtString);
-                chatMessageDto.setMessage("[알림] " + "약속시간 이후 24시간이 지나 더 이상 대화를 할 수 없으며 채팅방을 나가면 다시 입장할 수 없습니다.");
+                chatMessageDto.setMessage("약속시간 이후 24시간이 지나 더 이상 대화를 할 수 없으며 채팅방을 나가면 다시 입장할 수 없습니다.");
                 redisPublisher.publish(ChatRoomRepository.getTopic(String.valueOf(post.getId())), chatMessageDto);
             }
         }
