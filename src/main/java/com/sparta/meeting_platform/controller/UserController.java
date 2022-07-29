@@ -67,4 +67,21 @@ public class UserController {
 
         return userService.refreshToken(accessToken, refreshToken);
     }
+
+    // 온보딩 및 이용약관 체크
+    @GetMapping("/user/onboardandlbs")
+    public ResponseEntity<FinalResponseDto<?>> checkOnboardAndLbs(
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ){
+        return userService.checkOnboardAndLbs(userDetails.getUser().getId());
+    }
+
+    //로그아웃
+    @PostMapping("/user/logout")
+    public ResponseEntity<FinalResponseDto<?>> logout(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestHeader(value = "RefreshToken") String refreshToken
+    ){
+        return userService.logout(userDetails.getUser().getId(),refreshToken);
+    }
 }

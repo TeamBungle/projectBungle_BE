@@ -54,7 +54,7 @@ public class SocialKakaoService {
         User kakaoUser = signupKakaoUser(kakaoUserInfo);
 
         //4. 강제 로그인 처리
-        Authentication authentication = forceLoginKakaoUser(kakaoUser);
+        forceLoginKakaoUser(kakaoUser);
 
         // User 권한 확인
         userRoleCheckService.userRoleCheck(kakaoUser);
@@ -62,11 +62,8 @@ public class SocialKakaoService {
         //  5. response Header에 JWT 토큰 추가
         userService.accessAndRefreshTokenProcess(kakaoUser.getUsername());
 
-        String nickname = kakaoUser.getNickName();
-        int mannerTemp = kakaoUser.getMannerTemp();
-
         return new ResponseEntity<>(new FinalResponseDto<>
-                (true, "로그인 성공", nickname, mannerTemp, kakaoUser.getId()), HttpStatus.OK);
+                (true, "로그인 성공",kakaoUser), HttpStatus.OK);
     }
 
     //header 에 Content-type 지정
