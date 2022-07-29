@@ -106,6 +106,26 @@ public class ChatService {
                     chatMessageJpaRepository.deleteByRoomId(messageDto.getRoomId());
                     chatRoomJpaRepository.deleteByRoomId(messageDto.getRoomId());
                 }
+            }else {
+                ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(messageDto.getRoomId());
+                if (chatRoom.getUsername().equals(user.getUsername())) {
+                    messageDto.setQuitOwner(true);
+                    messageDto.setMessage("(방장) " + messageDto.getSender() + "님이 나가셨습니다. " +
+                            "더 이상 대화를 할 수 없으며 채팅방을 나가면 다시 입장할 수 없습니다.");
+                    likeRepository.deleteByPostId(Long.parseLong(messageDto.getRoomId()));
+                    postRepository.deleteById(Long.parseLong(messageDto.getRoomId()));
+                    user.setIsOwner(false);
+                    ChatRoom findChatRoom = chatRoomJpaRepository.findByRoomId(messageDto.getRoomId());
+                    List<ChatMessage> chatMessage = chatMessageJpaRepository.findAllByRoomId(messageDto.getRoomId());
+                    ResignChatRoom resignChatRoom = new ResignChatRoom(findChatRoom);
+                    resignChatRoomJpaRepository.save(resignChatRoom);
+                    for (ChatMessage message : chatMessage) {
+                        ResignChatMessage resignChatMessage = new ResignChatMessage(message);
+                        resignChatMessageJpaRepository.save(resignChatMessage);
+                    }
+                    chatMessageJpaRepository.deleteByRoomId(messageDto.getRoomId());
+                    chatRoomJpaRepository.deleteByRoomId(messageDto.getRoomId());
+                }
             }
             chatMessageJpaRepository.deleteByRoomId(messageDto.getRoomId());
         }
