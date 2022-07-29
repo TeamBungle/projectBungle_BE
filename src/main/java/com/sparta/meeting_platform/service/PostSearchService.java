@@ -95,16 +95,17 @@ public class PostSearchService {
             if (post.getPostUrls().size() < 1) {
                 post.getPostUrls().add(null);
             }
+            TempAndJoinCountSearchDto tempAndJoinCountSearchDto = getAvgTemp(post.getId());
             PostResponseDto postResponseDto = PostResponseDto.builder()
                     .id(post.getId())
                     .title(post.getTitle())
                     .content(post.getContent())
                     .personnel(post.getPersonnel())
-                    .joinCount(1)                       //TODO 수정필요
+                    .joinCount(tempAndJoinCountSearchDto.getJoinCount())                       //TODO 수정필요
                     .place(post.getPlace())
                     .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
                     .time(timeCheck(post.getTime()))
-                    .avgTemp(50)                      //TODO 수정필요
+                    .avgTemp(tempAndJoinCountSearchDto.getAveTemp())                      //TODO 수정필요
                     .isLetter(post.getIsLetter())
                     .isLike(isLike)
                     .latitude(post.getLatitude())
