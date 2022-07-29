@@ -152,7 +152,7 @@ public class PostSearchService {
         }
         return postList;
     }
-
+    //
     //지도에서 post리스트 찾기
     public List<MapListDto> searchMapPostList(List<com.sparta.meeting_platform.domain.Post> posts, Long userId, Double longitude, Double latitude) {
         List<MapListDto> mapListDtos = new ArrayList<>();
