@@ -1,8 +1,11 @@
 package com.sparta.meeting_platform.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.sparta.meeting_platform.chat.dto.ChatMessageDto;
 import com.sparta.meeting_platform.chat.dto.UserDto;
 import com.sparta.meeting_platform.chat.model.*;
 import com.sparta.meeting_platform.chat.repository.*;
+import com.sparta.meeting_platform.chat.service.RedisPublisher;
 import com.sparta.meeting_platform.domain.Like;
 import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.domain.User;
@@ -28,6 +31,7 @@ import org.locationtech.jts.io.ParseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -56,6 +60,8 @@ public class PostService {
     private final ChatMessageJpaRepository chatMessageJpaRepository;
     private final ResignChatMessageJpaRepository resignChatMessageJpaRepository;
     private final ResignChatRoomJpaRepository resignChatRoomJpaRepository;
+
+    private final RedisPublisher redisPublisher;
 
     private Double distance = 400000.0;
 
@@ -235,10 +241,7 @@ public class PostService {
         User user = checkUser(userId);
         Boolean isOwner = user.getIsOwner();
 
-        System.out.println(requestDto.getContent());
-        System.out.println(requestDto.getContent().length());
-        System.out.println(requestDto.getContent().replaceAll("(\r\n|\r|\n|\n\r)","").length());
-        if(requestDto.getContent().replaceAll("(\r\n|\r|\n|\n\r)","").length() > 500){
+        if (requestDto.getContent().replaceAll("(\r\n|\r|\n|\n\r)", "").length() > 500) {
             throw new PostApiException("게시글 내용은 500자 이내");
         }
 
@@ -280,9 +283,7 @@ public class PostService {
 
         //이미지 s3저장 및 예외처리
         if (files == null) {
-            ArrayList<String> postUrls = new ArrayList<>();
-            postUrls.add("https://meeting-project.s3.ap-northeast-2.amazonaws.com/fb80e2d1-32d5-42f6-891d-5f7df69ad509.jpg");
-            requestDto.setPostUrls(postUrls);
+            requestDto.setPostUrls(null);
         } else {
             if (files.size() > 3) {
                 throw new PostApiException("게시글 사진은 3개 이하 입니다.");
@@ -311,25 +312,18 @@ public class PostService {
     @Transactional
     public ResponseEntity<FinalResponseDto<?>> updatePost(Long postId, Long userId, PostRequestDto requestDto, List<MultipartFile> files) throws Exception {
 
-        System.out.println(requestDto.getContent());
-        System.out.println(requestDto.getContent().length());
-        System.out.println(requestDto.getContent().replaceAll("(\r\n|\r|\n|\n\r)","").length());
-        if(requestDto.getContent().replaceAll("(\r\n|\r|\n|\n\r)","").length() > 500){
-            throw new PostApiException("게시글 내용은 500자 이내");
-        }
-
         checkUser(userId);
         Post post = checkPost(postId);
-        if (files == null) {
-            requestDto.setPostUrls(post.getPostUrls());
-            // 기본 이미지로 변경 필요
-        } else {
-            List<String> postUrls = new ArrayList<>();
+
+        List<String> postUrls = new ArrayList<>();
+        if (files != null) {
             for (MultipartFile file : files) {
                 postUrls.add(s3Service.upload(file));
             }
-            requestDto.setPostUrls(postUrls);
         }
+        postUrls.addAll(requestDto.getPostUrls());
+        requestDto.setPostUrls(postUrls);
+
         SearchMapDto searchMapDto = mapSearchService.findLatAndLong(requestDto.getPlace());
         Point point = mapSearchService.makePoint(searchMapDto.getLongitude(), searchMapDto.getLatitude());
         post.update(searchMapDto.getLongitude(), searchMapDto.getLatitude(), requestDto, point);
@@ -365,13 +359,17 @@ public class PostService {
     }
 
     //게시글 삭제
+//    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Transactional
-    public ResponseEntity<FinalResponseDto<?>> deletePost(Long postId, Long userId) {
+    public ResponseEntity<FinalResponseDto<?>> deletePost(Long postId, Long userId) throws JsonProcessingException {
         Post post = checkPost(postId);
         User user = checkUser(userId);
         if (!post.getUser().getId().equals(userId)) {
             throw new PostApiException("본인 게시글이 아닙니다.");
         } else {
+            if (invitedUsersRepository.existsByPostId(postId)) {
+                invitedUsersRepository.deleteAllByPostId(postId);
+            }
             likeRepository.deleteByPostId(postId);
             postRepository.deleteById(postId);
             user.setIsOwner(false);
@@ -385,6 +383,19 @@ public class PostService {
             }
             chatMessageJpaRepository.deleteByRoomId(String.valueOf(post.getId()));
             chatRoomJpaRepository.deleteByRoomId(String.valueOf(postId));
+//            LocalDateTime createdAt = LocalDateTime.now();
+//            String createdAtString = createdAt.format(DateTimeFormatter.ofPattern("dd,MM,yyyy,HH,mm,ss", Locale.KOREA));
+//            ChatMessageDto chatMessageDto = new ChatMessageDto();
+//            chatMessageDto.setType(ChatMessage.MessageType.QUIT);
+//            chatMessageDto.setQuitOwner(true);
+//            chatMessageDto.setRoomId(String.valueOf(postId));
+//            chatMessageDto.setUserId(userId);
+//            chatMessageDto.setSender(user.getNickName());
+//            chatMessageDto.setProfileUrl(user.getProfileUrl());
+//            chatMessageDto.setCreatedAt(createdAtString);
+//            chatMessageDto.setMessage("[알림] " + "(방장) " + chatMessageDto.getSender() + "님이 나가셨습니다. " +
+//                    "더 이상 대화를 할 수 없으며 채팅방을 나가면 다시 입장할 수 없습니다.");
+//            redisPublisher.publish(ChatRoomRepository.getTopic(String.valueOf(postId)), chatMessageDto);
             return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공", user.getIsOwner()), HttpStatus.OK);
         }
     }

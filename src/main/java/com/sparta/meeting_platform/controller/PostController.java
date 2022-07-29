@@ -1,5 +1,6 @@
 package com.sparta.meeting_platform.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
@@ -141,7 +142,7 @@ public class PostController {
     @DeleteMapping("/{postid}")
     public ResponseEntity<FinalResponseDto<?>> deletePost(
             @PathVariable Long postid,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws JsonProcessingException {
         Long userId = getUserId(userDetails);
         return postService.deletePost(postid, userId);
     }
