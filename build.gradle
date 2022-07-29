@@ -88,7 +88,8 @@ dependencies {
 
     // openvidu
     implementation group: 'io.openvidu', name: 'openvidu-java-client', version: '2.22.0'
-
+    //jasypt
+    implementation 'com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.4'
 
 }
 

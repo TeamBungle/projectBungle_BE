@@ -37,5 +37,5 @@ out/
 .vscode/
 
 # Application.properties ignore
-src/main/resources/application.properties
-.properties
+#src/main/resources/application.properties
+#.properties

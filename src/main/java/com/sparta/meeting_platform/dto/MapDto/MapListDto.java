@@ -43,12 +43,12 @@ public class MapListDto {
     private Double longitude;
 
 //    @JsonIgnore
-    private Double distance;
+    private Long distance;
 
     @Builder
     public MapListDto(Long id, String title, String content, String time, int personnel, String place, List<String> postUrls,
                       int joinCount, Boolean isLetter, Boolean isLike,int avgTemp,
-                      String postUrl, Double latitude, Double longitude,Double distance) {
+                      String postUrl, Double latitude, Double longitude,Long distance) {
         this.postId = id;
         this.title = title;
         this.content =content;

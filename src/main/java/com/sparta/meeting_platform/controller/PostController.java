@@ -9,12 +9,12 @@ import com.sparta.meeting_platform.service.LikeService;
 import com.sparta.meeting_platform.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.joda.time.LocalDateTime;
 import org.locationtech.jts.io.ParseException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
 import javax.validation.Valid;
 import java.util.List;
 
@@ -172,8 +172,10 @@ public class PostController {
 
     // 찜한 게시글 전체 조회
     @GetMapping("/like")
-    public ResponseEntity<FinalResponseDto<?>> getLiedPosts(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return postService.getLikedPosts(getUserId(userDetails));
+    public ResponseEntity<FinalResponseDto<?>> getLiedPosts(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                                            @RequestParam(value = "latitude") Double latitude,
+                                                            @RequestParam(value = "longitude") Double longitude) throws ParseException {
+        return postService.getLikedPosts(getUserId(userDetails),latitude,longitude);
     }
 
     //나의 번개 페이지 조회
