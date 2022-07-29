@@ -118,7 +118,8 @@ public class User {
         this.intro = requestDto.getIntro();
     }
 
-    public void updateMannerTemp() {
+    public void updateMannerTempAndBungCount() {
         this.mannerTemp += 5;
+        this.bungCount += 1;
     }
 }

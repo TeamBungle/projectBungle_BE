@@ -57,7 +57,7 @@ public class QrcodeCheckService {
             } else if (post.getUser().equals(user)) {
                 throw new QrcodeApiException("본인 게시글의 QR코드는 적용되지 않습니다.");
             } else {
-                user.updateMannerTemp();
+                user.updateMannerTempAndBungCount();
                 invitedUsers.updateQrCheck();
             }
         } catch (NullPointerException e) {
@@ -98,6 +98,7 @@ public class QrcodeCheckService {
     }
 
     //qr코드 네이버로그인 유저 인증처리
+    @Transactional
     public ResponseEntity<FinalResponseDto<?>> naverLogin(String code, String state, Long postId) {
         ResponseEntity<FinalResponseDto<?>> finalResponseDtoResponseEntity
                 = socialNaverService.naverLogin(code, state);
