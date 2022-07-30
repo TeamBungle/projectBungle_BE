@@ -60,7 +60,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/user/signin/**").permitAll()
                 .antMatchers("/health/**").permitAll()
                 .antMatchers("/health").permitAll()
-                .antMatchers("/user/confirmEmai").permitAll()
+                .antMatchers("/user/confirmEmail").permitAll()
                 .antMatchers("/wss/chat/**").permitAll()
                 .anyRequest().authenticated()
                 // 그 외 어떤 요청이든 '인증'
