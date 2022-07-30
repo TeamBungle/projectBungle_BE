@@ -34,6 +34,7 @@ public class FinalResponseDto<T> {
     private Long postId;
     private List<PostResponseDto> postListRealTime;
     private List<PostResponseDto> postListEndTime;
+    private List<PostResponseDto> postListManner;
     private PostDetailsResponseDto postDetailsResponseDto;
     private VideoChatResponseDto videoChatResponseDto;
     private Boolean checkedOnboard;
@@ -48,13 +49,13 @@ public class FinalResponseDto<T> {
     }
 
     public FinalResponseDto(boolean response, String message, Boolean isOwner,
-                            List<PostResponseDto> postListRealTime, List<PostResponseDto> postListEndTime){
+                            List<PostResponseDto> postListRealTime, List<PostResponseDto> postListEndTime, List<PostResponseDto> postListManner){
         this.response = response;
         this.message = message;
         this.isOwner = isOwner;
         this.postListRealTime = postListRealTime;
         this.postListEndTime = postListEndTime;
-
+        this.postListManner = postListManner;
     }
 
     public FinalResponseDto(boolean response, String message, Long postId, Long userId) {

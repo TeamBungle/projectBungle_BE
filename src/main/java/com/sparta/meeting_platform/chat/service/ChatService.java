@@ -6,13 +6,11 @@ import com.sparta.meeting_platform.chat.dto.ChatMessageDto;
 import com.sparta.meeting_platform.chat.dto.FilesDto;
 import com.sparta.meeting_platform.chat.dto.UserDetailDto;
 import com.sparta.meeting_platform.chat.dto.UserinfoDto;
-import com.sparta.meeting_platform.chat.model.ChatMessage;
-import com.sparta.meeting_platform.chat.model.ChatRoom;
-import com.sparta.meeting_platform.chat.model.InvitedUsers;
-import com.sparta.meeting_platform.chat.model.ResignChatRoom;
+import com.sparta.meeting_platform.chat.model.*;
 import com.sparta.meeting_platform.chat.repository.*;
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.exception.UserApiException;
+import com.sparta.meeting_platform.repository.LikeRepository;
 import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.repository.UserRepository;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
@@ -44,6 +42,8 @@ public class ChatService {
     private final ChatRoomJpaRepository chatRoomJpaRepository;
     private final ResignChatRoomJpaRepository resignChatRoomJpaRepository;
     private final PostRepository postRepository;
+    private final LikeRepository likeRepository;
+    private final ResignChatMessageJpaRepository resignChatMessageJpaRepository;
 
 
     @Transactional
@@ -86,14 +86,20 @@ public class ChatService {
             if (invitedUsersRepository.existsByUserIdAndPostId(user.getId(), Long.parseLong(messageDto.getRoomId()))) {
                 invitedUsersRepository.deleteByUserIdAndPostId(user.getId(), Long.parseLong(messageDto.getRoomId()));
             }
+
             if (!postRepository.existsById(Long.parseLong(messageDto.getRoomId()))) {
                 ResignChatRoom chatRoom = resignChatRoomJpaRepository.findByRoomId(messageDto.getRoomId());
                 if (chatRoom.getUsername().equals(user.getUsername())) {
-                    messageDto.setQuitOwner(true);
-                    messageDto.setMessage("(방장) " + messageDto.getSender() + "님이 나가셨습니다. " +
-                            "더 이상 대화를 할 수 없으며 채팅방을 나가면 다시 입장할 수 없습니다.");
+                    quitOwner(messageDto, user);
+                }
+            }else {
+                ChatRoom chatRoom = chatRoomJpaRepository.findByRoomId(messageDto.getRoomId());
+                if (chatRoom.getUsername().equals(user.getUsername())) {
+                    quitOwner(messageDto, user);
                 }
             }
+
+
             chatMessageJpaRepository.deleteByRoomId(messageDto.getRoomId());
         }
         chatMessageRepository.save(messageDto); // 캐시에 저장 했다.
@@ -101,6 +107,26 @@ public class ChatService {
         chatMessageJpaRepository.save(chatMessage); // DB 저장
         // Websocket 에 발행된 메시지를 redis 로 발행한다(publish)
         redisPublisher.publish(ChatRoomRepository.getTopic(messageDto.getRoomId()), messageDto);
+    }
+
+    //방장 나가기
+    private void quitOwner(ChatMessageDto messageDto, User user) {
+        messageDto.setQuitOwner(true);
+        messageDto.setMessage("(방장) " + messageDto.getSender() + "님이 나가셨습니다. " +
+                "더 이상 대화를 할 수 없으며 채팅방을 나가면 다시 입장할 수 없습니다.");
+        likeRepository.deleteByPostId(Long.parseLong(messageDto.getRoomId()));
+        postRepository.deleteById(Long.parseLong(messageDto.getRoomId()));
+        user.setIsOwner(false);
+        ChatRoom findChatRoom = chatRoomJpaRepository.findByRoomId(messageDto.getRoomId());
+        List<ChatMessage> chatMessage = chatMessageJpaRepository.findAllByRoomId(messageDto.getRoomId());
+        ResignChatRoom resignChatRoom = new ResignChatRoom(findChatRoom);
+        resignChatRoomJpaRepository.save(resignChatRoom);
+        for (ChatMessage message : chatMessage) {
+            ResignChatMessage resignChatMessage = new ResignChatMessage(message);
+            resignChatMessageJpaRepository.save(resignChatMessage);
+        }
+        chatMessageJpaRepository.deleteByRoomId(messageDto.getRoomId());
+        chatRoomJpaRepository.deleteByRoomId(messageDto.getRoomId());
     }
 
     //redis에 저장되어있는 message 들 출력

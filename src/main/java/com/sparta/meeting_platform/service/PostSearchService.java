@@ -3,14 +3,13 @@ package com.sparta.meeting_platform.service;
 import com.sparta.meeting_platform.chat.model.InvitedUsers;
 import com.sparta.meeting_platform.chat.repository.InvitedUsersRepository;
 import com.sparta.meeting_platform.domain.Like;
-import com.sparta.meeting_platform.domain.Post;
 import com.sparta.meeting_platform.dto.MapDto.MapListDto;
 import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.TempAndJoinCountSearchDto;
 import com.sparta.meeting_platform.exception.PostApiException;
 import com.sparta.meeting_platform.repository.LikeRepository;
-import com.sparta.meeting_platform.repository.mapping.PostMapping;
+import com.sparta.meeting_platform.domain.Post;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -81,46 +80,9 @@ public class PostSearchService {
     }
 
     //postlist 찾기 - 거리순
-    public List<PostResponseDto> searchPostList(List<Post> posts, Long userId) {
+    public List<PostResponseDto> searchPostList(List<com.sparta.meeting_platform.domain.Post> posts, Long userId) {
         List<PostResponseDto> postList = new ArrayList<>();
-        for (Post post : posts) {
-            Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
-            Boolean isLike;
-
-            if (like == null) {
-                isLike = false;
-            } else {
-                isLike = like.getIsLike();
-            }
-            if (post.getPostUrls().size() < 1) {
-                post.getPostUrls().add(null);
-            }
-            TempAndJoinCountSearchDto tempAndJoinCountSearchDto = getAvgTemp(post.getId());
-            PostResponseDto postResponseDto = PostResponseDto.builder()
-                    .id(post.getId())
-                    .title(post.getTitle())
-                    .content(post.getContent())
-                    .personnel(post.getPersonnel())
-                    .joinCount(tempAndJoinCountSearchDto.getJoinCount())                       //TODO 수정필요
-                    .place(post.getPlace())
-                    .postUrl(post.getPostUrls().get(0)) //TODO 수정필요
-                    .time(timeCheck(post.getTime()))
-                    .avgTemp(tempAndJoinCountSearchDto.getAveTemp())                      //TODO 수정필요
-                    .isLetter(post.getIsLetter())
-                    .isLike(isLike)
-                    .latitude(post.getLatitude())
-                    .longitude(post.getLongitude())
-                    .distance(post.getDistance() / 1000)
-                    .build();
-            postList.add(postResponseDto);
-        }
-        return postList;
-    }
-
-    //postlist 찾기 - realTime,endTime,manner
-    public List<PostResponseDto> searchTimeOrMannerPostList(List<Post> posts, Long userId) {
-        List<PostResponseDto> postList = new ArrayList<>();
-        for (Post post : posts) {
+        for (com.sparta.meeting_platform.domain.Post post : posts) {
             Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
             Boolean isLike;
 
@@ -147,24 +109,54 @@ public class PostSearchService {
                     .isLike(isLike)
                     .latitude(post.getLatitude())
                     .longitude(post.getLongitude())
+                    .distance(post.getDistance() / 1000)
                     .build();
             postList.add(postResponseDto);
         }
         return postList;
     }
 
+    //postlist 찾기 - realTime,endTime,manner
+    public List<PostResponseDto> searchTimeOrMannerPostList(List<Post> posts, Long userId) {
+        List<PostResponseDto> postList = new ArrayList<>();
+        for (com.sparta.meeting_platform.domain.Post post : posts) {
+            Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
+            Boolean isLike;
+
+            if (like == null) {
+                isLike = false;
+            } else {
+                isLike = like.getIsLike();
+            }
+            if (post.getPostUrls().size() < 1) {
+                post.getPostUrls().add(null);
+            }
+            TempAndJoinCountSearchDto tempAndJoinCountSearchDto = getAvgTemp(post.getId());
+            PostResponseDto postResponseDto = PostResponseDto.builder()
+                    .id(post.getId())
+                    .title(post.getTitle())
+                    .content(post.getContent())
+                    .personnel(post.getPersonnel())
+                    .joinCount(tempAndJoinCountSearchDto.getJoinCount())
+                    .place(post.getPlace())
+                    .postUrl(post.getPostUrls().get(0))
+                    .time(timeCheck(post.getTime()))
+                    .avgTemp(tempAndJoinCountSearchDto.getAveTemp())
+                    .isLetter(post.getIsLetter())
+                    .isLike(isLike)
+                    .latitude(post.getLatitude())
+                    .longitude(post.getLongitude())
+                    .distance(post.getDistance() / 1000)
+                    .build();
+            postList.add(postResponseDto);
+        }
+        return postList;
+    }
+    //
     //지도에서 post리스트 찾기
-    public List<MapListDto> searchMapPostList(List<Post> posts, Long userId, Double longitude, Double latitude) {
+    public List<MapListDto> searchMapPostList(List<com.sparta.meeting_platform.domain.Post> posts, Long userId) {
         List<MapListDto> mapListDtos = new ArrayList<>();
-        for (Post post : posts) {
-            double theta = longitude - post.getLatitude();
-            double dist = Math.sin(deg2rad(latitude)) * Math.sin(deg2rad(post.getLongitude()))
-                    + Math.cos(deg2rad(latitude)) * Math.cos(deg2rad(post.getLongitude())) * Math.cos(deg2rad(theta));
-
-            dist = Math.acos(dist);
-            dist = rad2deg(dist);
-            dist = dist * 60 * 1.1515 * 1.609344;
-
+        for (com.sparta.meeting_platform.domain.Post post : posts) {
             Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);
             Boolean isLike;
 
@@ -191,7 +183,7 @@ public class PostSearchService {
                     .isLike(isLike)
                     .latitude(post.getLatitude())
                     .longitude(post.getLongitude())
-                    .distance(dist)
+                    .distance(post.getDistance() / 1000)
                     .build();
 
             mapListDtos.add(mapListDto);
@@ -200,7 +192,7 @@ public class PostSearchService {
     }
 
     //게시글 상세조회 데이터 출력
-    public PostDetailsResponseDto detailPost(Like like, Post post) {
+    public PostDetailsResponseDto detailPost(Like like, com.sparta.meeting_platform.domain.Post post) {
         Boolean isLike;
 
         if (like == null) {
@@ -237,31 +229,32 @@ public class PostSearchService {
     }
 
     //찜한 post List 찾기
-    public List<PostResponseDto> searchLikePostList(List<PostMapping> posts, Long userId) {
+    public List<PostResponseDto> searchLikePostList(List<Post> posts, Long userId) {
         List<PostResponseDto> postList = new ArrayList<>();
-        for (PostMapping post : posts) {
-            Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getPost().getId()).orElseThrow(
+        for (Post post : posts) {
+            Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElseThrow(
                     () -> new PostApiException("찜한 게시글이 없습니다.")
             );
 
-            if (post.getPost().getPostUrls().size() < 1) {
-                post.getPost().getPostUrls().add(null);
+            if (post.getPostUrls().size() < 1) {
+                post.getPostUrls().add(null);
             }
 
 
-            TempAndJoinCountSearchDto tempAndJoinCountSearchDto1 = getAvgTemp(post.getPost().getId());
+            TempAndJoinCountSearchDto tempAndJoinCountSearchDto1 = getAvgTemp(post.getId());
             PostResponseDto postResponseDto = PostResponseDto.builder()
-                    .id(post.getPost().getId())
-                    .title(post.getPost().getTitle())
-                    .content(post.getPost().getContent())
-                    .personnel(post.getPost().getPersonnel())
+                    .id(post.getId())
+                    .title(post.getTitle())
+                    .content(post.getContent())
+                    .personnel(post.getPersonnel())
                     .joinCount(tempAndJoinCountSearchDto1.getJoinCount())
-                    .place(post.getPost().getPlace())
-                    .postUrl(post.getPost().getPostUrls().get(0))
-                    .time(timeCheck(post.getPost().getTime()))
+                    .place(post.getPlace())
+                    .postUrl(post.getPostUrls().get(0))
+                    .time(timeCheck(post.getTime()))
                     .avgTemp(tempAndJoinCountSearchDto1.getAveTemp())
-                    .isLetter(post.getPost().getIsLetter())
+                    .isLetter(post.getIsLetter())
                     .isLike(like.getIsLike())
+                    .distance(post.getDistance() / 1000)
                     .build();
             postList.add(postResponseDto);
         }
@@ -269,7 +262,7 @@ public class PostSearchService {
     }
 
     //나의 post 찾기
-    public PostResponseDto searchMyPost(Like like, Post post) {
+    public PostResponseDto searchMyPost(Like like, com.sparta.meeting_platform.domain.Post post) {
         Boolean isLike;
 
         if (like == null) {

@@ -5,9 +5,9 @@ import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.MapDto.MapListDto;
 import com.sparta.meeting_platform.dto.MapDto.MapResponseDto;
 import com.sparta.meeting_platform.dto.MapDto.SearchMapDto;
+import com.sparta.meeting_platform.exception.MapApiException;
 import com.sparta.meeting_platform.exception.UserApiException;
 import com.sparta.meeting_platform.repository.UserRepository;
-import com.sparta.meeting_platform.exception.MapApiException;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.parser.ParseException;
 import org.springframework.http.HttpStatus;
@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.io.IOException;
-import java.util.*;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Service
@@ -37,7 +37,10 @@ public class MapService {
         User user = checkUser(userId);
 
         Query query = em.createNativeQuery(
-                        "SELECT *,ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) AS distance FROM post AS p "
+                        "SELECT id, content, created_at, is_letter, latitude, location, longitude,"
+                                + "modified_at, personnel, place, time, title, user_id , "
+                                + "ROUND(ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude))) AS 'distance' "
+                                + "FROM post AS p "
                                 + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) < :distance "
                                 + "ORDER BY distance", Post.class)
                 .setParameter("myPoint", mapSearchService.makePoint(longitude, latitude))
@@ -47,7 +50,7 @@ public class MapService {
         if (posts.size() < 1) {
             throw new MapApiException(distance + "km 내에 모임이 존재하지 않습니다.");
         }
-        List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId, longitude, latitude);
+        List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId);
 
         return new ResponseEntity<>(
                 new MapResponseDto<>(
@@ -74,7 +77,7 @@ public class MapService {
             throw new MapApiException(distance + "km 내에 모임이 존재하지 않습니다.");
         }
         List<MapListDto> mapListDtos
-                = postSearchService.searchMapPostList(posts, userId, searchMapDto.getLongitude(), searchMapDto.getLatitude());
+                = postSearchService.searchMapPostList(posts, userId);
 
         return new ResponseEntity<>(
                 new MapResponseDto<>(
@@ -91,7 +94,10 @@ public class MapService {
         String mergeList = postSearchService.categoryOrTagListMergeString(categories);
 
         Query query = em.createNativeQuery(
-                        "SELECT *,ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) AS distance FROM post AS p "
+                        "SELECT id, content, created_at, is_letter, latitude, location, longitude,"
+                                + "modified_at, personnel, place, time, title, user_id , "
+                                + "ROUND(ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude))) AS 'distance' "
+                                + "FROM post AS p "
                                 + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) < :distance "
                                 + "AND personnel <= " + personnel + " AND p.id in (select u.post_id from post_categories u "
                                 + "WHERE u.category in (" + mergeList + "))"
@@ -100,7 +106,7 @@ public class MapService {
                 .setParameter("distance", distanceKm);
         List<Post> posts = query.getResultList();
 
-        List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId, longitude, latitude);
+        List<MapListDto> mapListDtos = postSearchService.searchMapPostList(posts, userId);
 
         return new ResponseEntity<>(
                 new MapResponseDto<>(

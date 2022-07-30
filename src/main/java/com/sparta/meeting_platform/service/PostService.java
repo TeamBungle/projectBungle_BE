@@ -1,6 +1,5 @@
 package com.sparta.meeting_platform.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sparta.meeting_platform.chat.dto.UserDto;
 import com.sparta.meeting_platform.chat.model.*;
 import com.sparta.meeting_platform.chat.repository.*;
@@ -18,7 +17,6 @@ import com.sparta.meeting_platform.exception.UserApiException;
 import com.sparta.meeting_platform.repository.LikeRepository;
 import com.sparta.meeting_platform.repository.PostRepository;
 import com.sparta.meeting_platform.repository.UserRepository;
-import com.sparta.meeting_platform.repository.mapping.PostMapping;
 import com.sparta.meeting_platform.security.UserDetailsImpl;
 import com.sparta.meeting_platform.util.FileExtFilter;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +28,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.time.LocalDateTime;
@@ -40,7 +37,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-
+//
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -70,7 +67,10 @@ public class PostService {
     @Transactional(readOnly = true)
     public ResponseEntity<FinalResponseDto<?>> getPosts(Long userId, Double latitude, Double longitude) throws ParseException {
         User user = checkUser(userId);
-        Query realTimeQuery = em.createNativeQuery("SELECT * FROM post AS p "
+        Query realTimeQuery = em.createNativeQuery("SELECT id, content, created_at, is_letter, latitude, location, longitude,"
+                        + "modified_at, personnel, place, time, title, user_id , "
+                        + "ROUND(ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude))) AS 'distance' "
+                        + "FROM post AS p "
                         + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) < :distance "
                         + "AND p.time < :convertedDateReal "
                         + "ORDER BY p.time desc", Post.class)
@@ -79,7 +79,10 @@ public class PostService {
                 .setParameter("distance", distance)
                 .setMaxResults(4);
         List<Post> realTimePosts = realTimeQuery.getResultList();
-        Query endTimeQuery = em.createNativeQuery("SELECT * FROM post AS p "
+        Query endTimeQuery = em.createNativeQuery("SELECT id, content, created_at, is_letter, latitude, location, longitude,"
+                        + "modified_at, personnel, place, time, title, user_id , "
+                        + "ROUND(ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude))) AS 'distance' "
+                        + "FROM post AS p "
                         + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) < :distance "
                         + "AND p.time > :convertedDateEnd "
                         + "ORDER BY p.time", Post.class)
@@ -88,27 +91,28 @@ public class PostService {
                 .setParameter("distance", distance)
                 .setMaxResults(4);
         List<Post> endTimePosts = endTimeQuery.getResultList();
-//        Query mannerQuery = em.createNativeQuery("SELECT * FROM post AS p "
-//                        + "INNER JOIN (SELECT AVG(u.manner_temp) AS avg_temp, i.post_id AS id FROM invited_users AS i "
-//                        + "INNER JOIN userinfo AS u "
-//                        + "ON i.user_id = u.id "
-//                        + "GROUP BY i.post_id) AS s "
-//                        + "ON p.id = s.id "
-//                        + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) < :distance "
-//                        + "AND p.time < :convertedDateReal "
-//                        + "GROUP BY id "
-//                        + "ORDER BY avg_temp DESC", Post.class)
-//                .setParameter("convertedDateReal", formatDateTime())
-//                .setParameter("myPoint", mapSearchService.makePoint(longitude, latitude))
-//                .setParameter("distance", distance)
-//                .setMaxResults(4);
-//        List<Post> mannerPosts = mannerQuery.getResultList();
-
+        Query mannerQuery = em.createNativeQuery("SELECT p.id, content, created_at, is_letter, latitude, location, longitude,"
+                        + "modified_at, personnel, place, time, title, user_id , "
+                        + "ROUND(ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude))) AS 'distance' "
+                        + "FROM post AS p "
+                        + "INNER JOIN (SELECT AVG(u.manner_temp) AS avg_temp, i.post_id AS id FROM invited_users AS i "
+                        + "INNER JOIN userinfo AS u "
+                        + "ON i.user_id = u.id "
+                        + "GROUP BY i.post_id) AS s "
+                        + "ON p.id = s.id "
+                        + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) < :distance "
+                        + "AND p.time < :convertedDateReal "
+                        + "ORDER BY avg_temp DESC", Post.class)
+                .setParameter("convertedDateReal", formatDateTime())
+                .setParameter("myPoint", mapSearchService.makePoint(longitude, latitude))
+                .setParameter("distance", distance)
+                .setMaxResults(4);
+        List<Post> mannerPosts = mannerQuery.getResultList();
         List<PostResponseDto> postListRealTime = postSearchService.searchTimeOrMannerPostList(realTimePosts, userId);
         List<PostResponseDto> postListEndTime = postSearchService.searchTimeOrMannerPostList(endTimePosts, userId);
-//        List<PostResponseDto> postListmanner = postSearchService.searchTimeOrMannerPostList(mannerPosts, userId);
+        List<PostResponseDto> postListManner = postSearchService.searchTimeOrMannerPostList(mannerPosts, userId);
 
-        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", user.getIsOwner(), postListRealTime, postListEndTime), HttpStatus.OK);
+        return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 조회 성공", user.getIsOwner(), postListRealTime, postListEndTime, postListManner), HttpStatus.OK);
     }
 
     //카테고리별 게시글 조회
@@ -169,7 +173,10 @@ public class PostService {
         List<Post> posts = new ArrayList<>();
         switch (status) {
             case "endTime":
-                Query query = em.createNativeQuery("SELECT * FROM post AS p "
+                Query query = em.createNativeQuery("SELECT id, content, created_at, is_letter, latitude, location, longitude,"
+                                + "modified_at, personnel, place, time, title, user_id , "
+                                + "ROUND(ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude))) AS 'distance' "
+                                + "FROM post AS p "
                                 + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) < :distance "
                                 + "AND p.time > :convertedDate1"
                                 + " ORDER BY p.time ", Post.class)
@@ -179,7 +186,10 @@ public class PostService {
                 posts = query.getResultList();
                 break;
             case "realTime":
-                Query query1 = em.createNativeQuery("SELECT * FROM post AS p "
+                Query query1 = em.createNativeQuery("SELECT id, content, created_at, is_letter, latitude, location, longitude,"
+                                + "modified_at, personnel, place, time, title, user_id , "
+                                + "ROUND(ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude))) AS 'distance' "
+                                + "FROM post AS p "
                                 + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) < :distance "
                                 + "AND p.time < :convertedDate1 "
                                 + "ORDER BY p.time desc", Post.class)
@@ -189,7 +199,10 @@ public class PostService {
                 posts = query1.getResultList();
                 break;
             case "manner":
-                Query query2 = em.createNativeQuery("SELECT p.* FROM post AS p "
+                Query query2 = em.createNativeQuery("SELECT id, content, created_at, is_letter, latitude, location, longitude,"
+                                + "modified_at, personnel, place, time, title, user_id , "
+                                + "ROUND(ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude))) AS 'distance' "
+                                + "FROM post AS p "
                                 + "INNER JOIN (SELECT AVG(u.manner_temp) AS avg_temp, i.post_id AS id FROM invited_users AS i "
                                 + "INNER JOIN userinfo AS u "
                                 + "ON i.user_id = u.id "
@@ -386,28 +399,27 @@ public class PostService {
             }
             chatMessageJpaRepository.deleteByRoomId(String.valueOf(post.getId()));
             chatRoomJpaRepository.deleteByRoomId(String.valueOf(postId));
-//            LocalDateTime createdAt = LocalDateTime.now();
-//            String createdAtString = createdAt.format(DateTimeFormatter.ofPattern("dd,MM,yyyy,HH,mm,ss", Locale.KOREA));
-//            ChatMessageDto chatMessageDto = new ChatMessageDto();
-//            chatMessageDto.setType(ChatMessage.MessageType.QUIT);
-//            chatMessageDto.setQuitOwner(true);
-//            chatMessageDto.setRoomId(String.valueOf(postId));
-//            chatMessageDto.setUserId(userId);
-//            chatMessageDto.setSender(user.getNickName());
-//            chatMessageDto.setProfileUrl(user.getProfileUrl());
-//            chatMessageDto.setCreatedAt(createdAtString);
-//            chatMessageDto.setMessage("[알림] " + "(방장) " + chatMessageDto.getSender() + "님이 나가셨습니다. " +
-//                    "더 이상 대화를 할 수 없으며 채팅방을 나가면 다시 입장할 수 없습니다.");
-//            redisPublisher.publish(ChatRoomRepository.getTopic(String.valueOf(postId)), chatMessageDto);
             return new ResponseEntity<>(new FinalResponseDto<>(true, "게시글 삭제 성공", user.getIsOwner()), HttpStatus.OK);
         }
     }
 
     // 찜한 게시글 전체 조회
     @Transactional(readOnly = true)
-    public ResponseEntity<FinalResponseDto<?>> getLikedPosts(Long userId) {
+    public ResponseEntity<FinalResponseDto<?>> getLikedPosts(Long userId,Double latitude, Double longitude) throws ParseException {
         User user = checkUser(userId);
-        List<PostMapping> posts = likeRepository.findAllByUserIdAndIsLikeTrueOrderByPost_Id(userId);
+
+        Query query = em.createNativeQuery(
+                        "SELECT id, content, created_at, is_letter, latitude, location, longitude,"
+                                + "modified_at, personnel, place, time, title, user_id , "
+                                + "ROUND(ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude))) AS 'distance' "
+                                + "FROM post AS p "
+                                + "WHERE p.id in (SELECT l.post_id FROM liketable AS l WHERE user_id = " + userId + " "
+                                + "AND is_like = true )"
+                                + "ORDER BY id", Post.class)
+                .setParameter("myPoint", mapSearchService.makePoint(longitude, latitude));
+        List<Post> posts = query.getResultList();
+
+
         List<PostResponseDto> postList = postSearchService.searchLikePostList(posts, userId);
         return new ResponseEntity<>(new FinalResponseDto<>(true, "좋아요한 게시글 조회 성공", postList, user.getIsOwner()), HttpStatus.OK);
     }
@@ -437,7 +449,10 @@ public class PostService {
         List<Post> posts = new ArrayList<>();
         switch (status) {
             case "endTime":
-                Query query = em.createNativeQuery("SELECT * FROM post AS p "
+                Query query = em.createNativeQuery("SELECT id, content, created_at, is_letter, latitude, location, longitude,"
+                                + "modified_at, personnel, place, time, title, user_id , "
+                                + "ROUND(ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude))) AS 'distance' "
+                                + "FROM post AS p "
                                 + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) < :distance "
                                 + "AND p.time > (SELECT post.time FROM post WHERE id = :lastId) "
                                 + "ORDER BY p.time "
@@ -449,7 +464,10 @@ public class PostService {
                 posts = query.getResultList();
                 break;
             case "realTime":
-                Query query1 = em.createNativeQuery("SELECT * FROM post AS p "
+                Query query1 = em.createNativeQuery("SELECT id, content, created_at, is_letter, latitude, location, longitude,"
+                                + "modified_at, personnel, place, time, title, user_id , "
+                                + "ROUND(ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude))) AS 'distance' "
+                                + "FROM post AS p "
                                 + "WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude)) < :distance "
                                 + "AND p.time < (SELECT post.time FROM post WHERE id = :lastId) "
                                 + "ORDER BY p.time desc "
@@ -461,7 +479,10 @@ public class PostService {
                 posts = query1.getResultList();
                 break;
             case "manner":
-                Query query2 = em.createNativeQuery("SELECT p.* FROM post AS p "
+                Query query2 = em.createNativeQuery("SELECT id, content, created_at, is_letter, latitude, location, longitude,"
+                                + "modified_at, personnel, place, time, title, user_id , "
+                                + "ROUND(ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude))) AS 'distance' "
+                                + "FROM post AS p "
                                 + "INNER JOIN (SELECT AVG(u.manner_temp) AS avg_temp, i.post_id AS id FROM invited_users AS i "
                                 + "INNER JOIN userinfo AS u "
                                 + "ON i.user_id = u.id "
@@ -480,19 +501,8 @@ public class PostService {
                         .setParameter("pageSize", size);
                 posts = query2.getResultList();
                 break;
-            /*
-             * SELECT *, AVG(mannser_temp) AS avg_temp
-             * FROM post, (
-             *      SELECT *
-             *      FROM invited_users AS i
-             *      JOIN userinfo AS u
-             *      ON i.user_id = u.id
-             * WHERE ST_DISTANCE_SPHERE(:myPoint, POINT(longitude, latitude)) < :distance
-             * AND p.time > :convertedDate1
-             * GROUP BY post_id
-             * ORDER BY avg_temp DESC
-             */
         }
+
         if (posts.size() < 1) {
             throw new PostApiException("게시글이 없습니다");
         }
