@@ -9,7 +9,6 @@ public class ChatRoomService {
     /*
     * destination 에서 roomid 가져오기
     */
-    //"put/chat/message/20"
     public String getRoomId(String destination) {
         int lastIndex = destination.lastIndexOf('/');
         if (lastIndex != -1) {

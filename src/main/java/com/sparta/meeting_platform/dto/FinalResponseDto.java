@@ -2,6 +2,7 @@ package com.sparta.meeting_platform.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.sparta.meeting_platform.chat.videoChat.VideoChatResponseDto;
+import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.PostDto.PostDetailsResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostResponseDto;
 import com.sparta.meeting_platform.dto.UserDto.MyPageDto;
@@ -33,8 +34,11 @@ public class FinalResponseDto<T> {
     private Long postId;
     private List<PostResponseDto> postListRealTime;
     private List<PostResponseDto> postListEndTime;
+    private List<PostResponseDto> postListManner;
     private PostDetailsResponseDto postDetailsResponseDto;
     private VideoChatResponseDto videoChatResponseDto;
+    private Boolean checkedOnboard;
+    private Boolean agreedLbs;
 
 
     public FinalResponseDto(boolean response, String message, Long postId, List<String> postUrls) {
@@ -45,13 +49,13 @@ public class FinalResponseDto<T> {
     }
 
     public FinalResponseDto(boolean response, String message, Boolean isOwner,
-                            List<PostResponseDto> postListRealTime, List<PostResponseDto> postListEndTime){
+                            List<PostResponseDto> postListRealTime, List<PostResponseDto> postListEndTime, List<PostResponseDto> postListManner){
         this.response = response;
         this.message = message;
         this.isOwner = isOwner;
         this.postListRealTime = postListRealTime;
         this.postListEndTime = postListEndTime;
-
+        this.postListManner = postListManner;
     }
 
     public FinalResponseDto(boolean response, String message, Long postId, Long userId) {
@@ -96,12 +100,14 @@ public class FinalResponseDto<T> {
         this.isOwner = isOwner;
     }
 
-    public FinalResponseDto(boolean response, String message, String nickname, int mannerTemp, Long userId) {
+    public FinalResponseDto(boolean response, String message, User user) {
         this.response = response;
         this.message = message;
-        this.nickName = nickname;
-        this.mannerTemp = mannerTemp;
-        this.userId = userId;
+        this.nickName = user.getNickName();
+        this.mannerTemp = user.getMannerTemp();
+        this.userId = user.getId();
+        this.checkedOnboard = user.getCheckedOnboard();
+        this.agreedLbs = user.getAgreedLbs();
     }
 
     public FinalResponseDto(boolean response, String message, ProfileResponseDto profileResponseDto, boolean isOwner) {

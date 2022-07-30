@@ -1,16 +1,15 @@
-package com.sparta.meeting_platform.util;
+package com.sparta.meeting_platform.dto.MapDto;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
-public class Location {
-
+public class SearchMapDto {
     private Double latitude;
     private Double longitude;
 
-    public Location(Double latitude, Double longitude) {
+    public SearchMapDto( Double longitude,Double latitude) {
         this.latitude = latitude;
         this.longitude = longitude;
+
     }
 }

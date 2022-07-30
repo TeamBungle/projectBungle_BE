@@ -19,7 +19,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -32,7 +31,7 @@ public class SocialNaverService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final  UserRoleCheckService userRoleCheckService;
+    private final UserRoleCheckService userRoleCheckService;
     private final UserService userService;
 
     @Transactional
@@ -45,18 +44,18 @@ public class SocialNaverService {
             String encodedPassword = passwordEncoder.encode(password);
 
             // 재가입 방지
-            int mannerTemp = userRoleCheckService.userResignCheck(naverUser.getEmail().substring(1,naverUser.getEmail().length()-1));
+            int mannerTemp = userRoleCheckService.userResignCheck(naverUser.getEmail().substring(1, naverUser.getEmail().length() - 1));
             // 네이버 ID로 유저 정보 DB 에서 조회
-            User user = userRepository.findByUsername(naverUser.getEmail().substring(1,naverUser.getEmail().length()-1)).orElse(null);
+            User user = userRepository.findByUsername(naverUser.getEmail().substring(1, naverUser.getEmail().length() - 1)).orElse(null);
 
             // 없으면 회원가입
             if (user == null) {
                 user = User.builder()
-                        .username(naverUser.getEmail().substring(1,naverUser.getEmail().length()-1))
+                        .username(naverUser.getEmail().substring(1, naverUser.getEmail().length() - 1))
                         .password(encodedPassword)
-                        .nickName(naverUser.getNickName().substring(1,naverUser.getNickName().length()-1))
-                        .profileUrl(naverUser.getProfileUrl().substring(1,naverUser.getProfileUrl().length()-1))
-                        .naverId(naverUser.getNaverId().substring(1,naverUser.getNaverId().length()-1))
+                        .nickName(naverUser.getNickName().substring(1, naverUser.getNickName().length() - 1))
+                        .profileUrl(naverUser.getProfileUrl().substring(1, naverUser.getProfileUrl().length() - 1))
+                        .naverId(naverUser.getNaverId().substring(1, naverUser.getNaverId().length() - 1))
                         .mannerTemp(mannerTemp)
                         .isOwner(false)
                         .role(UserRoleEnum.USER)
@@ -77,7 +76,7 @@ public class SocialNaverService {
             userService.accessAndRefreshTokenProcess(user.getUsername());
 
             return new ResponseEntity<>(new FinalResponseDto<>
-                    (true, "로그인 성공!!",user.getNickName(), user.getMannerTemp(),user.getId()), HttpStatus.OK);
+                    (true, "로그인 성공!!", user), HttpStatus.OK);
         } catch (IOException e) {
             return new ResponseEntity<>(new FinalResponseDto<>
                     (false, "로그인 실패"), HttpStatus.OK);
@@ -102,7 +101,7 @@ public class SocialNaverService {
             String sb = "grant_type=authorization_code" +  // TODO grant_type 입력
                     "&client_id=fNINb0JLOoWHKPO8p2HO" + // TODO client-id 입력
                     "&client_secret=5PzjffB3yr" + // TODO client_secret 입력
-                    "&redirect_uri=https://localhost:3000/oauth" + // TODO 인가코드 받은 redirect_uri 입력
+                    "&redirect_uri=https://bungle.life/oauth" + // TODO 인가코드 받은 redirect_uri 입력
                     "&code=" + code +
                     "&state=" + state;
             bw.write(sb);

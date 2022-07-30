@@ -15,6 +15,4 @@ public class ChatRoomResponseDto {
     private boolean isLetter;
     private String postTime;
     private Long postId;
-    private boolean isOwner;
-
 }

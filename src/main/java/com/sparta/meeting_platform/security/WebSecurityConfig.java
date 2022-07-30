@@ -55,7 +55,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
         http.authorizeRequests()
                 // 회원 관리 처리 API 전부를 login 없이 허용
-                .antMatchers("/user/**").permitAll()
+                .antMatchers("/user/duplicate/username").permitAll()
+                .antMatchers("/user/signup").permitAll()
+                .antMatchers("/user/login").permitAll()
+                .antMatchers("/user/refresh").permitAll()
+                .antMatchers("/user/confirmEmail").permitAll()
+                .antMatchers("/user/signin/**").permitAll()
                 .antMatchers("/wss/chat/**").permitAll()
                 .anyRequest().authenticated()
                 // 그 외 어떤 요청이든 '인증'
@@ -72,6 +77,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         configuration.addAllowedOriginPattern("https://authex-d42a5.web.app/");
         configuration.addAllowedOriginPattern("https://auth-6eb37.web.app");
         configuration.addAllowedOriginPattern("https://test-react-basic.web.app");
+        configuration.addAllowedOriginPattern("https://authex-d42a5.web.app");
+        configuration.addAllowedOriginPattern("https://bungle.life");
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
         configuration.addExposedHeader("Authorization");

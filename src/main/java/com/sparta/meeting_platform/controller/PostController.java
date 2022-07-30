@@ -1,5 +1,6 @@
 package com.sparta.meeting_platform.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sparta.meeting_platform.domain.User;
 import com.sparta.meeting_platform.dto.FinalResponseDto;
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
@@ -8,13 +9,13 @@ import com.sparta.meeting_platform.service.LikeService;
 import com.sparta.meeting_platform.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.joda.time.LocalDateTime;
+import org.locationtech.jts.io.ParseException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
 import javax.validation.Valid;
-import java.text.ParseException;
 import java.util.List;
 
 @Slf4j
@@ -35,7 +36,7 @@ public class PostController {
     @GetMapping("")
     public ResponseEntity<FinalResponseDto<?>> getPosts(@RequestParam(value = "latitude") Double latitude,
                                                         @RequestParam(value = "longitude") Double longitude,
-                                                        @AuthenticationPrincipal UserDetailsImpl userDetails){
+                                                        @AuthenticationPrincipal UserDetailsImpl userDetails) throws org.locationtech.jts.io.ParseException {
         Long userId = userDetails.getUser().getId();
         return postService.getPosts(userId,latitude,longitude);
     }
@@ -46,9 +47,22 @@ public class PostController {
             @RequestParam(value = "categories",required = false, defaultValue = "") List<String> categories,
             @RequestParam(value = "latitude") Double latitude,
             @RequestParam(value = "longitude") Double longitude,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws org.locationtech.jts.io.ParseException {
         Long userId = getUserId(userDetails);
         return postService.getPostsByCategories(userId,categories,latitude,longitude);
+    }
+
+    //카테고리별 게시글 무한 스크롤
+    @GetMapping("/categories/{lastId}")
+    public ResponseEntity<FinalResponseDto<?>> getCategoriesInfiniteScroll(
+            @PathVariable Long lastId,
+            @RequestParam(value = "categories",required = false, defaultValue = "") List<String> categories,
+            @RequestParam(value = "latitude") Double latitude,
+            @RequestParam(value = "longitude") Double longitude,
+            @RequestParam(value = "size") int size,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws org.locationtech.jts.io.ParseException {
+        Long userId = getUserId(userDetails);
+        return postService.getCategoriesInfiniteScroll(lastId, categories, latitude, longitude, userId, size);
     }
 
     //태그별 게시글 조회
@@ -57,9 +71,22 @@ public class PostController {
             @RequestParam(value = "tags",required = false,defaultValue = "") List<String> tags,
             @RequestParam(value = "latitude") Double latitude,
             @RequestParam(value = "longitude") Double longitude,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws org.locationtech.jts.io.ParseException {
         Long userId = getUserId(userDetails);
         return postService.getPostsByTags(userId,tags,latitude,longitude);
+    }
+
+    //태그별 게시글 무한 스크롤
+    @GetMapping("/tags/{lastId}")
+    public ResponseEntity<FinalResponseDto<?>> getTagsInfiniteScroll(
+            @PathVariable Long lastId,
+            @RequestParam(value = "tags",required = false, defaultValue = "") List<String> tags,
+            @RequestParam(value = "latitude") Double latitude,
+            @RequestParam(value = "longitude") Double longitude,
+            @RequestParam(value = "size") int size,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws org.locationtech.jts.io.ParseException {
+        Long userId = getUserId(userDetails);
+        return postService.gettagsInfiniteScroll(lastId, tags, latitude, longitude, userId, size);
     }
 
     //게시글 더보기 조회
@@ -67,7 +94,7 @@ public class PostController {
     public ResponseEntity<FinalResponseDto<?>> morePostList(@RequestParam(value = "latitude") Double latitude,
                                                             @RequestParam(value = "longitude") Double longitude,
                                                             @RequestParam(value = "status") String status,
-                                                            @AuthenticationPrincipal UserDetailsImpl userDetails){
+                                                            @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
         Long userId = getUserId(userDetails);
         return postService.morePostList(userId,status,latitude,longitude);
     }
@@ -80,7 +107,7 @@ public class PostController {
             @RequestParam(value = "longitude") Double longitude,
             @RequestParam(value = "status") String status,
             @RequestParam(value = "size") int size,
-            @AuthenticationPrincipal UserDetailsImpl userDetails){
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
         Long userId = getUserId(userDetails);
         return postService.morePostListInfiniteScroll(lastId, userId,status,latitude,longitude,size);
     }
@@ -128,7 +155,7 @@ public class PostController {
     @DeleteMapping("/{postid}")
     public ResponseEntity<FinalResponseDto<?>> deletePost(
             @PathVariable Long postid,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) throws JsonProcessingException {
         Long userId = getUserId(userDetails);
         return postService.deletePost(postid, userId);
     }
@@ -145,8 +172,10 @@ public class PostController {
 
     // 찜한 게시글 전체 조회
     @GetMapping("/like")
-    public ResponseEntity<FinalResponseDto<?>> getLiedPosts(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return postService.getLikedPosts(getUserId(userDetails));
+    public ResponseEntity<FinalResponseDto<?>> getLiedPosts(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                                            @RequestParam(value = "latitude") Double latitude,
+                                                            @RequestParam(value = "longitude") Double longitude) throws ParseException {
+        return postService.getLikedPosts(getUserId(userDetails),latitude,longitude);
     }
 
     //나의 번개 페이지 조회
@@ -161,14 +190,14 @@ public class PostController {
     }
 
 
-    //게시글 검색(제목에포함된단어로)
-    @GetMapping("/search")
-    public ResponseEntity<FinalResponseDto<?>> getSearch(@RequestParam(value = "keyword") String keyword,
-                                                         @RequestParam(value = "latitude") Double latitude,
-                                                         @RequestParam(value = "longitude") Double longitude,
-                                                         @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        Long userId = getUserId(userDetails);
-        return postService.getSearch(keyword,userId,longitude,latitude);
-    }
+//    //게시글 검색(제목에포함된단어로)
+//    @GetMapping("/search")
+//    public ResponseEntity<FinalResponseDto<?>> getSearch(@RequestParam(value = "keyword") String keyword,
+//                                                         @RequestParam(value = "latitude") Double latitude,
+//                                                         @RequestParam(value = "longitude") Double longitude,
+//                                                         @AuthenticationPrincipal UserDetailsImpl userDetails) throws ParseException {
+//        Long userId = getUserId(userDetails);
+//        return postService.getSearch(keyword,userId,longitude,latitude);
+//    }
 
 }

@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.Optional;
 
 @Service
@@ -21,6 +22,7 @@ public class LikeService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
 
+    //찜하기 및 취소하기
     @Transactional
     public ResponseEntity<FinalResponseDto<?>> setLike(Long postId, Long userId) {
         // Like 테이블에서 사용자가 해당 post를 찜한 여부 확인
@@ -32,17 +34,17 @@ public class LikeService {
             // 처음 좋아요를 누르는 것이라면 생성하기위한 Post, User 가져오기기
             Post post = postRepository.findById(postId).orElse(null);
             User user = userRepository.findById(userId).orElse(null);
-            if(post == null || user == null){
+            if (post == null || user == null) {
                 return new ResponseEntity<>(new FinalResponseDto<>(false, "찜 할수 없습니다."), HttpStatus.OK);
             }
             Like likes = new Like(post, user);
             likeRepository.save(likes);
-            return  new ResponseEntity<>(new FinalResponseDto<>(true, "찜하기 성공"), HttpStatus.OK);
+            return new ResponseEntity<>(new FinalResponseDto<>(true, "찜하기 성공"), HttpStatus.OK);
         }
-        if(like.get().getIsLike() == true){
-            return  new ResponseEntity<>(new FinalResponseDto<>(true, "찜하기 성공"), HttpStatus.OK);
-        }else {
-            return  new ResponseEntity<>(new FinalResponseDto<>(true, "찜하기 취소"), HttpStatus.OK);
+        if (like.get().getIsLike() == true) {
+            return new ResponseEntity<>(new FinalResponseDto<>(true, "찜하기 성공"), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(new FinalResponseDto<>(true, "찜하기 취소"), HttpStatus.OK);
         }
     }
 }

@@ -10,7 +10,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class UserDto {
-
     private String username;
     private String password;
     private String nickName;
@@ -22,6 +21,7 @@ public class UserDto {
     private Boolean isOwner = false;
     private String intro;
     private int bungCount;
+
     public UserDto(User user) {
         this.username = user.getUsername();
         this.password = user.getPassword();

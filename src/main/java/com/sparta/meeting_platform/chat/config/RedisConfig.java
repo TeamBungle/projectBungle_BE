@@ -13,8 +13,8 @@ import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 /*
-* Redis 관련 설정들을 모아놓은 class
-* */
+ * Redis 관련 설정들을 모아놓은 class
+ * */
 @Configuration
 public class RedisConfig {
 
@@ -28,7 +28,7 @@ public class RedisConfig {
     private int port;
 
 
-     /*
+    /*
      *  redisConnectionFactory 를 통해 외부 redis 를 연결한다.
      *  Spring 에서 Redis 접근하는 방식은 2가지의 프레임워크가 있다(Lettuce 와 Jedis)
      *  Lettuce 별도의 설정없이 사용 할 수 있지만, Jedis 사용하려면 의존성을 추가 해야만 한다.
@@ -43,10 +43,10 @@ public class RedisConfig {
     }
 
     /*
-    * redisTemplate
-    * Spring 에서 redis commend 들을 사용 할 수 있게 도와준다 (추상화 시켜준다)
-    * RedisTemplate에는 serializer를 설정하여 데이터를 넘겨준다.
-   */
+     * redisTemplate
+     * Spring 에서 redis commend 들을 사용 할 수 있게 도와준다 (추상화 시켜준다)
+     * RedisTemplate에는 serializer를 설정하여 데이터를 넘겨준다.
+     */
     @Bean
     public RedisTemplate<String, Object> redisTemplate() {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
@@ -60,10 +60,11 @@ public class RedisConfig {
         redisTemplate.setConnectionFactory(redisConnectionFactory());
         return redisTemplate;
     }
+
     /*
-    * String RedisTemplate 설정
-    * 위에 선언한 RedisTemplate 보다 좀더 문자열에 특화된 Serialize 제공한다
-    */
+     * String RedisTemplate 설정
+     * 위에 선언한 RedisTemplate 보다 좀더 문자열에 특화된 Serialize 제공한다
+     */
     @Bean
     public StringRedisTemplate stringRedisTemplate() {
         final StringRedisTemplate stringRedisTemplate = new StringRedisTemplate();

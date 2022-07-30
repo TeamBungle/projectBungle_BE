@@ -1,7 +1,6 @@
 package com.sparta.meeting_platform.domain;
 
 import com.sparta.meeting_platform.dto.PostDto.PostRequestDto;
-import com.sparta.meeting_platform.dto.PostTestDto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -71,6 +70,9 @@ public class Post {
 
     @Column
     private Double longitude;
+
+    @Column
+    private Long distance;
 
     public Post(User user, PostRequestDto requestDto,Double longitude,Double latitude, Point location){
         this.user = user;

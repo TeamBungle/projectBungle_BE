@@ -15,10 +15,8 @@ public class PostRequestDto {
 
     private String title;
     private String time;
-
-    @Pattern(regexp = "^.{1,100}$", message = "모임내용은 100자 이내에 작성해 주세요")
+//    @Pattern(regexp = "^.{0,500}$", message = "모임내용은 500자 이내에 작성해 주세요")
     private String content;
-
     private int personnel;
     private String place;
     private List<String> tags;

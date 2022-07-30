@@ -24,12 +24,10 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class SocialKakaoService {
 
@@ -56,7 +54,7 @@ public class SocialKakaoService {
         User kakaoUser = signupKakaoUser(kakaoUserInfo);
 
         //4. 강제 로그인 처리
-        Authentication authentication = forceLoginKakaoUser(kakaoUser);
+        forceLoginKakaoUser(kakaoUser);
 
         // User 권한 확인
         userRoleCheckService.userRoleCheck(kakaoUser);
@@ -64,12 +62,10 @@ public class SocialKakaoService {
         //  5. response Header에 JWT 토큰 추가
         userService.accessAndRefreshTokenProcess(kakaoUser.getUsername());
 
-        String nickname = kakaoUser.getNickName();
-        int mannerTemp = kakaoUser.getMannerTemp();
-
         return new ResponseEntity<>(new FinalResponseDto<>
-                (true, "로그인 성공", nickname, mannerTemp,kakaoUser.getId() ), HttpStatus.OK);
+                (true, "로그인 성공",kakaoUser), HttpStatus.OK);
     }
+
     //header 에 Content-type 지정
     //1번
     public String getAccessToken(String code) throws JsonProcessingException {
@@ -98,11 +94,10 @@ public class SocialKakaoService {
         String responseBody = response.getBody();
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(responseBody);
-        log.info("인가코드로 액세스 토큰 요청 {}", jsonNode.get("access_token").asText());
         return jsonNode.get("access_token").asText();
     }
 
-        //2번
+    //2번
     public KakaoUserInfoDto getKakaoUserInfo(String accessToken) throws JsonProcessingException {
         // HTTP Header 생성
         HttpHeaders headers = new HttpHeaders();
@@ -129,7 +124,6 @@ public class SocialKakaoService {
                 .get("email").asText();
         String profileUrl = jsonNode.get("properties")
                 .get("profile_image").asText();
-        log.info("카카오 사용자 정보 id: {},{},{},{}", id, nickname, email, profileUrl);
         return new KakaoUserInfoDto(id, nickname, email, profileUrl);
     }
 
@@ -162,11 +156,10 @@ public class SocialKakaoService {
                     .role(UserRoleEnum.USER)
                     .build();
             userRepository.save(kakaoUser);
-            log.info("카카오 아이디로 회원가입 {}", kakaoUser);
+
 
             return kakaoUser;
         }
-        log.info("카카오 아이디가 있는 경우 {}", findKakao);
         return findKakao;
     }
 
@@ -176,8 +169,6 @@ public class SocialKakaoService {
         Authentication authentication =
                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        log.info("강제 로그인 {}", authentication);
         return authentication;
     }
-
 }
