@@ -2,7 +2,7 @@ version: 0.0
 os: linux
 files:
   - source: /
-    destination: /home/ubuntu/meeting/ # 프로젝트 이름
+    destination: /home/ubuntu/bungle/ # 프로젝트 이름
     overwrite: yes
 file_exists_behavior: OVERWRITE
 
