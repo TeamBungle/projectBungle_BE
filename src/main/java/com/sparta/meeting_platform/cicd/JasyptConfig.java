@@ -1,4 +1,4 @@
-package com.sparta.meeting_platform.chat.config;
+package com.sparta.meeting_platform.cicd;
 
 import org.jasypt.encryption.StringEncryptor;
 import org.jasypt.encryption.pbe.PooledPBEStringEncryptor;
