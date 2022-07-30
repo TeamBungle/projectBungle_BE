@@ -16,8 +16,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import javax.servlet.Filter;
-
 @RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity // 스프링 Security 지원을 가능하게 함
@@ -60,6 +58,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/user/login").permitAll()
                 .antMatchers("/user/refresh").permitAll()
                 .antMatchers("/user/signin/**").permitAll()
+                .antMatchers("GET,/health").permitAll()
                 .antMatchers("/wss/chat/**").permitAll()
                 .anyRequest().authenticated()
                 // 그 외 어떤 요청이든 '인증'
