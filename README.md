@@ -63,120 +63,6 @@
         </div>
     </details>
     <details>
-        <summary>모임전 필요한 정보 공유를 위한 채팅 서비스를 제공</summary>
-        <ul>
-            <li>문제 인지
-                <div>로그인 하지 않는 사용자가 URL을 직접 입력해서 다른 페이지로 접근할 수 있는 상황이 발생</div>
-            </li>
-            <li>선택지
-                <div>1. 실시간 채팅 라이브러리( ex> PeerJS )<br>2. Stomp, SockJS, Redis pub/sub</div> 
-            </li>
-            <li>핵심 기술을 선택한 이유 및 근거
-                <div>
-                [2번 선택]<br>
-                - Websocket에 대한 전반적인 이해도가 부족한 상태에서, 라이브러리를 통해 구현하려고 하다보니 개발이 잘 진행 되지 않음<br>
-                - 채팅 서버가 여러개로 나뉠경우, Spring 에서 제공하는 내장 broker로는 서로 다른 서버에 요청을 보낸 사용자끼리 채팅이 불가 하여 Reids pub/sub 방식을 사용
-                </div> 
-            </li>
-        </ul>
-        <div markedown="1">
-        https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
-        </div>
-    </details>
-     <details>
-        <summary>코드 병합할때 시큐리티 적용시 Websocket 이 정상연결 되지 않는 문제</summary>
-        <div style=""> 1. 시큐리티 적용후 프론트에서 jwt token을 헤더에 담아서 보내서 채팅 연결 시도<div>
-            <div> -> 401 에러 (이때부터 Reids pub/sub 적용함)
-            <br>  -> websocket은 custom header를 적용 시킬 수 없는 부분 확인 (→ 관련 자료 https://velog.io/@tlatldms/Socket-인증-with-API-Gateway-Refresh-JWT)</div>
-        <div style=""> 2. 시큐리티를 패스 시켜서 하려고 시도하였으나 실패<div>
-        <div style=""> 3. stomp handler를 만들어서 websocket config에 intercepter 적용하였으나 실패 <div>
-            <div> -> security 로직 문제 인것으로 판단
-            <br>  -> token을 header에 넣어서 보냈으나, 받아지질 않으니 유효성 검사가 계속 실패하여 임시로 token을 만드는 로직을 구현해서 test를 진행
-            <br>  -> 연결, 구독, 메세지 보내는 순서대로 테스트 - > 성공</div> 
-        <div style="">정리) 시큐리티에서 토큰을 받아오지 못하는가<div>
-            <div> 1. websocket 은 custom header가 안됨
-            <br>  2. 따라서 security config에서 endpoint를 pass 시켜줘야만 한다.(permitAll)
-            <br>  3. 그래서 pass를 시켜 줬지만 현재 사용하고 있는 security 로직에서는 와일드 카드가 적용이 안되서 security를 교체 함
-            <br>   sockjs에서 요청을 서버쪽으로 보낼때, 현재 정해놓은 endpoint (”ws/chat”)뒤에다가 여러가지 url을 붙여서 요청을 보내오는데, 우리가 만든 security에서는 (”ws/chat/**)이런식으로 와일드카드가 적용이 안되어서 에러가 발생했었다. </div>
-        <div markedown="1">
-            https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
-        </div>
-    </details>
-    <details>
-       <summary>Websocket 통신시 직렬화/역직렬화 문제</summary>
-       <div style=""> 1. 웹소켓은 객체를 Serialization 해서 보내야 한다 ?<div>
-           <div> -> spring에서 http 통신을 할때는 자동으로 jacson2HttpMessageConverter 내부에서 objectmapper를 이용해 역 직렬화 하여,
-           <br>객체 형태로 만들어 줬으나 Websocket은 따로 역직렬화 해야하는점 확인 </div>
-       <div style=""> 2. connect/sub 시에 sessionId를 받아오지 못하는 현상<div>
-       <div>세션 아이디를 if문 밖에서 초기화 시켜야 했는데, Stirng session Id = “”; 형식으로 설정하여 진행되지 않음<div>
-       <div style=""> 3. redis 캐시 사용시 Localdatetime , date serialize 문제 <div>
-           <div> 메세지를 reids에 저장하고 return 시킬때 메세지가 작성된 시간을 저장하려고 LocaldateTime 을 사용하였는데, serialize 오류 발생
-           <br>  -> 확인해 보니 redis 캐시에서는 localdatetime과 date << 이 두개의 type을 지원하지 않아, string으로 serialize해서 보내야 했음
-           <br>  -> db에 redis에 있는 데이터가 몇개이상 쌓일때마다 저장을 하려고하니 오류 
-           <br>  -> date type을 string으로 변환하여 해결 </div> 
-       <div style="">해결방법<div>
-           <div> Object mapper = new ObjectMapper();
-           <br>List<타입> list = mapper.convertValue(returnlist, new TypeReference<List<타입>>(){});</div>
-       <div markedown="1">
-           https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
-       </div>
-   </details>
-   <details>
-       <summary>방장은 채팅방에 바로 입장 했지만 유저는 채팅 방에 정상 진입 하지 않는 문제 </summary>
-       <div style=""> 기존에 게시물 Id 랑 room Id 를 같은 값을 사용하지만 TopicChannel 에 Class에서 param을 String으로 받기 때문에 
-           <br> 게시물 Id 는 Long 으로 사용하지만 roomId 는 String 으로 형변환 하여 사용했었음 <div>
-       <div style=""> 채팅 방에 진입할때 게시물 내에서 게시물 Id를 사용하여 입장을 시도 하였으나 방입장이 정상적으로 진행되지 않음 <div>
-       <div>> 확인 결과 Client에서 보내주는 값이 Long 값으로 와서 채팅방입장이 정상적으로 진행되지 않음 
-           <br> -> room Id를 형변환 하지 않고 Long 형태로 사용 할 수 있는지 방법 확인 
-           <br> -> 확인결과 TopicChannel을 구현된 그대로 사용하는 이상 불가능한 점 확인 
-           <br> -> Client에서 값을 String으로 변환하여 보내줘서 문제 해결 <div>    
-       <div markedown="1">
-           https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
-       </div>
-   </details>    
-    <details>
-        <summary>채팅 메세지 저장 및 채팅방 입장시 이전 메세지 출력 방식</summary>
-        <ul>
-            <li>문제 인지
-                <div>로그인 하지 않는 사용자가 URL을 직접 입력해서 다른 페이지로 접근할 수 있는 상황이 발생</div>
-            </li>
-            <li>선택지
-                <div>1. Mysql 사용<br>
-                2. Redis Cache사용</div> 
-            </li>
-            <li>핵심 기술을 선택한 이유 및 근거
-                <div>
-                [1, 2번 선택]<br>
-                - 매번 채팅방에 입장 할 때마다 DB에서 조회해오는 방식을 사용하면 성능이 떨어질 것으로 예상하여, 메세지를 저장할때는 Reids와 DB에 같이 저장하고, 메세지를 조회해올경우에는 Redis Cache를 사용하여 메세지를 불러오며, Reids에 저장되어있는 데이터가 손실 되었을 경우, DB에서 조회하도록 로직을 구성.
-                </div> 
-            </li>
-        </ul>
-        <div markedown="1">
-        https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
-        </div>
-    </details>
-    <details>
-        <summary>읽지 않은 메세지에 대한 알림기능 구현</summary>
-        <ul>
-            <li>문제 인지
-                <div>로그인 하지 않는 사용자가 URL을 직접 입력해서 다른 페이지로 접근할 수 있는 상황이 발생</div>
-            </li>
-            <li>선택지
-                <div>1. Websocket을 사용하여 실시간 알림<br>2. SSE를 사용하여 실시간 알림<br>3. http를 사용하여 알림</div> 
-            </li>
-            <li>핵심 기술을 선택한 이유 및 근거
-                <div>
-                [3번 선택]<br>
-                - 프로젝트 마무리 시간을 고려하여, 시간이 충분히 여유롭지 않아 제일 익숙한 방식인 http를 이용하여 알림을 구현하기로 함<br>
-                - front에서 5초마다 알림을 조회하는 요청을 보내고 그에대한 응답으로 사용자가 채팅방에서 나간 시간을 저장하여, 그시간 이후로 그방에서 보내진 메세지들을 return시켜줌.
-                </div> 
-            </li>
-        </ul>
-        <div markedown="1">
-        https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
-        </div>
-    </details>
-    <details>
         <summary>회원 가입시 사용자 인증</summary>
         <ul>
             <li>문제 인지
@@ -216,9 +102,81 @@
         <div markedown="1"> https://github.com/TeamBungle/projectBungle_BE/blob/ba1372e9c4d25307f66320c42b1f60a41544d8bd/src/main/java/com/sparta/meeting_platform/service/UserService.java#L188-L222
         </div>
     </details>
+    <details>
+        <summary>읽지 않은 메세지에 대한 알림기능 구현</summary>
+        <ul>
+            <li>문제 인지
+                <div>로그인 하지 않는 사용자가 URL을 직접 입력해서 다른 페이지로 접근할 수 있는 상황이 발생</div>
+            </li>
+            <li>선택지
+                <div>1. Websocket을 사용하여 실시간 알림<br>2. SSE를 사용하여 실시간 알림<br>3. http를 사용하여 알림</div> 
+            </li>
+            <li>핵심 기술을 선택한 이유 및 근거
+                <div>
+                [3번 선택]<br>
+                - 프로젝트 마무리 시간을 고려하여, 시간이 충분히 여유롭지 않아 제일 익숙한 방식인 http를 이용하여 알림을 구현하기로 함<br>
+                - front에서 5초마다 알림을 조회하는 요청을 보내고 그에대한 응답으로 사용자가 채팅방에서 나간 시간을 저장하여, 그시간 이후로 그방에서 보내진 메세지들을 return시켜줌.
+                </div> 
+            </li>
+        </ul>
+        <div markedown="1">
+        https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
+        </div>
+    </details>
+    <details>
+        <summary>Spring Security를 적용시 발생한 Websocket 연결 문제</summary>
+        <ul>
+            <li>문제 인지
+                <div>Spring Security를 적용하지 않은 상태에서 클라이언트와 서버간의 연결에 문제가 없이 정상적으로 작동 하였으나, Security를 적용하고 연결을 시도하니 401 에러가 발생했다.</div>
+            </li>
+            <li>핵심 기술을 선택한 이유 및 근거
+                <div>
+             <div markdown=“1”>
+### 1. Spring Security를 적용하자 Websocket 연결이 정상적으로 이루어 지지 않았다.
+- 문제 상황 : Spring Security를 적용하지 않은 상태에서 클라이언트와 서버간의 연결에 문제가 없이 정상적으로 작동 하였으나, Security를 적용하고 연결을 시도하니 401 에러가 발생했다.
+### 1-1 WebSocket은 Custom Header 적용이 안되는것으로 확인됬다.
+- 관련자료 : https://velog.io/@tlatldms/Socket-%EC%9D%B8%EC%A6%9D-with-API-Gateway-Refresh-JWT
+### 1-2 Hand Shake하는 과정을 Security에서  Pass를 걸어 시도를 하였다
+- 결과는 실패 , 이때까지는 이유를 알 수 가 없었다
+### 1-3 Stomp Handler를 만들어서 intersepter를 적용하여서 Token검사를 시도하였다.
+- 실패 , Token 자체를 받아올 수 가 없었다.
+![](https://velog.velcdn.com/images/junghunuk456/post/bd2cb4f4-c822-4f9f-9c9f-82855d298b85/image.png)
+### 1-4 첫 HandShake 과정부터 하나하나 log를 찍어서 확인 해 본 결과 Sockjs를 사용시 우리가 정해놓은 EndPoint 뒤에 여러 path을 붙여서 접속을 시도하는것을 확인했다.
+- 우리가 정해놓은 EndPoint가 (“ws/chat”)이었는데, “ws/chat/934/czvkhxvy/websocket << 이런식으로 뒤에 path 를 붙여서 요청이 들어왔다.
+![](https://velog.velcdn.com/images/junghunuk456/post/5439c533-9e22-40c9-b89c-4886f2972395/image.png)
+### 1-5 우리가 적용했던 security에서 api paht를 시키는 방법이 다음과 같았다.
+![](https://velog.velcdn.com/images/junghunuk456/post/424d3e82-4cf1-40c5-aef5-72872b21c3de/image.png)
+하지만 이 상태에서는 ws/chat/** 이런식으로 뒤에 와일드카드를 붙여서 전부다 API path를 허용하는것이 불가능 하였기 때문에 ws/chat을 path 시켜도, 뒤에 붙는 path들이 전부 다르기 때문에 적용이 안되었었다.
+### 1-6 Security 구조 변경
+![](https://velog.velcdn.com/images/junghunuk456/post/57fb71d1-a381-49b5-8770-b9a4bddbf40f/image.png)
+위와 같이, 구조를 변경하고 와일드카드를 사용하여 path시키니 정상적으로 작동하였다!
+---
+## 2 .refresh Token 적용 후 , Access Token 의 만료시간이 지나 refresh Token을 사용하여 AccessToken을 갱신 하는 과정에서 갱신을 시도할때 보내는 첫번째 메세지가 채팅창에 입력이되지 않는 현상이 발생
+- Token을 사용하여 유저의 유효성을 검증하는것은 처음 WebSocket에 Connect 할때에만  하는것으로도 충분하다고 생각하여 Connect 할때(채팅방에 입장할때)에만 Token을 받아서  유효성 검사를 진행하고, 메세지를 주고 받을때는 기존에 사용하던 Token이 아닌, 그저 User의 PK값을 받아서 user정보를 찾아 return시켜 주는 방법으로 변경하였다.
+---
+## 3. Reids 에 Message들을 저장할때 Serialize 하는 부분에서 에러발생,
+- 메세지를 저장할때 메세지를 보낸 시간을 저장하기위해서 LocalDateTime을 사용하였는데, 자료를 조사해본결과 Java8 버전에서는 LocalDateTime을 직렬화,역직렬화 하지 못한다고 한다
+  - redis 에 저장하기 전, LocaldateTime 을 String으로 변환하여 저장하였다
+---
+## 4 .유저가 채팅 방에 정상 진입 되지 않는 문제
+기존에 서버쪽에서 postId(Pk)를 roomId로 사용하였는데 TopicChannel Class에서 param을 String으로 받기 때문에
+Long type 인 postId를 String으로 형 변환 하여 사용하는 중이였다.
+이때 채팅방에 유저가 진입을 시도할경우 방입장이 정상적으로 진행되지 않음
+- 확인 결과 Client에서 보내주는 값이 Long Type으로 와서 채팅방입장이 정상적으로 진행되지 않음
+  - room Id를 형변환 하지 않고 Long 형태로 사용 할 수 있는지 방법 확인
+  - 확인결과 TopicChannel을 구현된 그대로 사용하는 이상 불가능한 점 확인
+  - Client에서 값을 String으로 변환하여 보내줘서 문제 해결
+</div>
+                </div> 
+            </li>
+        </ul>
+        <div markedown="1">
+        https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
+        </div>
+    </details>
 
 - FE Trouble Shooting
-    https://github.com/TeamBungle/projectBungle_FE/blob/c59ca843603028c114949199179fcc88dac413db/src/App.js#L42-L74
+
 
 ### 😍 벙글 [서비스 링크 바로가기](https://bungle.life)
 
