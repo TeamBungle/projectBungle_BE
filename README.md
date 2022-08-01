@@ -102,26 +102,22 @@
         <div markedown="1"> https://github.com/TeamBungle/projectBungle_BE/blob/ba1372e9c4d25307f66320c42b1f60a41544d8bd/src/main/java/com/sparta/meeting_platform/service/UserService.java#L188-L222
         </div>
     </details>
-    <details>
-        <summary>읽지 않은 메세지에 대한 알림기능 구현</summary>
+        <details>
+        <summary>Websocket을 사용하여 실시간 알림</summary>
         <ul>
             <li>문제 인지
-                <div>로그인 하지 않는 사용자가 URL을 직접 입력해서 다른 페이지로 접근할 수 있는 상황이 발생</div>
+                <div>기존 기능 구현시 유저가 채팅방에 입장할때마다 Websocket을 Connect하고 나갈때마다 Disconnect 하였으나, 처음 로그인했을때 Connect 후, 로그아웃 하거나 웹페이지를 빠져나갈때 Disconnect가 되어야 안읽은 메세지에 대한 실시간 알림이 구현 된다고 판단하여 로직을 바꾸는 시도를 하였음</div>
             </li>
-            <li>선택지
-                <div>1. Websocket을 사용하여 실시간 알림<br>2. SSE를 사용하여 실시간 알림<br>3. http를 사용하여 알림</div> 
+            <li>현재 상태
+                <div>1. 채팅방에 입장할때 Connect 후 그방에대한 Subscribe 진행<br>2. 채팅방에서 나갈때 Disconnect</div> 
             </li>
-            <li>핵심 기술을 선택한 이유 및 근거
-                <div>
-                [3번 선택]<br>
-                - 프로젝트 마무리 시간을 고려하여, 시간이 충분히 여유롭지 않아 제일 익숙한 방식인 http를 이용하여 알림을 구현하기로 함<br>
-                - front에서 5초마다 알림을 조회하는 요청을 보내고 그에대한 응답으로 사용자가 채팅방에서 나간 시간을 저장하여, 그시간 이후로 그방에서 보내진 메세지들을 return시켜줌.
-                </div> 
+            <li>목표
+               <div>1. 로그인할때 WebSocket Connect<br>2. 채팅방에 입장할때 그방에대한 Subscribe 진행<br>3. 채팅방에서 나갈때 그방에대한 Unsubscribe 진행<br>4. 로그아웃할때 Websocket Disconnect<br>Websocket을 하나 열고 그안에서 여러개의 sub,unsub을 진행하려고 하는 과정에서 에러가 많이 발생했고, 시간관계상 프로젝트 마무리까지 얼마 남지않아 방식을 바꾸기로 결정하고 구글링 및 멘토님께 자문을 구한 결과 http를 이용해서 구현 하기로 결정하였다.</div>  
+            </li>
+	    <li>실제 반영
+               <div>front에서 5초마다 알림을 조회하는 요청을 보내고 그에대한 응답으로 사용자가 채팅방에서 나간 시간을 저장하여, 그시간 이후로 그방에서 보내진 메세지들을 응답으로 보내주는 방식으로 구현</div>  
             </li>
         </ul>
-        <div markedown="1">
-        https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
-        </div>
     </details>
     <details>
         <summary>Spring Security를 적용시 발생한 Websocket 연결 문제</summary>
@@ -129,36 +125,33 @@
             <li>문제 인지
                 <div>Spring Security를 적용하지 않은 상태에서 클라이언트와 서버간의 연결에 문제가 없이 정상적으로 작동 하였으나, Security를 적용하고 연결을 시도하니 401 에러가 발생했다.</div>
             </li>
-            <li>핵심 기술을 선택한 이유 및 근거
+            <li>문제 해결 과정
                 <div>
-             <div markdown=“1”>
-### 1. Spring Security를 적용하자 Websocket 연결이 정상적으로 이루어 지지 않았다.
-- 문제 상황 : Spring Security를 적용하지 않은 상태에서 클라이언트와 서버간의 연결에 문제가 없이 정상적으로 작동 하였으나, Security를 적용하고 연결을 시도하니 401 에러가 발생했다.
-### 1-1 WebSocket은 Custom Header 적용이 안되는것으로 확인됬다.
-- 관련자료 : https://velog.io/@tlatldms/Socket-%EC%9D%B8%EC%A6%9D-with-API-Gateway-Refresh-JWT
-### 1-2 Hand Shake하는 과정을 Security에서  Pass를 걸어 시도를 하였다
+1-1 WebSocket은 Custom Header 적용이 안되는것으로 확인됬다.
+- 관련자료 : https://velog.io/@tlatldms/Socket-%EC%9D%B8%EC%A6%9D-with-API-Gateway-Refresh-JWT<br>
+1-2 Hand Shake하는 과정을 Security에서  Pass를 걸어 시도를 하였다
 - 결과는 실패 , 이때까지는 이유를 알 수 가 없었다
-### 1-3 Stomp Handler를 만들어서 intersepter를 적용하여서 Token검사를 시도하였다.
+1-3 Stomp Handler를 만들어서 intersepter를 적용하여서 Token검사를 시도하였다.
 - 실패 , Token 자체를 받아올 수 가 없었다.
 ![](https://velog.velcdn.com/images/junghunuk456/post/bd2cb4f4-c822-4f9f-9c9f-82855d298b85/image.png)
-### 1-4 첫 HandShake 과정부터 하나하나 log를 찍어서 확인 해 본 결과 Sockjs를 사용시 우리가 정해놓은 EndPoint 뒤에 여러 path을 붙여서 접속을 시도하는것을 확인했다.
+1-4 첫 HandShake 과정부터 하나하나 log를 찍어서 확인 해 본 결과 Sockjs를 사용시 우리가 정해놓은 EndPoint 뒤에 여러 path을 붙여서 접속을 시도하는것을 확인했다.
 - 우리가 정해놓은 EndPoint가 (“ws/chat”)이었는데, “ws/chat/934/czvkhxvy/websocket << 이런식으로 뒤에 path 를 붙여서 요청이 들어왔다.
 ![](https://velog.velcdn.com/images/junghunuk456/post/5439c533-9e22-40c9-b89c-4886f2972395/image.png)
-### 1-5 우리가 적용했던 security에서 api paht를 시키는 방법이 다음과 같았다.
+1-5 우리가 적용했던 security에서 api paht를 시키는 방법이 다음과 같았다.
 ![](https://velog.velcdn.com/images/junghunuk456/post/424d3e82-4cf1-40c5-aef5-72872b21c3de/image.png)
 하지만 이 상태에서는 ws/chat/** 이런식으로 뒤에 와일드카드를 붙여서 전부다 API path를 허용하는것이 불가능 하였기 때문에 ws/chat을 path 시켜도, 뒤에 붙는 path들이 전부 다르기 때문에 적용이 안되었었다.
-### 1-6 Security 구조 변경
+1-6 Security 구조 변경
 ![](https://velog.velcdn.com/images/junghunuk456/post/57fb71d1-a381-49b5-8770-b9a4bddbf40f/image.png)
 위와 같이, 구조를 변경하고 와일드카드를 사용하여 path시키니 정상적으로 작동하였다!
 ---
-## 2 .refresh Token 적용 후 , Access Token 의 만료시간이 지나 refresh Token을 사용하여 AccessToken을 갱신 하는 과정에서 갱신을 시도할때 보내는 첫번째 메세지가 채팅창에 입력이되지 않는 현상이 발생
+2 .refresh Token 적용 후 , Access Token 의 만료시간이 지나 refresh Token을 사용하여 AccessToken을 갱신 하는 과정에서 갱신을 시도할때 보내는 첫번째 메세지가 채팅창에 입력이되지 않는 현상이 발생
 - Token을 사용하여 유저의 유효성을 검증하는것은 처음 WebSocket에 Connect 할때에만  하는것으로도 충분하다고 생각하여 Connect 할때(채팅방에 입장할때)에만 Token을 받아서  유효성 검사를 진행하고, 메세지를 주고 받을때는 기존에 사용하던 Token이 아닌, 그저 User의 PK값을 받아서 user정보를 찾아 return시켜 주는 방법으로 변경하였다.
 ---
-## 3. Reids 에 Message들을 저장할때 Serialize 하는 부분에서 에러발생,
+3. Reids 에 Message들을 저장할때 Serialize 하는 부분에서 에러발생,
 - 메세지를 저장할때 메세지를 보낸 시간을 저장하기위해서 LocalDateTime을 사용하였는데, 자료를 조사해본결과 Java8 버전에서는 LocalDateTime을 직렬화,역직렬화 하지 못한다고 한다
   - redis 에 저장하기 전, LocaldateTime 을 String으로 변환하여 저장하였다
 ---
-## 4 .유저가 채팅 방에 정상 진입 되지 않는 문제
+4 .유저가 채팅 방에 정상 진입 되지 않는 문제
 기존에 서버쪽에서 postId(Pk)를 roomId로 사용하였는데 TopicChannel Class에서 param을 String으로 받기 때문에
 Long type 인 postId를 String으로 형 변환 하여 사용하는 중이였다.
 이때 채팅방에 유저가 진입을 시도할경우 방입장이 정상적으로 진행되지 않음
@@ -166,7 +159,6 @@ Long type 인 postId를 String으로 형 변환 하여 사용하는 중이였다
   - room Id를 형변환 하지 않고 Long 형태로 사용 할 수 있는지 방법 확인
   - 확인결과 TopicChannel을 구현된 그대로 사용하는 이상 불가능한 점 확인
   - Client에서 값을 String으로 변환하여 보내줘서 문제 해결
-</div>
                 </div> 
             </li>
         </ul>
