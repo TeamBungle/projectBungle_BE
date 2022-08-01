@@ -161,7 +161,7 @@ Long type 인 postId를 String으로 형 변환 하여 사용하는 중이였다
     </details><br>
 
 
-- FE Trouble Shooting
+	<a href="https://github.com/TeamBungle/projectBungle_FE"> FE Trouble Shooting 링크로 가기</a>
 
 
 ### 😍 벙글 [서비스 링크 바로가기](https://bungle.life)
