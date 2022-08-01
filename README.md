@@ -125,17 +125,16 @@
             <li>문제 인지
                 <div>Spring Security를 적용하지 않은 상태에서 클라이언트와 서버간의 연결에 문제가 없이 정상적으로 작동 하였으나, Security를 적용하고 연결을 시도하니 401 에러가 발생했다.</div>
             </li>
-            <li>문제 해결 과정
-                <div>
-1-1 WebSocket은 Custom Header 적용이 안되는것으로 확인됬다.
-- 관련자료 : https://velog.io/@tlatldms/Socket-%EC%9D%B8%EC%A6%9D-with-API-Gateway-Refresh-JWT<br>
-1-2 Hand Shake하는 과정을 Security에서  Pass를 걸어 시도를 하였다
-- 결과는 실패 , 이때까지는 이유를 알 수 가 없었다
-1-3 Stomp Handler를 만들어서 intersepter를 적용하여서 Token검사를 시도하였다.
-- 실패 , Token 자체를 받아올 수 가 없었다.
+- 문제 해결 과정<br>
+1-1 WebSocket은 Custom Header 적용이 안되는것으로 확인됬다.<br>
+ &nbsp;&nbsp;- 관련자료 : https://velog.io/@tlatldms/Socket-%EC%9D%B8%EC%A6%9D-with-API-Gateway-Refresh-JWT<br>
+1-2 Hand Shake하는 과정을 Security에서  Pass를 걸어 시도를 하였다<br>
+&nbsp;&nbsp;- 결과는 실패 , 이때까지는 이유를 알 수 가 없었다<br>
+1-3 Stomp Handler를 만들어서 intersepter를 적용하여서 Token검사를 시도하였다.<br>
+&nbsp;&nbsp;- 실패 , Token 자체를 받아올 수 가 없었다.
 ![](https://velog.velcdn.com/images/junghunuk456/post/bd2cb4f4-c822-4f9f-9c9f-82855d298b85/image.png)
 1-4 첫 HandShake 과정부터 하나하나 log를 찍어서 확인 해 본 결과 Sockjs를 사용시 우리가 정해놓은 EndPoint 뒤에 여러 path을 붙여서 접속을 시도하는것을 확인했다.
-- 우리가 정해놓은 EndPoint가 (“ws/chat”)이었는데, “ws/chat/934/czvkhxvy/websocket << 이런식으로 뒤에 path 를 붙여서 요청이 들어왔다.
+&nbsp;&nbsp;- 우리가 정해놓은 EndPoint가 (“ws/chat”)이었는데, “ws/chat/934/czvkhxvy/websocket << 이런식으로 뒤에 path 를 붙여서 요청이 들어왔다.
 ![](https://velog.velcdn.com/images/junghunuk456/post/5439c533-9e22-40c9-b89c-4886f2972395/image.png)
 1-5 우리가 적용했던 security에서 api paht를 시키는 방법이 다음과 같았다.
 ![](https://velog.velcdn.com/images/junghunuk456/post/424d3e82-4cf1-40c5-aef5-72872b21c3de/image.png)
@@ -158,13 +157,7 @@ Long type 인 postId를 String으로 형 변환 하여 사용하는 중이였다
 - 확인 결과 Client에서 보내주는 값이 Long Type으로 와서 채팅방입장이 정상적으로 진행되지 않음
   - room Id를 형변환 하지 않고 Long 형태로 사용 할 수 있는지 방법 확인
   - 확인결과 TopicChannel을 구현된 그대로 사용하는 이상 불가능한 점 확인
-  - Client에서 값을 String으로 변환하여 보내줘서 문제 해결
-                </div> 
-            </li>
-        </ul>
-        <div markedown="1">
-        https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
-        </div>
+  - Client에서 값을 String으로 변환하여 보내줘서 문제 해결        
     </details>
 
 - FE Trouble Shooting
