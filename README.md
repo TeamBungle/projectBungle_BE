@@ -138,7 +138,7 @@
 ![](https://velog.velcdn.com/images/junghunuk456/post/5439c533-9e22-40c9-b89c-4886f2972395/image.png)
 1-5 우리가 적용했던 security에서 api paht를 시키는 방법이 다음과 같았다.
 ![](https://velog.velcdn.com/images/junghunuk456/post/424d3e82-4cf1-40c5-aef5-72872b21c3de/image.png)
-하지만 이 상태에서는 ws/chat/** 이런식으로 뒤에 와일드카드를 붙여서 전부다 API path를 허용하는것이 불가능 하였기 때문에 ws/chat을 path 시켜도, 뒤에 붙는 path들이 전부 다르기 때문에 적용이 안되었었다.
+하지만 이 상태에서는 ws/chat/** 이런식으로 뒤에 와일드카드를 붙여서 전부다 API path를 허용하는것이 불가능 하였기 때문에 ws/chat을 path 시켜도, 뒤에 붙는 path들이 전부 다르기 때문에 적용이 안되었었다.<br>
 1-6 Security 구조 변경
 ![](https://velog.velcdn.com/images/junghunuk456/post/57fb71d1-a381-49b5-8770-b9a4bddbf40f/image.png)
 위와 같이, 구조를 변경하고 와일드카드를 사용하여 path시키니 정상적으로 작동하였다!
@@ -158,7 +158,7 @@ Long type 인 postId를 String으로 형 변환 하여 사용하는 중이였다
   - room Id를 형변환 하지 않고 Long 형태로 사용 할 수 있는지 방법 확인
   - 확인결과 TopicChannel을 구현된 그대로 사용하는 이상 불가능한 점 확인
   - Client에서 값을 String으로 변환하여 보내줘서 문제 해결        
-    </details>
+    </details><br>
 
 - FE Trouble Shooting
 
