@@ -160,6 +160,7 @@ Long type 인 postId를 String으로 형 변환 하여 사용하는 중이였다
   - Client에서 값을 String으로 변환하여 보내줘서 문제 해결        
     </details><br>
 
+
 - FE Trouble Shooting
 
 
