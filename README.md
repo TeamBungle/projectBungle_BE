@@ -128,7 +128,7 @@
 | BE | 강현구님 | https://github.com/kootner |
 | BE( LV ) | 김민수님 | https://github.com/minssu86 |
 | BE | 김정훈님 | https://github.com/junghoon-kim96 |
-| BE | 정현욱님 |  |
+| BE | 정현욱님 | https://github.com/Jeonghyeonuk
 | FE | 최서우님 | https://github.com/zerovodka |
 | FE | 한결님 | https://github.com/GHan19 |
 | FE( L ) | 한지용님 | https://github.com/jigomgom |
