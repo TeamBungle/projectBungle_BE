@@ -129,7 +129,7 @@
             <li>문제 인지
                 <div>Spring Security를 적용하지 않은 상태에서 클라이언트와 서버간의 연결에 문제가 없이 정상적으로 작동 하였으나, Security를 적용하고 연결을 시도하니 401 에러가 발생했다.</div>
             </li>
-	</ul>
+	
 - 문제 해결 과정<br>
 1-1 WebSocket은 Custom Header 적용이 안되는것으로 확인됬다.<br>
  &nbsp;&nbsp;- 관련자료 : https://velog.io/@tlatldms/Socket-%EC%9D%B8%EC%A6%9D-with-API-Gateway-Refresh-JWT<br>
@@ -163,10 +163,11 @@ Long type 인 postId를 String으로 형 변환 하여 사용하는 중이였다
   - room Id를 형변환 하지 않고 Long 형태로 사용 할 수 있는지 방법 확인
   - 확인결과 TopicChannel을 구현된 그대로 사용하는 이상 불가능한 점 확인
   - Client에서 값을 String으로 변환하여 보내줘서 문제 해결        
+		</ul>
     </details><br>
 
 
-- <a href="https://github.com/TeamBungle/projectBungle_FE"> FE Trouble Shooting 링크로 가기</a>
+<a href="https://github.com/TeamBungle/projectBungle_FE"> FE Trouble Shooting 링크로 가기</a>
 
 
 ### 😍 벙글 [서비스 링크 바로가기](https://bungle.life)
