@@ -209,7 +209,7 @@
                 <div>
                 [2 번 선택]<br>
                 - Access Token의 만료 시간을 짧게 두어 탈취 되었을 경우 악용가능한 시간을 줄였으며, Access Token발행 시 만료 기간이 긴 Refresh Token을 함께 발행 하여 Access Token 만료시
-	      재로그인으로 Access Token을 갱신하는 것이 아닌 Refresh Token 인증을 통해 Access Token을 갱신하였음
+	      재로그인으로 Access Token을 갱신하는 것이 아닌 Refresh Token 인증을 통해 Access Token을 갱신하였음.<br> 이때 Refresh Token은 in memory cache인 redis에 저장하여 잦은 조회로 인해 발생가능한 DB부담을 줄였음
                 </div> 
             </li>
         </ul>
