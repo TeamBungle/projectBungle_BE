@@ -62,6 +62,7 @@
         <div markedown="1">    https://github.com/TeamBungle/projectBungle_BE/blob/ba1372e9c4d25307f66320c42b1f60a41544d8bd/src/main/java/com/sparta/meeting_platform/service/PostService.java#L118-L141
         </div>
     </details>
+    
     <details>
         <summary>회원 가입시 사용자 인증</summary>
         <ul>
@@ -81,6 +82,7 @@
         <div markedown="1"> https://github.com/TeamBungle/projectBungle_BE/blob/ba1372e9c4d25307f66320c42b1f60a41544d8bd/src/main/java/com/sparta/meeting_platform/service/EmailConfirmTokenService.java#L24-L51
         </div>
     </details>
+    
     <details>
         <summary>서비스 이용시 탈취 될 수 있는 유저 정보 보안</summary>
         <ul>
@@ -102,7 +104,8 @@
         <div markedown="1"> https://github.com/TeamBungle/projectBungle_BE/blob/ba1372e9c4d25307f66320c42b1f60a41544d8bd/src/main/java/com/sparta/meeting_platform/service/UserService.java#L188-L222
         </div>
     </details>
-        <details>
+    
+    <details>
         <summary>Websocket을 사용하여 실시간 알림</summary>
         <ul>
             <li>문제 인지
@@ -119,12 +122,14 @@
             </li>
         </ul>
     </details>
+    
     <details>
         <summary>Spring Security를 적용시 발생한 Websocket 연결 문제</summary>
         <ul>
             <li>문제 인지
                 <div>Spring Security를 적용하지 않은 상태에서 클라이언트와 서버간의 연결에 문제가 없이 정상적으로 작동 하였으나, Security를 적용하고 연결을 시도하니 401 에러가 발생했다.</div>
             </li>
+	</ul>
 - 문제 해결 과정<br>
 1-1 WebSocket은 Custom Header 적용이 안되는것으로 확인됬다.<br>
  &nbsp;&nbsp;- 관련자료 : https://velog.io/@tlatldms/Socket-%EC%9D%B8%EC%A6%9D-with-API-Gateway-Refresh-JWT<br>
@@ -161,7 +166,7 @@ Long type 인 postId를 String으로 형 변환 하여 사용하는 중이였다
     </details><br>
 
 
-	<a href="https://github.com/TeamBungle/projectBungle_FE"> FE Trouble Shooting 링크로 가기</a>
+- <a href="https://github.com/TeamBungle/projectBungle_FE"> FE Trouble Shooting 링크로 가기</a>
 
 
 ### 😍 벙글 [서비스 링크 바로가기](https://bungle.life)
