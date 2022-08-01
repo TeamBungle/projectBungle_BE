@@ -79,7 +79,6 @@
         https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
         </div>
     </details>
-    
      <details>
         <summary>코드 병합할때 시큐리티 적용시 Websocket 이 정상연결 되지 않는 문제</summary>
         <div style=""> 1. 시큐리티 적용후 프론트에서 jwt token을 헤더에 담아서 보내서 채팅 연결 시도<div>
@@ -99,7 +98,6 @@
             https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
         </div>
     </details>
-    
     <details>
        <summary>Websocket 통신시 직렬화/역직렬화 문제</summary>
        <div style=""> 1. 웹소켓은 객체를 Serialization 해서 보내야 한다 ?<div>
@@ -119,7 +117,6 @@
            https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
        </div>
    </details>
-    
    <details>
        <summary>방장은 채팅방에 바로 입장 했지만 유저는 채팅 방에 정상 진입 하지 않는 문제 </summary>
        <div style=""> 기존에 게시물 Id 랑 room Id 를 같은 값을 사용하지만 TopicChannel 에 Class에서 param을 String으로 받기 때문에 
@@ -133,51 +130,48 @@
            https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
        </div>
    </details>    
-    
-<details>
-    <summary>채팅 메세지 저장 및 채팅방 입장시 이전 메세지 출력 방식</summary>
-    <ul>
-        <li>문제 인지
-            <div>로그인 하지 않는 사용자가 URL을 직접 입력해서 다른 페이지로 접근할 수 있는 상황이 발생</div>
-        </li>
-        <li>선택지
-            <div>1. Mysql 사용<br>
-            2. Redis Cache사용</div> 
-        </li>
-        <li>핵심 기술을 선택한 이유 및 근거
-            <div>
-            [1, 2번 선택]<br>
-            - 매번 채팅방에 입장 할 때마다 DB에서 조회해오는 방식을 사용하면 성능이 떨어질 것으로 예상하여, 메세지를 저장할때는 Reids와 DB에 같이 저장하고, 메세지를 조회해올경우에는 Redis Cache를 사용하여 메세지를 불러오며, Reids에 저장되어있는 데이터가 손실 되었을 경우, DB에서 조회하도록 로직을 구성.
-            </div> 
-        </li>
-    </ul>
-    <div markedown="1">
-    https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
-    </div>
-</details>
-
-<details>
-    <summary>읽지 않은 메세지에 대한 알림기능 구현</summary>
-    <ul>
-        <li>문제 인지
-            <div>로그인 하지 않는 사용자가 URL을 직접 입력해서 다른 페이지로 접근할 수 있는 상황이 발생</div>
-        </li>
-        <li>선택지
-            <div>1. Websocket을 사용하여 실시간 알림<br>2. SSE를 사용하여 실시간 알림<br>3. http를 사용하여 알림</div> 
-        </li>
-        <li>핵심 기술을 선택한 이유 및 근거
-            <div>
-            [3번 선택]<br>
-            - 프로젝트 마무리 시간을 고려하여, 시간이 충분히 여유롭지 않아 제일 익숙한 방식인 http를 이용하여 알림을 구현하기로 함<br>
-            - front에서 5초마다 알림을 조회하는 요청을 보내고 그에대한 응답으로 사용자가 채팅방에서 나간 시간을 저장하여, 그시간 이후로 그방에서 보내진 메세지들을 return시켜줌.
-            </div> 
-        </li>
-    </ul>
-    <div markedown="1">
-    https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
-    </div>
-</details>
-    
+    <details>
+        <summary>채팅 메세지 저장 및 채팅방 입장시 이전 메세지 출력 방식</summary>
+        <ul>
+            <li>문제 인지
+                <div>로그인 하지 않는 사용자가 URL을 직접 입력해서 다른 페이지로 접근할 수 있는 상황이 발생</div>
+            </li>
+            <li>선택지
+                <div>1. Mysql 사용<br>
+                2. Redis Cache사용</div> 
+            </li>
+            <li>핵심 기술을 선택한 이유 및 근거
+                <div>
+                [1, 2번 선택]<br>
+                - 매번 채팅방에 입장 할 때마다 DB에서 조회해오는 방식을 사용하면 성능이 떨어질 것으로 예상하여, 메세지를 저장할때는 Reids와 DB에 같이 저장하고, 메세지를 조회해올경우에는 Redis Cache를 사용하여 메세지를 불러오며, Reids에 저장되어있는 데이터가 손실 되었을 경우, DB에서 조회하도록 로직을 구성.
+                </div> 
+            </li>
+        </ul>
+        <div markedown="1">
+        https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
+        </div>
+    </details>
+    <details>
+        <summary>읽지 않은 메세지에 대한 알림기능 구현</summary>
+        <ul>
+            <li>문제 인지
+                <div>로그인 하지 않는 사용자가 URL을 직접 입력해서 다른 페이지로 접근할 수 있는 상황이 발생</div>
+            </li>
+            <li>선택지
+                <div>1. Websocket을 사용하여 실시간 알림<br>2. SSE를 사용하여 실시간 알림<br>3. http를 사용하여 알림</div> 
+            </li>
+            <li>핵심 기술을 선택한 이유 및 근거
+                <div>
+                [3번 선택]<br>
+                - 프로젝트 마무리 시간을 고려하여, 시간이 충분히 여유롭지 않아 제일 익숙한 방식인 http를 이용하여 알림을 구현하기로 함<br>
+                - front에서 5초마다 알림을 조회하는 요청을 보내고 그에대한 응답으로 사용자가 채팅방에서 나간 시간을 저장하여, 그시간 이후로 그방에서 보내진 메세지들을 return시켜줌.
+                </div> 
+            </li>
+        </ul>
+        <div markedown="1">
+        https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
+        </div>
+    </details>
     <details>
         <summary>회원 가입시 사용자 인증</summary>
         <ul>
@@ -201,7 +195,6 @@
         https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
         </div>
     </details>
-    
     <details>
         <summary>서비스 이용시 탈취 될 수 있는 유저 정보 보안</summary>
         <ul>
