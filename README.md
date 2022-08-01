@@ -146,7 +146,7 @@
 2 .refresh Token 적용 후 , Access Token 의 만료시간이 지나 refresh Token을 사용하여 AccessToken을 갱신 하는 과정에서 갱신을 시도할때 보내는 첫번째 메세지가 채팅창에 입력이되지 않는 현상이 발생
 - Token을 사용하여 유저의 유효성을 검증하는것은 처음 WebSocket에 Connect 할때에만  하는것으로도 충분하다고 생각하여 Connect 할때(채팅방에 입장할때)에만 Token을 받아서  유효성 검사를 진행하고, 메세지를 주고 받을때는 기존에 사용하던 Token이 아닌, 그저 User의 PK값을 받아서 user정보를 찾아 return시켜 주는 방법으로 변경하였다.
 ---
-3. Reids 에 Message들을 저장할때 Serialize 하는 부분에서 에러발생,
+3 .Reids 에 Message들을 저장할때 Serialize 하는 부분에서 에러발생,
 - 메세지를 저장할때 메세지를 보낸 시간을 저장하기위해서 LocalDateTime을 사용하였는데, 자료를 조사해본결과 Java8 버전에서는 LocalDateTime을 직렬화,역직렬화 하지 못한다고 한다
   - redis 에 저장하기 전, LocaldateTime 을 String으로 변환하여 저장하였다
 ---
