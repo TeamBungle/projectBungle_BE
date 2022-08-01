@@ -42,20 +42,24 @@
         <summary>사용자 위치 기반 정보 검색 및 데이터 정렬</summary>
         <ul>
             <li>문제 인지
-                <div>로그인 하지 않는 사용자가 URL을 직접 입력해서 다른 페이지로 접근할 수 있는 상황이 발생</div>
+                <div>게시글 조회시 유저의 위치로부터 일정 거리내에 있는 게시물 만을 DB로부터 불러와 거리순에 맞춰 응답하는 로직 필요.<br>
+		초기 기능 구현시 기본적인 Spring Data JPA만을 사용한 결과 N+1 문제 및 DB로부터 불러온 data를 JAVA 코드로 재 정렬해야하는 문제 발생.<br></div>
             </li>
             <li>선택지
-                <div>1. JPA Data 사용<br> 2. Native Query 사용</div> 
+                <div>1. MBRContains 사용<br> 
+		2. ST_DISTANCE_SPHERE 사용</div> 
             </li>
             <li>핵심 기술을 선택한 이유 및 근거
                 <div>
                     [2번 선택]<br>
-                    - Kakao Geocoding을 통해 DB에 저장된 위도, 경도 정보를 조회시 Native Query를 사용하여 Query 조회 성능 향상
+                    - 먼저 적용해본 MBRContains는 두점 사이의 거리를 직접 구하는 것이 아니라 한 지점을 기준으로 4각형의 박스형 영역을 만들어 그 안에 포함 되는지를 판별하여
+		값을 불러오는 방식이다보니, DB로부터 가져온 data를 client에 응답하기전 haversine공식등을 활용해서 재 정렬해야하는 문제점이 발생하였음.<br>
+		위 와 같은 문제점을 해결 하기위해 다른 방법을 조사해본 결과 Query문작성시 ST_DISTANCE_SPHERE 함수를 사용하면 DB에서 불러오는 과정에서 두점사이의
+		거리를 바로 구할 수 있어 이를 바탕으로 Query조회시 필요한 데이터만을 추출 및 정렬을 한번에 끝낼 수 있어 조회 성능을 향상시킴
                 </div> 
             </li>
         </ul>
-        <div markedown="1">
-        https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
+        <div markedown="1">    https://github.com/TeamBungle/projectBungle_BE/blob/ba1372e9c4d25307f66320c42b1f60a41544d8bd/src/main/java/com/sparta/meeting_platform/service/PostService.java#L118-L141
         </div>
     </details>
     <details>
@@ -176,43 +180,40 @@
         <summary>회원 가입시 사용자 인증</summary>
         <ul>
             <li>문제 인지
-                <div>로그인 하지 않는 사용자가 URL을 직접 입력해서 다른 페이지로 접근할 수 있는 상황이 발생</div>
+                <div> 회원 가입시 email 인증 메일 발송 로직에서 2~3초간의 대기시간이 걸려 가입 버튼을 클릭한 사용자가 대기해야하는 문제 발생 </div>
             </li>
             <li>선택지
-                <div>1. Email 인증<br>
-                2. OAuth 사용<br>
-                3. only Id/Password</div> 
+                <div>1. 비동기 처리<br>
             </li>
             <li>핵심 기술을 선택한 이유 및 근거
                 <div>
-                [1, 2번 선택]<br>
-                - 일반 회원 가입의 경우 가입에 사용한 email로 인증 토큰을 전달후 유저가 해당 토큰을 다시 서버로 전달 하면 서비스를 사용할 수 있도록 권한 변경<br>
-                - Oauth를 통해 유저들에게 친숙한 3개의 대형회사에 접근 권한 인증을 위임하여 신규 서비스의 단점인 신뢰성을 보강생
+                [1선택]<br>
+                - email 전송 method에 @Async Annotation을 이용해 비동기 처리 하여 유저의 대기 시간을 줄였음
                 </div> 
             </li>
         </ul>
-        <div markedown="1">
-        https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
+        <div markedown="1"> https://github.com/TeamBungle/projectBungle_BE/blob/ba1372e9c4d25307f66320c42b1f60a41544d8bd/src/main/java/com/sparta/meeting_platform/service/EmailConfirmTokenService.java#L24-L51
         </div>
     </details>
     <details>
         <summary>서비스 이용시 탈취 될 수 있는 유저 정보 보안</summary>
         <ul>
             <li>문제 인지
-                <div>로그인 하지 않는 사용자가 URL을 직접 입력해서 다른 페이지로 접근할 수 있는 상황이 발생</div>
+                <div>유저인증 방식으로 JWT를 이용한 Access Token 발행 방식을 사용하였으며, 이때 Token이 타인에게 탈취 되었을때를 대비가 필요 하였음</div>
             </li>
             <li>선택지
-                <div>1. Access Token 만 사용<br>2. Access , Refresh Token 함께 사용</div> 
+                <div>1. Access Token 만 사용<br>
+		2. Access , Refresh Token 함께 사용</div> 
             </li>
             <li>핵심 기술을 선택한 이유 및 근거
                 <div>
                 [2 번 선택]<br>
-                - Client에서 Server로 요청시 사용자 인증을 위해 전달하는 Access Token<br>이 중간에 탈취 되면, 탈취 한사람이 원래의 유저의 권한을 획득하여 서비스를 악용할 우려가 있어 이를 방지 하기 위해 Access Token의 만료 시간 짧게 두어 탈취 되었을 경우 악용가능한 시간을 줄였으며, 만료된 토큰을 갱신 하여 새로 발급하기 위해 Refresh Token을 함께 사용
+                - Access Token의 만료 시간을 짧게 두어 탈취 되었을 경우 악용가능한 시간을 줄였으며, Access Token발행 시 만료 기간이 긴 Refresh Token을 함께 발행 하여 Access Token 만료시
+	      재로그인으로 Access Token을 갱신하는 것이 아닌 Refresh Token 인증을 통해 Access Token을 갱신하였음
                 </div> 
             </li>
         </ul>
-        <div markedown="1">
-        https://github.com/TeamBungle/projectBungle_FE/blob/00460f7436e216b8d65729aae642864c7185c9ab/src/App.js#L42-L74
+        <div markedown="1"> https://github.com/TeamBungle/projectBungle_BE/blob/ba1372e9c4d25307f66320c42b1f60a41544d8bd/src/main/java/com/sparta/meeting_platform/service/UserService.java#L188-L222
         </div>
     </details>
 
