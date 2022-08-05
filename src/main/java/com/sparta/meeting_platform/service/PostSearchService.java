@@ -117,7 +117,7 @@ public class PostSearchService {
     }
 
     //postlist 찾기 - realTime,endTime,manner
-    public List<PostResponseDto> searchTimeOrMannerPostList(List<Post> posts, Long userId) {
+    public List<PostResponseDto> searchTimeOrMannerPostList(List<com.sparta.meeting_platform.domain.Post> posts, Long userId) {
         List<PostResponseDto> postList = new ArrayList<>();
         for (com.sparta.meeting_platform.domain.Post post : posts) {
             Like like = likeRepository.findByUser_IdAndPost_Id(userId, post.getId()).orElse(null);

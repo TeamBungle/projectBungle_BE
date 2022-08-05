@@ -91,10 +91,7 @@ public class PostService {
                 .setParameter("distance", distance)
                 .setMaxResults(4);
         List<Post> endTimePosts = endTimeQuery.getResultList();
-        Query mannerQuery = em.createNativeQuery("SELECT p.id, content, created_at, is_letter, latitude, location, longitude,"
-                        + "modified_at, personnel, place, time, title, user_id , "
-                        + "ROUND(ST_DISTANCE_SPHERE(:myPoint, POINT(p.longitude, p.latitude))) AS 'distance' "
-                        + "FROM post AS p "
+        Query mannerQuery = em.createNativeQuery("SELECT * FROM post AS p "
                         + "INNER JOIN (SELECT AVG(u.manner_temp) AS avg_temp, i.post_id AS id FROM invited_users AS i "
                         + "INNER JOIN userinfo AS u "
                         + "ON i.user_id = u.id "
