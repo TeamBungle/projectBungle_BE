@@ -13,7 +13,7 @@
 ![최종 아키텍처](https://user-images.githubusercontent.com/107230384/182052947-7c29f084-224a-492b-9a71-0c0f09c65a9e.jpg)
 
 ### 🤩 Data base 설계
-![image](https://user-images.githubusercontent.com/87007109/182984168-3cec4c87-55fb-4ad4-b76d-1bfc82718911.png)
+![image](https://user-images.githubusercontent.com/87007109/182985563-f223fd87-d7ac-4688-8102-cf0a5d8bafac.png)
 
 ### 🤩 벙글 주요 기능
 
