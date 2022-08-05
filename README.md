@@ -186,3 +186,5 @@ Long type 인 postId를 String으로 형 변환 하여 사용하는 중이였다
 | FE | 한결님 | https://github.com/GHan19 |
 | FE( L ) | 한지용님 | https://github.com/jigomgom |
 | Designer | 양승연님 | didtmddus123@gmail.com |
+
+![image](https://user-images.githubusercontent.com/107230384/182984092-aa5e7b4e-cf7b-4e39-a90d-6ec822e562eb.png)
