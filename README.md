@@ -182,7 +182,7 @@ Long type 인 postId를 String으로 형 변환 하여 사용하는 중이였다
 | BE | 강현구님 | https://github.com/kootner | refromto@naver.com |
 | BE( LV ) | 김민수님 | https://github.com/minssu86 | manager.kim86@gmail.com |
 | BE | 김정훈님 | https://github.com/junghoon-kim96 | 0527wj@naver.com |
-| BE | 정현욱님 | https://github.com/Jeonghyeonuk |
+| BE | 정현욱님 | https://github.com/Jeonghyeonuk | junghunwook456@naver.com |
 | FE | 최서우님 | https://github.com/zerovodka | 264826@naver.com |
 | FE | 한결님 | https://github.com/GHan19 | gksrufdla@naver.com |
 | FE( L ) | 한지용님 | https://github.com/jigomgom | hjy583@naver.com |
