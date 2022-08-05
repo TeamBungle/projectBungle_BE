@@ -20,7 +20,7 @@ public class Opinion {
     private String message;
 
     @JoinColumn(name = "USER_ID")
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
     public Opinion(User user, OpinionRequestDto opinionRequestDto) {
