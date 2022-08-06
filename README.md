@@ -1,44 +1,92 @@
 
 ![배너용](https://user-images.githubusercontent.com/107230384/182052615-f4743530-6596-4b4f-9b5e-6100f021eebb.jpg)
 
+<div align="center"><h3>싱글벙글, 사용자 현재 위치 기반으로 빠르게 주변 모임을 확인할 수 있습니다.</h3></div>
 
-**싱글벙글, 사용자 현재 위치 기반으로 빠르게 주변 모임을 확인할 수 있습니다.**
+## 🤩 벙글 [서비스 링크 바로가기](https://bungle.life)
+## 😖 벙글 [발표 영상 바로가기](https://youtu.be/AoN3nuWR9Hg)
+## 🤗 벙글 [시연 영상 바로가기](https://youtu.be/aJnM2TuXXWg)
 
-### 🤔 프로젝트 시장 조사 및 Feasibility Test
+## 😆 프로젝트 Git address
 
-[Feasibility test](https://www.notion.so/Feasibility-test-b8f7d2dccd354a0db0577e245a12f4a4) 
+- Back-end Github    https://github.com/TeamBungle/projectBungle_BE
+- Front-end Github   https://github.com/TeamBungle/projectBungle_FE
 
-### 🙂 아키텍쳐
+## 😶 벙글 팀원 소개( L : 팀장, LV : 부팀장 )
+<!-- 표 시작 -->
+<div align="center">
+<table>
+      <thead>
+        <tr>
+          <th>역할</th><th>이름</th><th>개인 Git 주소</th><th>개인 메일 주소</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><img src="https://img.shields.io/badge/spring-6DB33F?style=for-the-badge&logo=spring&logoColor=white"></td><td>강현구님</td><td>https://github.com/kootner</td><td>refromto@naver.com</td>
+        </tr>
+        <tr>
+          <td><img src="https://img.shields.io/badge/spring-6DB33F?style=for-the-badge&logo=spring&logoColor=white"></td><td>( LV ) 김민수님</td><td>https://github.com/minssu86</td><td>manager.kim86@gmail.com</td>
+        </tr>
+        <tr>
+          <td><img src="https://img.shields.io/badge/spring-6DB33F?style=for-the-badge&logo=spring&logoColor=white"></td><td>김정훈님</td><td>https://github.com/junghoon-kim96</td><td>0527wj@naver.com</td>
+        </tr>
+        <tr>
+          <td><img src="https://img.shields.io/badge/spring-6DB33F?style=for-the-badge&logo=spring&logoColor=white"></td><td>정현욱님</td><td>https://github.com/Jeonghyeonuk</td><td>junghunwook456@naver.com</td>
+        </tr>
+        <tr>
+          <td><img src="https://img.shields.io/badge/react-61DAFB?style=for-the-badge&logo=react&logoColor=black"></td><td>최서우님</td><td>https://github.com/zerovodka</td><td>264826@naver.com</td>
+        </tr>
+        <tr>
+          <td><img src="https://img.shields.io/badge/react-61DAFB?style=for-the-badge&logo=react&logoColor=black"></td><td>한결님</td><td>https://github.com/GHan19</td><td>gksrufdla@naver.com</td>
+        </tr>
+        <tr>
+          <td><img src="https://img.shields.io/badge/react-61DAFB?style=for-the-badge&logo=react&logoColor=black"></td><td>( L ) 한지용님</td><td>https://github.com/jigomgom</td><td>hjy583@naver.com</td>
+        </tr>
+        <tr>
+          <td><img src="https://img.shields.io/badge/figma-F24E1E?style=for-the-badge&logo=Figma&logoColor=white"></td><td>양승연님</td><td></td><td>didtmddus123@gmail.com</td>
+        </tr>
+      </tbody>
+    </table>
+</div>
+<!--표 끝-->
+<p align="center"><img src="https://user-images.githubusercontent.com/107230384/182984029-9de38ffc-186e-415c-a372-76b2bf59a6dd.png"></p>    
+
+## 🤔 프로젝트 시장 조사 및 Feasibility Test
+
+- <p><a href="https://www.notion.so/Feasibility-test-b8f7d2dccd354a0db0577e245a12f4a4">팀 Feasibility Test 페이지 </a>로 바로가기</p>
+
+## 😏 QA 프로세스
+- <p><a href="https://www.notion.so/QA-c3a48710c4f241298990b8413bff3e0d">팀 QA 프로세스 페이지</a>로 바로가기</p>
+
+## 🙂 아키텍쳐
 
 ![최종 아키텍처](https://user-images.githubusercontent.com/107230384/182052947-7c29f084-224a-492b-9a71-0c0f09c65a9e.jpg)
 
-### 🤩 Data base 설계
+## 😮 Data base 설계
 ![image](https://user-images.githubusercontent.com/87007109/182985563-f223fd87-d7ac-4688-8102-cf0a5d8bafac.png)
 
-### 🤩 벙글 주요 기능
+## 🤩 벙글 주요 기능
 
 1. GPS를 사용한 현재 위치 확인 ( geolocation )
-    - 사용자 위치 기준, 400km 반경의 실시간 벙글 위치와 마감 임박순 벙글 을 나타냄
-    - 서비스 론칭 기간이 짧기 때문에 400km로 결정, 추후 데이터가 많이 쌓이면 50km로 변경 예정
-    
-![Untitled (1)](https://user-images.githubusercontent.com/107230384/182052513-562cce1e-09d0-4496-aceb-e17440cf3b22.png)
-    
+   - 사용자 위치 기준, 400km 반경의 실시간 벙글 위치와 마감 임박순 벙글 을 나타냄
+   - 서비스 론칭 기간이 짧기 때문에 400km로 결정, 추후 데이터가 많이 쌓이면 50km로 변경 예정
+
+<p align="center"><img src="https://user-images.githubusercontent.com/107230384/182052513-562cce1e-09d0-4496-aceb-e17440cf3b22.png" width="920px" height="400px"></p>    
 
 2. 실시간 벙글 생성 및 문자 채팅 ( Redis, StompJS, SockJS )
     - 벙글 생성을 통해 주변 사람들과 모임을 가질 수 있고 문자 채팅에서 상세 결정을 내릴 수 있음
     - 사용자 피드백에 따라 화상 채팅 추가 예정
-
-![Untitled (2)](https://user-images.githubusercontent.com/107230384/182052538-9e3d28f1-0f7f-4604-a944-35c920fa2aca.png)
-
+<p align="center"><img src="https://user-images.githubusercontent.com/107230384/182052538-9e3d28f1-0f7f-4604-a944-35c920fa2aca.png"></p>    
 
 3. 지도를 통해 실시간 진행 중인 벙글 확인 ( Redis, Kakao map API )
+<p align="center"><img src="https://user-images.githubusercontent.com/107230384/182052556-d5fb2af0-7617-403a-9e39-a3becd215dd3.png"></p>
 
-![Untitled (3)](https://user-images.githubusercontent.com/107230384/182052556-d5fb2af0-7617-403a-9e39-a3becd215dd3.png)
 
-
-### 🧐 Trouble Shooting
+## 🧐 Trouble Shooting
 
 - BE Trouble Shooting
+<!--
     <details>
         <summary>사용자 위치 기반 정보 검색 및 데이터 정렬</summary>
         <ul>
@@ -162,30 +210,6 @@ Long type 인 postId를 String으로 형 변환 하여 사용하는 중이였다
   - 확인결과 TopicChannel을 구현된 그대로 사용하는 이상 불가능한 점 확인
   - Client에서 값을 String으로 변환하여 보내줘서 문제 해결        
 		</ul>
-    </details><br>
-
-
-<a href="https://github.com/TeamBungle/projectBungle_FE"> FE Trouble Shooting 링크로 가기</a>
-
-
-### 😍 벙글 [서비스 링크 바로가기](https://bungle.life)
-
-### 😆 프로젝트 Git address
-
-- Back-end Github    https://github.com/TeamBungle/projectBungle_BE
-- Front-end Github   https://github.com/TeamBungle/projectBungle_FE
-
-### 😶 벙글 팀원 소개( L : 팀장, LV : 부팀장 )
-
-| 역할 | 이름 | Git 주소 | 메일 주소 |
-| --- | --- | --- | --- |
-| BE | 강현구님 | https://github.com/kootner | refromto@naver.com |
-| BE( LV ) | 김민수님 | https://github.com/minssu86 | manager.kim86@gmail.com |
-| BE | 김정훈님 | https://github.com/junghoon-kim96 | 0527wj@naver.com |
-| BE | 정현욱님 | https://github.com/Jeonghyeonuk | junghunwook456@naver.com |
-| FE | 최서우님 | https://github.com/zerovodka | 264826@naver.com |
-| FE | 한결님 | https://github.com/GHan19 | gksrufdla@naver.com |
-| FE( L ) | 한지용님 | https://github.com/jigomgom | hjy583@naver.com |
-| Designer | 양승연님 | didtmddus123@gmail.com |
-
-![image](https://user-images.githubusercontent.com/107230384/182984092-aa5e7b4e-cf7b-4e39-a90d-6ec822e562eb.png)
+    </details><br/>
+-->
+- <p><a href="https://github.com/TeamBungle/projectBungle_FE"> FE Trouble Shooting </a> 로 바로가기</p>
