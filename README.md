@@ -384,12 +384,12 @@
 <h4>1. 지도 [ 4건 ]</h4>
 <div>
 &nbsp;&nbsp;[유저 피드백] 벙글 지도가 늘리고 줄일 때 버벅임이 심함<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 테스트 후, 개선 방향 논의 필요
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 테스트 후, 개선 방향 논의 필요<br>
 &nbsp;&nbsp;[유저 피드백] 지도가 더 확대된 상태로 시작되면 좋을 것 같아요.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 예상 해결 방안 (Map.js options 부분의 level값 수정)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 예상 해결 방안 (Map.js options 부분의 level값 수정)<br>
 &nbsp;&nbsp;[유저 피드백] 지도에서 아래 클릭하면 팝업창처럼 올라오는 게 끌어올리면 올라올줄알았는데 
   안돼서 아주!조금! 불편했습니닷 끌어올리는것도 가능하게 해주시면 좋을거같아용<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 예상 해결 방안 ( framer-motion 라이브러리를 이용하여 구현 예정 )
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 예상 해결 방안 ( framer-motion 라이브러리를 이용하여 구현 예정 )<br>
 &nbsp;&nbsp;[유저 피드백] 지도 마커를 누르면 모임의 상세 내용을 보고 싶어요.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- 예상 해결 방안 ( Kakao map API 클릭 이벤트 사용 )
 </div>
